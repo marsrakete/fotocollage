@@ -1,0 +1,252 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#101828" />
+    <link rel="manifest" href="./manifest.json" />
+    <link rel="icon" href="./icon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="./icon-192.png" />
+    <title>Foto-Collage</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="shell">
+      <header class="hero">
+        <div class="hero-copy">
+          <p class="eyebrow" id="heroEyebrow">Progressive Web App</p>
+          <div class="hero-title-row">
+            <h1 id="appTitle">Foto-Collage</h1>
+            <button id="settingsButton" class="secondary settings-button" type="button" aria-label="Einstellungen">
+              <span aria-hidden="true">⚙</span>
+              <span id="settingsButtonLabel">Einstellungen</span>
+            </button>
+          </div>
+          <p class="lede" id="heroLede">
+            In wenigen Schritten zur fertigen Collage: Vorlage wählen, Fotos
+            hochladen, Ausschnitte feinjustieren und als PNG speichern.
+          </p>
+          <p id="versionLabel" class="version-label"></p>
+        </div>
+        <div class="hero-card">
+          <div class="hero-stat">
+            <span id="gridSummary">2 x 2</span>
+            <small>Raster</small>
+          </div>
+          <div class="hero-stat">
+            <span id="filledSummary">0 / 4</span>
+            <small>Fotos</small>
+          </div>
+          <div class="hero-stat">
+            <span id="stepSummary">1 / 4</span>
+            <small>Schritt</small>
+          </div>
+        </div>
+      </header>
+
+      <main class="workspace">
+        <section class="wizard">
+          <div class="progress">
+            <button class="step-chip active" data-step-target="1" id="stepChip1">1. Vorlage</button>
+            <button class="step-chip" data-step-target="2" id="stepChip2">2. Fotos</button>
+            <button class="step-chip" data-step-target="3" id="stepChip3">3. Feinschliff</button>
+            <button class="step-chip" data-step-target="4" id="stepChip4">4. Export</button>
+          </div>
+
+          <section class="step-panel active" data-step="1">
+            <div class="panel-head">
+              <h2 id="step1Title">Schritt 1: Collage-Vorlage</h2>
+              <p id="step1Desc">Wähle ein Raster oder passe Zeilen und Spalten flexibel an.</p>
+            </div>
+
+            <div class="preset-grid" id="presetGrid"></div>
+
+            <div class="form-grid">
+              <label class="field">
+                <span>Zeilen</span>
+                <input id="rowsInput" type="number" min="1" max="8" value="2" />
+              </label>
+              <label class="field">
+                <span>Spalten</span>
+                <input id="colsInput" type="number" min="1" max="8" value="2" />
+              </label>
+              <label class="field">
+                <span>Abstand</span>
+                <input id="gapInput" type="range" min="0" max="40" value="12" />
+                <strong><span id="gapValue">12</span> px</strong>
+              </label>
+              <label class="field">
+                <span>Hintergrund</span>
+                <input id="backgroundInput" type="color" value="#101828" />
+              </label>
+            </div>
+
+            <div class="step-actions">
+              <button class="primary" id="toStep2">Weiter zu den Fotos</button>
+            </div>
+          </section>
+
+          <section class="step-panel" data-step="2">
+            <div class="panel-head">
+              <h2 id="step2Title">Schritt 2: Fotos hochladen</h2>
+              <p id="step2Desc">
+                Lade genau so viele Fotos hoch, wie das Raster benötigt.
+                Fehlende Plätze bleiben markiert.
+              </p>
+            </div>
+
+            <div class="upload-zone" id="dropZone">
+              <input id="fileInput" type="file" accept="image/*" multiple />
+              <div>
+                <strong id="uploadTitle">Fotos ziehen oder auswählen</strong>
+                <p id="uploadDesc">Alle Bilder werden der Reihe nach in die freien Felder gesetzt.</p>
+              </div>
+            </div>
+
+            <div class="slot-status" id="slotStatus"></div>
+            <div class="slot-grid" id="slotGrid"></div>
+
+            <div class="step-actions">
+              <button class="secondary" data-prev-step="1">Zurück</button>
+              <button class="primary" id="toStep3">Weiter zum Feinschliff</button>
+            </div>
+          </section>
+
+          <section class="step-panel" data-step="3">
+            <div class="panel-head">
+              <h2 id="step3Title">Schritt 3: Feinschliff</h2>
+              <p id="step3Desc">
+                Ziehe ein Bild in der Vorschau, um den Ausschnitt im Kasten zu
+                verschieben.
+              </p>
+            </div>
+
+            <div class="editor-layout">
+              <div class="collage-preview-wrap">
+                <div class="collage-preview" id="collagePreview"></div>
+              </div>
+
+              <aside class="editor-panel">
+                <div class="panel-head compact">
+                  <h3 id="activeCellTitle">Aktives Feld</h3>
+                  <p id="activeCellInfo">Wähle ein Feld aus der Collage.</p>
+                </div>
+                <div class="editor-frame" id="editorFrame">
+                  <img id="editorImage" alt="" />
+                  <div class="editor-overlay">
+                    <span id="dragHint">Zum Verschieben ziehen</span>
+                  </div>
+                </div>
+                <div class="editor-controls">
+                  <button class="secondary" id="prevCell">Vorheriges Feld</button>
+                  <button class="secondary" id="nextCell">Nächstes Feld</button>
+                  <button class="secondary" id="replaceCell">Bild ersetzen</button>
+                  <button class="secondary" id="resetFocus">Ausschnitt zurücksetzen</button>
+                </div>
+                <label class="field zoom-field">
+                  <span id="zoomLabel">Zoom</span>
+                  <input id="zoomInput" type="range" min="1" max="4" step="0.05" value="1" />
+                  <strong><span id="zoomValue">100</span> %</strong>
+                </label>
+                <button class="secondary" id="resetZoom" type="button">Zoom zurücksetzen</button>
+                <input id="replaceInput" type="file" accept="image/*" hidden />
+              </aside>
+            </div>
+
+            <div class="step-actions">
+              <button class="secondary" data-prev-step="2">Zurück</button>
+              <button class="primary" id="toStep4">Weiter zum Export</button>
+            </div>
+          </section>
+
+          <section class="step-panel" data-step="4">
+            <div class="panel-head">
+              <h2 id="step4Title">Schritt 4: PNG speichern</h2>
+              <p id="step4Desc">
+                Die Collage wird in hoher Auflösung gerendert und direkt als
+                PNG-Datei heruntergeladen.
+              </p>
+            </div>
+
+            <div class="export-layout">
+              <div class="export-card">
+                <label class="field">
+                  <span id="filenameLabel">Dateiname</span>
+                  <input id="filenameInput" type="text" value="fotocollage.png" />
+                </label>
+                <label class="field">
+                  <span id="exportWidthLabel">Exportbreite</span>
+                  <input id="exportWidthInput" type="range" min="1200" max="6000" step="100" value="3000" />
+                  <strong><span id="exportWidthValue">3000</span> px</strong>
+                </label>
+                <label class="field">
+                  <span id="exportGapLabel">Randabstand</span>
+                  <input id="exportGapInput" type="range" min="0" max="60" step="1" value="12" />
+                  <strong><span id="exportGapValue">12</span> px</strong>
+                </label>
+                <p class="helper" id="exportHelp">
+                  Der Export skaliert das gewählte Raster samt Zwischenräumen
+                  und verwendet die aktuellen Ausschnitte.
+                </p>
+                <button class="primary" id="exportButton">Als PNG speichern</button>
+              </div>
+
+              <div class="export-preview">
+                <canvas id="exportCanvas" width="1200" height="1200"></canvas>
+              </div>
+            </div>
+
+            <div class="step-actions">
+              <button class="secondary" data-prev-step="3">Zurück</button>
+            </div>
+          </section>
+        </section>
+      </main>
+    </div>
+
+    <template id="slotTemplate">
+      <button class="slot" type="button">
+        <span class="slot-index"></span>
+        <img alt="" />
+        <span class="slot-label">Leer</span>
+      </button>
+    </template>
+
+    <template id="previewCellTemplate">
+      <button class="preview-cell" type="button">
+        <span class="cell-index"></span>
+        <img alt="" />
+        <span class="empty-note">Bild fehlt</span>
+      </button>
+    </template>
+
+    <dialog id="settingsDialog" class="settings-dialog">
+      <form id="settingsForm" method="dialog" class="settings-panel">
+        <div class="dialog-head">
+          <h2 id="settingsTitle">Einstellungen</h2>
+          <button class="secondary icon-only" value="cancel" aria-label="Schließen" type="submit">✕</button>
+        </div>
+        <p id="settingsIntro" class="dialog-copy">Sprache, Version und Aktualisierung der App.</p>
+        <label class="field">
+          <span id="languageLabel">Sprache</span>
+          <select id="languageSelect">
+            <option value="auto">Automatisch</option>
+            <option value="de">Deutsch</option>
+            <option value="en">English</option>
+            <option value="fr">Français</option>
+          </select>
+        </label>
+        <div class="settings-stack">
+          <button id="checkForUpdatesButton" class="secondary" type="button">Auf Update prüfen</button>
+          <p id="updateCheckStatus" class="settings-status" hidden></p>
+          <button id="reloadAppButton" class="primary" type="button" hidden>Neu laden</button>
+        </div>
+        <div class="settings-footer">
+          <button class="secondary" value="cancel" type="submit">Schließen</button>
+        </div>
+      </form>
+    </dialog>
+
+    <script type="module" src="./app.js"></script>
+  </body>
+</html>
