@@ -1,5 +1,6 @@
-const CACHE_PREFIX = "fotocollage-cache-v1";
-const CACHE_NAME = CACHE_PREFIX;
+const CACHE_PREFIX = "fotocollage-cache";
+const CACHE_VERSION = "v5";
+const CACHE_NAME = `${CACHE_PREFIX}-${CACHE_VERSION}`;
 const ASSETS = [
   "./",
   "./index.html",
@@ -22,7 +23,7 @@ self.addEventListener("activate", (event) => {
     caches.keys().then((keys) =>
       Promise.all(
         keys
-          .filter((key) => key.startsWith(CACHE_PREFIX) && key !== CACHE_NAME)
+          .filter((key) => key.startsWith(`${CACHE_PREFIX}-`) && key !== CACHE_NAME)
           .map((key) => caches.delete(key))
       )
     )

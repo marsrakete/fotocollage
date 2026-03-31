@@ -71,9 +71,14 @@
                 <input id="colsInput" type="number" min="1" max="8" value="2" />
               </label>
               <label class="field">
-                <span>Abstand</span>
+                <span id="gapLabel">Abstand</span>
                 <input id="gapInput" type="range" min="0" max="40" value="12" />
                 <strong><span id="gapValue">12</span> px</strong>
+              </label>
+              <label class="field">
+                <span id="outerGapLabel">Randabstand</span>
+                <input id="outerGapInput" type="range" min="0" max="80" step="1" value="12" />
+                <strong><span id="outerGapValue">12</span> px</strong>
               </label>
               <label class="field">
                 <span>Hintergrund</span>
@@ -171,18 +176,9 @@
             <div class="export-layout">
               <div class="export-card">
                 <label class="field">
-                  <span id="filenameLabel">Dateiname</span>
-                  <input id="filenameInput" type="text" value="fotocollage.png" />
-                </label>
-                <label class="field">
                   <span id="exportWidthLabel">Exportbreite</span>
                   <input id="exportWidthInput" type="range" min="1200" max="6000" step="100" value="3000" />
                   <strong><span id="exportWidthValue">3000</span> px</strong>
-                </label>
-                <label class="field">
-                  <span id="exportGapLabel">Randabstand</span>
-                  <input id="exportGapInput" type="range" min="0" max="60" step="1" value="12" />
-                  <strong><span id="exportGapValue">12</span> px</strong>
                 </label>
                 <p class="helper" id="exportHelp">
                   Der Export skaliert das gewählte Raster samt Zwischenräumen

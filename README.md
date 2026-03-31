@@ -51,6 +51,53 @@ Optional anderer Port:
 .\start-server.ps1 -Port 5050
 ```
 
+## PWA installieren (Desktop + Mobil)
+
+Die Installation erfolgt ueber den Browser, nachdem die App mindestens einmal per HTTP geladen wurde.
+
+1. Lokalen Server starten:
+
+```powershell
+.\start-server.ps1
+```
+
+2. App im Browser oeffnen:
+
+`http://localhost:5000/`
+
+3. Installieren:
+- Edge/Chrome Desktop: Adressleiste -> App installieren
+- Android (Chrome/Edge): Menue -> App installieren / Zum Startbildschirm
+- iOS (Safari): Teilen -> Zum Home-Bildschirm
+
+### Warum mindestens einmal ein Server noetig ist
+
+Eine PWA basiert auf `manifest.json` und `service-worker.js`.  
+Service Worker werden von Browsern nur in einem sicheren Kontext akzeptiert:
+
+- `https://...` (normaler Betrieb)
+- oder `http://localhost` (lokale Entwicklung)
+
+Wenn du nur `index.html` direkt als Datei (`file://...`) oeffnest:
+- kein Service Worker
+- kein echtes Offline-Caching
+- keine vollstaendige PWA-Installation
+
+Deshalb muss die App mindestens einmal ueber einen lokalen Server gestartet werden.
+
+## Beispielfotos fuer Collagen
+
+Kostenfreie Beispielbilder (Lorem Picsum), die du direkt fuer Tests nutzen kannst:
+
+![Beispielfoto 1](https://picsum.photos/id/1015/1200/800)
+![Beispielfoto 2](https://picsum.photos/id/1025/1200/800)
+![Beispielfoto 3](https://picsum.photos/id/1035/1200/800)
+![Beispielfoto 4](https://picsum.photos/id/1043/1200/800)
+
+Tipps:
+- Fuer `2 x 1` (oben/unten) funktionieren Landschaftsbilder gut.
+- Fuer `1 x 2` (links/rechts) funktionieren Hochformate gut.
+
 ## Update- und Versionierungslogik
 
 - `version.json` enthaelt:

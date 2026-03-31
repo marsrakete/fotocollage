@@ -1,4 +1,6 @@
 const PRESETS = [
+  { label: "2 Felder (oben/unten)", rows: 2, cols: 1 },
+  { label: "2 Felder (links/rechts)", rows: 1, cols: 2 },
   { label: "2 x 2", rows: 2, cols: 2 },
   { label: "3 x 3", rows: 3, cols: 3 },
   { label: "2 x 3", rows: 2, cols: 3 },
@@ -8,8 +10,8 @@ const PRESETS = [
 ];
 
 const DEFAULT_VERSION_INFO = Object.freeze({
-  appVersion: "1.0.0",
-  cacheVersion: "v1",
+  appVersion: "1.0.4",
+  cacheVersion: "v5",
   label: "Aktueller Stand",
 });
 
@@ -37,9 +39,9 @@ const I18N = {
     dragHint: "Zum Verschieben ziehen",
     step4Title: "Schritt 4: PNG speichern",
     step4Desc: "Die Collage wird in hoher Aufl\u00f6sung gerendert und direkt als PNG-Datei heruntergeladen.",
-    filenameLabel: "Dateiname",
     exportWidthLabel: "Exportbreite",
-    exportGapLabel: "Randabstand",
+    gapLabel: "Abstand",
+    outerGapLabel: "Randabstand",
     exportHelp:
       "Der Export skaliert das gew\u00e4hlte Raster samt Zwischenr\u00e4umen und verwendet die aktuellen Ausschnitte.",
     settingsTitle: "Einstellungen",
@@ -97,9 +99,9 @@ const I18N = {
     dragHint: "Drag to move",
     step4Title: "Step 4: Save PNG",
     step4Desc: "The collage is rendered in high resolution and downloaded directly as a PNG file.",
-    filenameLabel: "File name",
     exportWidthLabel: "Export width",
-    exportGapLabel: "Outer gap",
+    gapLabel: "Spacing",
+    outerGapLabel: "Outer gap",
     exportHelp: "The export scales the chosen grid, including spacing, and uses the current crops.",
     settingsTitle: "Settings",
     settingsIntro: "Language, version and app updates.",
@@ -156,9 +158,9 @@ const I18N = {
     dragHint: "Glisser pour d\u00e9placer",
     step4Title: "\u00c9tape 4: Enregistrer en PNG",
     step4Desc: "Le collage est rendu en haute r\u00e9solution puis t\u00e9l\u00e9charg\u00e9 directement en PNG.",
-    filenameLabel: "Nom du fichier",
     exportWidthLabel: "Largeur d'export",
-    exportGapLabel: "Marge ext\u00e9rieure",
+    gapLabel: "Espacement",
+    outerGapLabel: "Marge ext\u00e9rieure",
     exportHelp:
       "L'export met \u00e0 l'\u00e9chelle la grille choisie, espaces compris, avec le cadrage actuel.",
     settingsTitle: "Param\u00e8tres",
@@ -203,6 +205,7 @@ const state = {
   rows: 2,
   cols: 2,
   gap: 12,
+  outerGap: 12,
   background: "#101828",
   activeStep: 1,
   cells: [],
@@ -212,7 +215,6 @@ const state = {
   pinch: null,
   touchPoints: new Map(),
   exportWidth: 3000,
-  filename: "fotocollage.png",
   languagePreference: "auto",
   language: "de",
   versionInfo: { ...DEFAULT_VERSION_INFO },
@@ -233,8 +235,12 @@ const els = {
   presetGrid: document.getElementById("presetGrid"),
   rowsInput: document.getElementById("rowsInput"),
   colsInput: document.getElementById("colsInput"),
+  gapLabel: document.getElementById("gapLabel"),
   gapInput: document.getElementById("gapInput"),
   gapValue: document.getElementById("gapValue"),
+  outerGapLabel: document.getElementById("outerGapLabel"),
+  outerGapInput: document.getElementById("outerGapInput"),
+  outerGapValue: document.getElementById("outerGapValue"),
   backgroundInput: document.getElementById("backgroundInput"),
   toStep2: document.getElementById("toStep2"),
   toStep3: document.getElementById("toStep3"),
@@ -256,11 +262,8 @@ const els = {
   zoomValue: document.getElementById("zoomValue"),
   zoomLabel: document.getElementById("zoomLabel"),
   resetZoom: document.getElementById("resetZoom"),
-  filenameInput: document.getElementById("filenameInput"),
   exportWidthInput: document.getElementById("exportWidthInput"),
   exportWidthValue: document.getElementById("exportWidthValue"),
-  exportGapInput: document.getElementById("exportGapInput"),
-  exportGapValue: document.getElementById("exportGapValue"),
   exportButton: document.getElementById("exportButton"),
   exportCanvas: document.getElementById("exportCanvas"),
   settingsDialog: document.getElementById("settingsDialog"),
@@ -284,9 +287,7 @@ const els = {
   dragHint: document.getElementById("dragHint"),
   step4Title: document.getElementById("step4Title"),
   step4Desc: document.getElementById("step4Desc"),
-  filenameLabel: document.getElementById("filenameLabel"),
   exportWidthLabel: document.getElementById("exportWidthLabel"),
-  exportGapLabel: document.getElementById("exportGapLabel"),
   exportHelp: document.getElementById("exportHelp"),
   stepChip1: document.getElementById("stepChip1"),
   stepChip2: document.getElementById("stepChip2"),
@@ -404,9 +405,9 @@ function translateStaticUi() {
   setText(els.dragHint, "dragHint");
   setText(els.step4Title, "step4Title");
   setText(els.step4Desc, "step4Desc");
-  setText(els.filenameLabel, "filenameLabel");
+  setText(els.gapLabel, "gapLabel");
+  setText(els.outerGapLabel, "outerGapLabel");
   setText(els.exportWidthLabel, "exportWidthLabel");
-  setText(els.exportGapLabel, "exportGapLabel");
   setText(els.exportHelp, "exportHelp");
   setText(els.settingsTitle, "settingsTitle");
   setText(els.settingsIntro, "settingsIntro");
@@ -484,12 +485,13 @@ function applyGrid() {
   state.rows = clamp(Number(els.rowsInput.value) || 1, 1, 8);
   state.cols = clamp(Number(els.colsInput.value) || 1, 1, 8);
   state.gap = clamp(Number(els.gapInput.value) || 0, 0, 60);
+  state.outerGap = clamp(Number(els.outerGapInput.value) || 0, 0, 80);
   state.background = els.backgroundInput.value;
   els.rowsInput.value = state.rows;
   els.colsInput.value = state.cols;
   els.gapValue.textContent = state.gap;
-  els.exportGapInput.value = state.gap;
-  els.exportGapValue.textContent = state.gap;
+  els.outerGapInput.value = state.outerGap;
+  els.outerGapValue.textContent = state.outerGap;
   document.documentElement.style.setProperty("--gap", `${state.gap}px`);
   resizeCells(state.rows * state.cols);
   renderAll();
@@ -620,6 +622,7 @@ function renderPreview() {
   els.collagePreview.style.gridTemplateColumns = `repeat(${state.cols}, minmax(0, 1fr))`;
   els.collagePreview.style.gridTemplateRows = `repeat(${state.rows}, minmax(0, 1fr))`;
   els.collagePreview.style.setProperty("--grid-gap", `${state.gap}px`);
+  els.collagePreview.style.setProperty("--outer-gap", `${state.outerGap}px`);
   els.collagePreview.innerHTML = "";
   const template = document.getElementById("previewCellTemplate");
   state.cells.forEach((cell, index) => {
@@ -632,12 +635,11 @@ function renderPreview() {
       node.classList.remove("empty");
       img.src = cell.objectUrl;
       img.alt = cell.fileName;
-      img.style.objectPosition = `${(cell.focusX + 1) * 50}% ${(cell.focusY + 1) * 50}%`;
-      img.style.transform = `scale(${cell.zoom || 1})`;
       if (emptyNote) emptyNote.hidden = true;
     } else {
       node.classList.add("empty");
       img.removeAttribute("src");
+      resetImagePlacement(img);
       if (emptyNote) {
         emptyNote.hidden = false;
         emptyNote.textContent = t("emptySlot");
@@ -650,6 +652,9 @@ function renderPreview() {
       renderPreview();
     });
     els.collagePreview.appendChild(node);
+    if (cell.bitmap) {
+      applyImagePlacement(img, node, cell);
+    }
   });
 }
 
@@ -662,14 +667,13 @@ function syncEditor() {
   if (cell.bitmap) {
     els.editorImage.src = cell.objectUrl;
     els.editorImage.alt = cell.fileName;
-    els.editorImage.style.objectPosition = `${(cell.focusX + 1) * 50}% ${(cell.focusY + 1) * 50}%`;
-    els.editorImage.style.transform = `scale(${cell.zoom || 1})`;
+    applyImagePlacement(els.editorImage, els.editorFrame, cell);
     els.zoomInput.value = String(cell.zoom || 1);
     els.zoomValue.textContent = String(Math.round((cell.zoom || 1) * 100));
   } else {
     els.editorImage.removeAttribute("src");
     els.editorImage.alt = "";
-    els.editorImage.style.transform = "scale(1)";
+    resetImagePlacement(els.editorImage);
     els.zoomInput.value = "1";
     els.zoomValue.textContent = "100";
   }
@@ -680,8 +684,6 @@ function renderExportPreview() {
   state.exportWidth = targetWidth;
   els.exportWidthInput.value = String(targetWidth);
   els.exportWidthValue.textContent = String(targetWidth);
-  els.exportGapInput.value = String(state.gap);
-  els.exportGapValue.textContent = String(state.gap);
   const canvas = els.exportCanvas;
   const ctx = canvas.getContext("2d");
   const height = Math.round(targetWidth * (state.rows / state.cols));
@@ -695,18 +697,36 @@ function hasCompleteGrid() {
 }
 
 function drawCollage(ctx, width, height) {
+  function buildAxis(totalSize, count, innerGap, outerGap) {
+    const usable = Math.max(count, totalSize - outerGap * 2 - innerGap * (count - 1));
+    const base = Math.floor(usable / count);
+    let remainder = usable - base * count;
+    const axis = [];
+    let cursor = outerGap;
+    for (let i = 0; i < count; i += 1) {
+      const size = base + (remainder > 0 ? 1 : 0);
+      if (remainder > 0) remainder -= 1;
+      axis.push({ start: cursor, size });
+      cursor += size + innerGap;
+    }
+    return axis;
+  }
+
   ctx.save();
   ctx.fillStyle = state.background;
   ctx.fillRect(0, 0, width, height);
-  const gap = state.gap;
-  const cellWidth = (width - gap * (state.cols + 1)) / state.cols;
-  const cellHeight = (height - gap * (state.rows + 1)) / state.rows;
+  const innerGap = state.gap;
+  const outerGap = state.outerGap;
+  const colAxis = buildAxis(width, state.cols, innerGap, outerGap);
+  const rowAxis = buildAxis(height, state.rows, innerGap, outerGap);
   for (let i = 0; i < state.cells.length; i += 1) {
     const cell = state.cells[i];
     const col = i % state.cols;
     const row = Math.floor(i / state.cols);
-    const x = gap + col * (cellWidth + gap);
-    const y = gap + row * (cellHeight + gap);
+    const x = colAxis[col].start;
+    const y = rowAxis[row].start;
+    const cellWidth = colAxis[col].size;
+    const cellHeight = rowAxis[row].size;
     ctx.fillStyle = "rgba(255,255,255,0.04)";
     ctx.fillRect(x, y, cellWidth, cellHeight);
     if (cell?.bitmap) {
@@ -714,19 +734,40 @@ function drawCollage(ctx, width, height) {
       const zoom = clamp(cell.zoom || 1, 1, 4);
       const drawWidth = cell.width * scale * zoom;
       const drawHeight = cell.height * scale * zoom;
-      const offsetX = ((cell.focusX + 1) / 2) * (drawWidth - cellWidth);
-      const offsetY = ((cell.focusY + 1) / 2) * (drawHeight - cellHeight);
+      const maxOffsetX = Math.max(0, drawWidth - cellWidth);
+      const maxOffsetY = Math.max(0, drawHeight - cellHeight);
+      const focusX = clamp((cell.focusX + 1) / 2, 0, 1);
+      const focusY = clamp((cell.focusY + 1) / 2, 0, 1);
+      const offsetX = focusX * maxOffsetX;
+      const offsetY = focusY * maxOffsetY;
+
+      ctx.save();
+      ctx.beginPath();
+      ctx.rect(x, y, cellWidth, cellHeight);
+      ctx.clip();
       ctx.drawImage(cell.bitmap, x - offsetX, y - offsetY, drawWidth, drawHeight);
-      } else {
-        ctx.fillStyle = "rgba(245,247,251,0.72)";
-        ctx.font = `${Math.max(18, Math.min(cellWidth, cellHeight) * 0.09)}px Segoe UI, sans-serif`;
-        ctx.textBaseline = "top";
-        ctx.fillText(`${t("field")} ${i + 1}`, x + 14, y + 34);
-      }
-    ctx.strokeStyle = "rgba(255,255,255,0.08)";
-    ctx.lineWidth = 1;
+      ctx.restore();
+    } else {
+      ctx.fillStyle = "rgba(245,247,251,0.72)";
+      ctx.font = `${Math.max(18, Math.min(cellWidth, cellHeight) * 0.09)}px Segoe UI, sans-serif`;
+      ctx.textBaseline = "top";
+      ctx.fillText(`${t("field")} ${i + 1}`, x + 14, y + 34);
+    }
+  }
+
+  ctx.save();
+  ctx.strokeStyle = "rgba(255,255,255,0.18)";
+  ctx.lineWidth = 1;
+  for (let i = 0; i < state.cells.length; i += 1) {
+    const col = i % state.cols;
+    const row = Math.floor(i / state.cols);
+    const x = colAxis[col].start + 0.5;
+    const y = rowAxis[row].start + 0.5;
+    const cellWidth = Math.max(1, colAxis[col].size - 1);
+    const cellHeight = Math.max(1, rowAxis[row].size - 1);
     ctx.strokeRect(x, y, cellWidth, cellHeight);
   }
+  ctx.restore();
   ctx.restore();
 }
 
@@ -769,15 +810,65 @@ async function loadFiles(fileList) {
   if (hasCompleteGrid()) setStep(Math.max(state.activeStep, 3));
 }
 
+function getImageRenderMetrics(cell, frameWidth, frameHeight) {
+  const scale = Math.max(frameWidth / cell.width, frameHeight / cell.height);
+  const zoom = clamp(cell.zoom || 1, 1, 4);
+  const coverWidth = cell.width * scale * zoom;
+  const coverHeight = cell.height * scale * zoom;
+  const extraX = Math.max(0, coverWidth - frameWidth);
+  const extraY = Math.max(0, coverHeight - frameHeight);
+  const focusX = clamp((cell.focusX + 1) / 2, 0, 1);
+  const focusY = clamp((cell.focusY + 1) / 2, 0, 1);
+  return {
+    coverWidth,
+    coverHeight,
+    extraX,
+    extraY,
+    offsetX: focusX * extraX,
+    offsetY: focusY * extraY,
+  };
+}
+
+function applyImagePlacement(img, frame, cell) {
+  const rect = frame.getBoundingClientRect();
+  if (rect.width <= 0 || rect.height <= 0) {
+    resetImagePlacement(img);
+    return;
+  }
+  const metrics = getImageRenderMetrics(cell, rect.width, rect.height);
+  img.style.inset = "auto";
+  img.style.right = "auto";
+  img.style.bottom = "auto";
+  img.style.width = `${metrics.coverWidth}px`;
+  img.style.height = `${metrics.coverHeight}px`;
+  img.style.left = `${-metrics.offsetX}px`;
+  img.style.top = `${-metrics.offsetY}px`;
+  img.style.objectFit = "fill";
+  img.style.objectPosition = "50% 50%";
+  img.style.transform = "none";
+}
+
+function resetImagePlacement(img) {
+  img.style.inset = "0";
+  img.style.right = "";
+  img.style.bottom = "";
+  img.style.left = "";
+  img.style.top = "";
+  img.style.width = "100%";
+  img.style.height = "100%";
+  img.style.objectFit = "cover";
+  img.style.objectPosition = "50% 50%";
+  img.style.transform = "none";
+}
+
 function getFrameMetrics(frame, cell) {
   const rect = frame.getBoundingClientRect();
-  const scale = Math.max(rect.width / cell.width, rect.height / cell.height);
-  const zoom = clamp(cell.zoom || 1, 1, 4);
+  const metrics = getImageRenderMetrics(cell, rect.width, rect.height);
   return {
     frameWidth: rect.width,
     frameHeight: rect.height,
-    coverWidth: cell.width * scale * zoom,
-    coverHeight: cell.height * scale * zoom,
+    coverWidth: metrics.coverWidth,
+    coverHeight: metrics.coverHeight,
   };
 }
 
@@ -898,9 +989,15 @@ function stopDrag() {
   state.dragging = null;
 }
 
-function normalizeFilename(value) {
-  const trimmed = value.trim() || "fotocollage.png";
-  return trimmed.toLowerCase().endsWith(".png") ? trimmed : `${trimmed}.png`;
+function buildTimestampFilename(now = new Date()) {
+  const pad2 = (value) => String(value).padStart(2, "0");
+  const y = String(now.getFullYear());
+  const m = pad2(now.getMonth() + 1);
+  const d = pad2(now.getDate());
+  const hh = pad2(now.getHours());
+  const mm = pad2(now.getMinutes());
+  const ss = pad2(now.getSeconds());
+  return `fotocollage_${y}${m}${d}_${hh}${mm}${ss}.png`;
 }
 
 function exportPng() {
@@ -912,7 +1009,7 @@ function exportPng() {
   const ctx = canvas.getContext("2d");
   drawCollage(ctx, width, height);
   const link = document.createElement("a");
-  link.download = normalizeFilename(els.filenameInput.value);
+  link.download = buildTimestampFilename(new Date());
   link.href = canvas.toDataURL("image/png");
   link.click();
 }
@@ -1012,8 +1109,7 @@ function wireControls() {
   els.gapInput.addEventListener("input", () => {
     applyGrid();
   });
-  els.exportGapInput.addEventListener("input", () => {
-    els.gapInput.value = els.exportGapInput.value;
+  els.outerGapInput.addEventListener("input", () => {
     applyGrid();
   });
   els.backgroundInput.addEventListener("input", () => {
@@ -1066,9 +1162,6 @@ function wireControls() {
     els.replaceInput.value = "";
   });
   els.exportWidthInput.addEventListener("input", renderExportPreview);
-  els.filenameInput.addEventListener("change", () => {
-    els.filenameInput.value = normalizeFilename(els.filenameInput.value);
-  });
   els.exportButton.addEventListener("click", exportPng);
   els.settingsButton.addEventListener("click", () => {
     setUpdateStatus("", false);
@@ -1124,13 +1217,11 @@ function init() {
   });
   registerServiceWorker();
   applyGrid();
-  state.filename = normalizeFilename(els.filenameInput.value);
-  els.filenameInput.value = state.filename;
   renderAllWithoutExport();
   els.exportWidthInput.value = String(state.exportWidth);
   els.exportWidthValue.textContent = String(state.exportWidth);
-  els.exportGapInput.value = String(state.gap);
-  els.exportGapValue.textContent = String(state.gap);
+  els.outerGapInput.value = String(state.outerGap);
+  els.outerGapValue.textContent = String(state.outerGap);
   renderVersionLabel();
 }
 

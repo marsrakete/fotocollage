@@ -1,5 +1,5 @@
 {
-  "appVersion": "1.0.0",
-  "cacheVersion": "v1",
-  "label": "Aktueller Stand"
+  "appVersion": "1.0.4",
+  "cacheVersion": "v5",
+  "label": "Automatischer Export-Dateiname mit Zeitstempel"
 }
