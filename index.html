@@ -26,7 +26,6 @@
             In wenigen Schritten zur fertigen Collage: Vorlage wählen, Fotos
             hochladen, Ausschnitte feinjustieren und als PNG speichern.
           </p>
-          <p id="versionLabel" class="version-label"></p>
         </div>
         <div class="hero-card">
           <div class="hero-stat">
@@ -85,6 +84,7 @@
                 <input id="backgroundInput" type="color" value="#101828" />
               </label>
             </div>
+            <button class="secondary" id="resetSettingsButton" type="button">Einstellungen zurücksetzen</button>
 
             <div class="step-actions">
               <button class="primary" id="toStep2">Weiter zu den Fotos</button>
@@ -184,7 +184,10 @@
                   Der Export skaliert das gewählte Raster samt Zwischenräumen
                   und verwendet die aktuellen Ausschnitte.
                 </p>
-                <button class="primary" id="exportButton">Als PNG speichern</button>
+                <div class="export-actions">
+                  <button class="primary" id="shareButton">Teilen</button>
+                  <button class="secondary" id="downloadButton" hidden>Als PNG speichern</button>
+                </div>
               </div>
 
               <div class="export-preview">
@@ -232,11 +235,15 @@
             <option value="fr">Français</option>
           </select>
         </label>
-        <div class="settings-stack">
-          <button id="checkForUpdatesButton" class="secondary" type="button">Auf Update prüfen</button>
-          <p id="updateCheckStatus" class="settings-status" hidden></p>
-          <button id="reloadAppButton" class="primary" type="button" hidden>Neu laden</button>
-        </div>
+        <section class="updates-block">
+          <h3 id="updatesTitle">Updates</h3>
+          <p id="versionLabel" class="version-label"></p>
+          <div class="settings-stack">
+            <button id="checkForUpdatesButton" class="secondary" type="button">Auf Update prüfen</button>
+            <p id="updateCheckStatus" class="settings-status" hidden></p>
+            <button id="reloadAppButton" class="primary" type="button" hidden>Neu laden</button>
+          </div>
+        </section>
         <div class="settings-footer">
           <button class="secondary" value="cancel" type="submit">Schließen</button>
         </div>

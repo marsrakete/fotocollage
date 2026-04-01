@@ -10,19 +10,20 @@ const PRESETS = [
 ];
 
 const DEFAULT_VERSION_INFO = Object.freeze({
-  appVersion: "1.0.4",
-  cacheVersion: "v5",
+  appVersion: "1.0.9",
+  cacheVersion: "v10",
   label: "Aktueller Stand",
 });
 
 const STORAGE_KEYS = {
   language: "fotocollage-language",
+  layout: "fotocollage-layout",
 };
 
 const I18N = {
   de: {
     appTitle: "Foto-Collage",
-    heroEyebrow: "Progressive Web App",
+    heroEyebrow: "Marsrakete",
     heroLede:
       "In wenigen Schritten zur fertigen Collage: Vorlage w\u00e4hlen, Fotos hochladen, Ausschnitte feinjustieren und als PNG speichern.",
     settingsAria: "Einstellungen \u00f6ffnen",
@@ -33,19 +34,22 @@ const I18N = {
     step2Desc: "Lade genau so viele Fotos hoch, wie das Raster ben\u00f6tigt. Fehlende Pl\u00e4tze bleiben markiert.",
     uploadTitle: "Fotos ziehen oder ausw\u00e4hlen",
     uploadDesc: "Alle Bilder werden der Reihe nach in die freien Felder gesetzt.",
+    uploadTitleMobile: "Fotos ausw\u00e4hlen",
+    uploadDescMobile: "Tippe auf das Feld oben und w\u00e4hle Bilder von deinem Ger\u00e4t aus.",
     step3Title: "Schritt 3: Feinschliff",
     step3Desc: "Ziehe ein Bild in der Vorschau, um den Ausschnitt im Kasten zu verschieben.",
     activeCellTitle: "Aktives Feld",
     dragHint: "Zum Verschieben ziehen",
     step4Title: "Schritt 4: PNG speichern",
-    step4Desc: "Die Collage wird in hoher Aufl\u00f6sung gerendert und direkt als PNG-Datei heruntergeladen.",
+    step4Desc: "Die Collage wird in hoher Aufl\u00f6sung gerendert und kann geteilt oder als PNG gespeichert werden.",
     exportWidthLabel: "Exportbreite",
     gapLabel: "Abstand",
     outerGapLabel: "Randabstand",
     exportHelp:
       "Der Export skaliert das gew\u00e4hlte Raster samt Zwischenr\u00e4umen und verwendet die aktuellen Ausschnitte.",
     settingsTitle: "Einstellungen",
-    settingsIntro: "Sprache, Version und Aktualisierung der App.",
+    settingsIntro: "Sprache und Aktualisierung der App.",
+    updatesTitle: "Updates",
     languageLabel: "Sprache",
     autoLanguage: "Automatisch",
     checkForUpdates: "Auf Update pr\u00fcfen",
@@ -54,7 +58,10 @@ const I18N = {
     toPhotos: "Weiter zu den Fotos",
     toFineTune: "Weiter zum Feinschliff",
     toExport: "Weiter zum Export",
+    share: "Teilen",
     savePng: "Als PNG speichern",
+    resetSettings: "Einstellungen zur\u00fccksetzen",
+    resetSettingsConfirm: "M\u00f6chtest du die Layout-Einstellungen wirklich zur\u00fccksetzen?",
     prevCell: "Vorheriges Feld",
     nextCell: "N\u00e4chstes Feld",
     replaceCell: "Bild ersetzen",
@@ -82,7 +89,7 @@ const I18N = {
   },
   en: {
     appTitle: "Photo Collage",
-    heroEyebrow: "Progressive Web App",
+    heroEyebrow: "Marsrakete",
     heroLede:
       "Create a finished collage in a few steps: choose a template, upload photos, fine-tune the crop, and save as PNG.",
     settingsAria: "Open settings",
@@ -93,18 +100,21 @@ const I18N = {
     step2Desc: "Upload exactly as many photos as the grid needs. Empty slots stay highlighted.",
     uploadTitle: "Drag photos or choose files",
     uploadDesc: "All images are placed into the free slots in order.",
+    uploadTitleMobile: "Choose photos",
+    uploadDescMobile: "Tap the field above and pick images from your device.",
     step3Title: "Step 3: Fine-tune",
     step3Desc: "Drag an image in the preview to shift the crop inside the frame.",
     activeCellTitle: "Active slot",
     dragHint: "Drag to move",
     step4Title: "Step 4: Save PNG",
-    step4Desc: "The collage is rendered in high resolution and downloaded directly as a PNG file.",
+    step4Desc: "The collage is rendered in high resolution and can be shared or saved as a PNG file.",
     exportWidthLabel: "Export width",
     gapLabel: "Spacing",
     outerGapLabel: "Outer gap",
     exportHelp: "The export scales the chosen grid, including spacing, and uses the current crops.",
     settingsTitle: "Settings",
-    settingsIntro: "Language, version and app updates.",
+    settingsIntro: "Language and app updates.",
+    updatesTitle: "Updates",
     languageLabel: "Language",
     autoLanguage: "Auto",
     checkForUpdates: "Check for updates",
@@ -113,7 +123,10 @@ const I18N = {
     toPhotos: "Continue to photos",
     toFineTune: "Continue to fine-tuning",
     toExport: "Continue to export",
+    share: "Share",
     savePng: "Save as PNG",
+    resetSettings: "Reset settings",
+    resetSettingsConfirm: "Do you really want to reset the layout settings?",
     prevCell: "Previous slot",
     nextCell: "Next slot",
     replaceCell: "Replace image",
@@ -141,7 +154,7 @@ const I18N = {
   },
   fr: {
     appTitle: "Collage photo",
-    heroEyebrow: "Progressive Web App",
+    heroEyebrow: "Marsrakete",
     heroLede:
       "Cr\u00e9ez un collage en quelques \u00e9tapes: choisissez un mod\u00e8le, envoyez vos photos, ajustez le cadrage et enregistrez en PNG.",
     settingsAria: "Ouvrir les param\u00e8tres",
@@ -152,19 +165,22 @@ const I18N = {
     step2Desc: "Envoyez exactement autant de photos que la grille en demande. Les emplacements vides restent visibles.",
     uploadTitle: "Glissez des photos ou choisissez des fichiers",
     uploadDesc: "Toutes les images sont plac\u00e9es dans les emplacements libres, dans l'ordre.",
+    uploadTitleMobile: "Choisir des photos",
+    uploadDescMobile: "Touchez le champ ci-dessus et choisissez des images depuis votre appareil.",
     step3Title: "\u00c9tape 3: Fignolage",
     step3Desc: "Faites glisser une image dans l'aper\u00e7u pour d\u00e9placer le cadrage dans le cadre.",
     activeCellTitle: "Emplacement actif",
     dragHint: "Glisser pour d\u00e9placer",
     step4Title: "\u00c9tape 4: Enregistrer en PNG",
-    step4Desc: "Le collage est rendu en haute r\u00e9solution puis t\u00e9l\u00e9charg\u00e9 directement en PNG.",
+    step4Desc: "Le collage est rendu en haute r\u00e9solution et peut \u00eatre partag\u00e9 ou enregistr\u00e9 en PNG.",
     exportWidthLabel: "Largeur d'export",
     gapLabel: "Espacement",
     outerGapLabel: "Marge ext\u00e9rieure",
     exportHelp:
       "L'export met \u00e0 l'\u00e9chelle la grille choisie, espaces compris, avec le cadrage actuel.",
     settingsTitle: "Param\u00e8tres",
-    settingsIntro: "Langue, version et mises \u00e0 jour de l'application.",
+    settingsIntro: "Langue et mises \u00e0 jour de l'application.",
+    updatesTitle: "Mises \u00e0 jour",
     languageLabel: "Langue",
     autoLanguage: "Auto",
     checkForUpdates: "V\u00e9rifier les mises \u00e0 jour",
@@ -173,7 +189,10 @@ const I18N = {
     toPhotos: "Continuer vers les photos",
     toFineTune: "Continuer vers le fignolage",
     toExport: "Continuer vers l'export",
+    share: "Partager",
     savePng: "Enregistrer en PNG",
+    resetSettings: "R\u00e9initialiser les param\u00e8tres",
+    resetSettingsConfirm: "Voulez-vous vraiment r\u00e9initialiser les param\u00e8tres de mise en page ?",
     prevCell: "Emplacement pr\u00e9c\u00e9dent",
     nextCell: "Emplacement suivant",
     replaceCell: "Remplacer l'image",
@@ -242,6 +261,7 @@ const els = {
   outerGapInput: document.getElementById("outerGapInput"),
   outerGapValue: document.getElementById("outerGapValue"),
   backgroundInput: document.getElementById("backgroundInput"),
+  resetSettingsButton: document.getElementById("resetSettingsButton"),
   toStep2: document.getElementById("toStep2"),
   toStep3: document.getElementById("toStep3"),
   toStep4: document.getElementById("toStep4"),
@@ -264,12 +284,14 @@ const els = {
   resetZoom: document.getElementById("resetZoom"),
   exportWidthInput: document.getElementById("exportWidthInput"),
   exportWidthValue: document.getElementById("exportWidthValue"),
-  exportButton: document.getElementById("exportButton"),
+  shareButton: document.getElementById("shareButton"),
+  downloadButton: document.getElementById("downloadButton"),
   exportCanvas: document.getElementById("exportCanvas"),
   settingsDialog: document.getElementById("settingsDialog"),
   settingsForm: document.getElementById("settingsForm"),
   settingsTitle: document.getElementById("settingsTitle"),
   settingsIntro: document.getElementById("settingsIntro"),
+  updatesTitle: document.getElementById("updatesTitle"),
   languageLabel: document.getElementById("languageLabel"),
   languageSelect: document.getElementById("languageSelect"),
   checkForUpdatesButton: document.getElementById("checkForUpdatesButton"),
@@ -342,6 +364,61 @@ function safeStorageSet(key, value) {
   }
 }
 
+function isTouchLikeDevice() {
+  const coarse = typeof window !== "undefined" && typeof window.matchMedia === "function"
+    ? window.matchMedia("(pointer: coarse)").matches
+    : false;
+  return coarse || (typeof navigator !== "undefined" && navigator.maxTouchPoints > 0);
+}
+
+function updateUploadUiForDevice() {
+  const touchLike = isTouchLikeDevice();
+  document.body.classList.toggle("touch-upload-mode", touchLike);
+  if (touchLike) {
+    els.uploadTitle.textContent = t("uploadTitleMobile");
+    els.uploadDesc.textContent = t("uploadDescMobile");
+    return;
+  }
+  setText(els.uploadTitle, "uploadTitle");
+  setText(els.uploadDesc, "uploadDesc");
+}
+
+function safeStorageRemove(key) {
+  try {
+    localStorage.removeItem(key);
+  } catch {
+    // Ignore storage errors.
+  }
+}
+
+function getDefaultLayoutSettings() {
+  return {
+    rows: 2,
+    cols: 2,
+    gap: 12,
+    outerGap: 12,
+    background: "#101828",
+    presetKey: "2x2",
+  };
+}
+
+function normalizeLayoutSettings(raw) {
+  const defaults = getDefaultLayoutSettings();
+  const rows = clamp(Number(raw?.rows) || defaults.rows, 1, 8);
+  const cols = clamp(Number(raw?.cols) || defaults.cols, 1, 8);
+  const gap = clamp(Number(raw?.gap) || defaults.gap, 0, 60);
+  const outerGap = clamp(Number(raw?.outerGap) || defaults.outerGap, 0, 80);
+  const background = /^#[0-9a-f]{6}$/i.test(String(raw?.background || ""))
+    ? String(raw.background)
+    : defaults.background;
+  const presetKey = typeof raw?.presetKey === "string" ? raw.presetKey : `${rows}x${cols}`;
+  return { rows, cols, gap, outerGap, background, presetKey };
+}
+
+function saveLayoutSettings(layout) {
+  safeStorageSet(STORAGE_KEYS.layout, JSON.stringify(layout));
+}
+
 function normalizeVersionInfo(raw) {
   return {
     appVersion: raw?.appVersion ? String(raw.appVersion) : DEFAULT_VERSION_INFO.appVersion,
@@ -397,8 +474,7 @@ function translateStaticUi() {
   setText(els.step1Desc, "step1Desc");
   setText(els.step2Title, "step2Title");
   setText(els.step2Desc, "step2Desc");
-  setText(els.uploadTitle, "uploadTitle");
-  setText(els.uploadDesc, "uploadDesc");
+  updateUploadUiForDevice();
   setText(els.step3Title, "step3Title");
   setText(els.step3Desc, "step3Desc");
   setText(els.activeCellTitle, "activeCellTitle");
@@ -411,13 +487,16 @@ function translateStaticUi() {
   setText(els.exportHelp, "exportHelp");
   setText(els.settingsTitle, "settingsTitle");
   setText(els.settingsIntro, "settingsIntro");
+  setText(els.updatesTitle, "updatesTitle");
   setText(els.languageLabel, "languageLabel");
   setText(els.checkForUpdatesButton, "checkForUpdates");
   setText(els.reloadAppButton, "reload");
   setText(els.toStep2, "toPhotos");
   setText(els.toStep3, "toFineTune");
   setText(els.toStep4, "toExport");
-  setText(els.exportButton, "savePng");
+  setText(els.shareButton, "share");
+  setText(els.downloadButton, "savePng");
+  setText(els.resetSettingsButton, "resetSettings");
   setText(els.prevCell, "prevCell");
   setText(els.nextCell, "nextCell");
   setText(els.replaceCell, "replaceCell");
@@ -481,7 +560,8 @@ function setStep(step) {
   syncEditor();
 }
 
-function applyGrid() {
+function applyGrid(options = {}) {
+  const { persist = true } = options;
   state.rows = clamp(Number(els.rowsInput.value) || 1, 1, 8);
   state.cols = clamp(Number(els.colsInput.value) || 1, 1, 8);
   state.gap = clamp(Number(els.gapInput.value) || 0, 0, 60);
@@ -489,10 +569,23 @@ function applyGrid() {
   state.background = els.backgroundInput.value;
   els.rowsInput.value = state.rows;
   els.colsInput.value = state.cols;
+  els.backgroundInput.value = state.background;
   els.gapValue.textContent = state.gap;
   els.outerGapInput.value = state.outerGap;
   els.outerGapValue.textContent = state.outerGap;
   document.documentElement.style.setProperty("--gap", `${state.gap}px`);
+  const matchingPreset = PRESETS.find((preset) => preset.rows === state.rows && preset.cols === state.cols);
+  const presetKey = matchingPreset ? `${matchingPreset.rows}x${matchingPreset.cols}` : `${state.rows}x${state.cols}`;
+  if (persist) {
+    saveLayoutSettings({
+      rows: state.rows,
+      cols: state.cols,
+      gap: state.gap,
+      outerGap: state.outerGap,
+      background: state.background,
+      presetKey,
+    });
+  }
   resizeCells(state.rows * state.cols);
   renderAll();
 }
@@ -1000,7 +1093,53 @@ function buildTimestampFilename(now = new Date()) {
   return `fotocollage_${y}${m}${d}_${hh}${mm}${ss}.png`;
 }
 
-function exportPng() {
+function downloadBlob(blob, filename) {
+  const objectUrl = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.download = filename;
+  link.href = objectUrl;
+  link.click();
+  setTimeout(() => URL.revokeObjectURL(objectUrl), 0);
+}
+
+function canShareFiles(file) {
+  if (typeof navigator === "undefined" || typeof navigator.share !== "function") {
+    return false;
+  }
+  if (typeof navigator.canShare !== "function") {
+    return true;
+  }
+  try {
+    return navigator.canShare({ files: [file] });
+  } catch {
+    return false;
+  }
+}
+
+function updateExportActionButtons() {
+  let canShare = false;
+  try {
+    const probe = new File([new Blob(["probe"], { type: "text/plain" })], "probe.txt", { type: "text/plain" });
+    canShare = canShareFiles(probe);
+  } catch {
+    canShare = typeof navigator !== "undefined" && typeof navigator.share === "function";
+  }
+  els.downloadButton.hidden = canShare;
+}
+
+function canvasToBlob(canvas) {
+  return new Promise((resolve, reject) => {
+    canvas.toBlob((blob) => {
+      if (blob) {
+        resolve(blob);
+        return;
+      }
+      reject(new Error("Canvas export failed"));
+    }, "image/png");
+  });
+}
+
+async function renderExportBlob() {
   const canvas = document.createElement("canvas");
   const width = clamp(Number(els.exportWidthInput.value) || 3000, 1200, 6000);
   const height = Math.round(width * (state.rows / state.cols));
@@ -1008,10 +1147,56 @@ function exportPng() {
   canvas.height = height;
   const ctx = canvas.getContext("2d");
   drawCollage(ctx, width, height);
-  const link = document.createElement("a");
-  link.download = buildTimestampFilename(new Date());
-  link.href = canvas.toDataURL("image/png");
-  link.click();
+  const filename = buildTimestampFilename(new Date());
+  const blob = await canvasToBlob(canvas);
+  return { blob, canvas, filename };
+}
+
+async function exportByDownload() {
+  try {
+    const { blob, canvas, filename } = await renderExportBlob();
+    if (blob) {
+      downloadBlob(blob, filename);
+      return;
+    }
+    const link = document.createElement("a");
+    link.download = filename;
+    link.href = canvas.toDataURL("image/png");
+    link.click();
+  } catch {
+    // ignore
+  }
+}
+
+async function exportByShare() {
+  try {
+    const { blob, canvas, filename } = await renderExportBlob();
+    const file = new File([blob], filename, { type: "image/png" });
+    if (canShareFiles(file)) {
+      try {
+        await navigator.share({
+          files: [file],
+          title: t("appTitle"),
+          text: t("appTitle"),
+        });
+        return;
+      } catch (error) {
+        if (error?.name === "AbortError") {
+          return;
+        }
+      }
+    }
+    if (!els.downloadButton.hidden) {
+      await exportByDownload();
+    } else {
+      const link = document.createElement("a");
+      link.download = filename;
+      link.href = canvas.toDataURL("image/png");
+      link.click();
+    }
+  } catch {
+    await exportByDownload();
+  }
 }
 
 function setUpdateStatus(message, showReload = false) {
@@ -1115,6 +1300,19 @@ function wireControls() {
   els.backgroundInput.addEventListener("input", () => {
     applyGrid();
   });
+  els.resetSettingsButton.addEventListener("click", () => {
+    if (!window.confirm(t("resetSettingsConfirm"))) {
+      return;
+    }
+    const defaults = getDefaultLayoutSettings();
+    safeStorageRemove(STORAGE_KEYS.layout);
+    els.rowsInput.value = String(defaults.rows);
+    els.colsInput.value = String(defaults.cols);
+    els.gapInput.value = String(defaults.gap);
+    els.outerGapInput.value = String(defaults.outerGap);
+    els.backgroundInput.value = defaults.background;
+    applyGrid();
+  });
   els.toStep2.addEventListener("click", () => setStep(2));
   els.toStep3.addEventListener("click", () => setStep(3));
   els.toStep4.addEventListener("click", () => setStep(4));
@@ -1162,7 +1360,12 @@ function wireControls() {
     els.replaceInput.value = "";
   });
   els.exportWidthInput.addEventListener("input", renderExportPreview);
-  els.exportButton.addEventListener("click", exportPng);
+  els.shareButton.addEventListener("click", () => {
+    void exportByShare();
+  });
+  els.downloadButton.addEventListener("click", () => {
+    void exportByDownload();
+  });
   els.settingsButton.addEventListener("click", () => {
     setUpdateStatus("", false);
     els.settingsDialog.showModal();
@@ -1180,6 +1383,7 @@ function wireControls() {
     els.settingsDialog.close();
   });
   window.addEventListener("resize", () => {
+    updateUploadUiForDevice();
     if (state.activeStep >= 3) {
       renderPreview();
       renderExportPreview();
@@ -1205,8 +1409,33 @@ function loadInitialPreferences() {
   document.documentElement.lang = state.language;
 }
 
+function loadInitialLayoutSettings() {
+  const defaults = getDefaultLayoutSettings();
+  let layout = defaults;
+  const storedLayout = safeStorageGet(STORAGE_KEYS.layout);
+  if (storedLayout) {
+    try {
+      layout = normalizeLayoutSettings(JSON.parse(storedLayout));
+    } catch {
+      layout = defaults;
+    }
+  }
+  const presetMatch = PRESETS.find((preset) => `${preset.rows}x${preset.cols}` === layout.presetKey);
+  if (presetMatch) {
+    layout.rows = presetMatch.rows;
+    layout.cols = presetMatch.cols;
+  }
+  els.rowsInput.value = String(layout.rows);
+  els.colsInput.value = String(layout.cols);
+  els.gapInput.value = String(layout.gap);
+  els.outerGapInput.value = String(layout.outerGap);
+  els.backgroundInput.value = layout.background;
+}
+
 function init() {
   loadInitialPreferences();
+  loadInitialLayoutSettings();
+  updateUploadUiForDevice();
   translateStaticUi();
   renderPresets();
   resizeCells(state.rows * state.cols);
@@ -1216,6 +1445,7 @@ function init() {
     renderVersionLabel();
   });
   registerServiceWorker();
+  updateExportActionButtons();
   applyGrid();
   renderAllWithoutExport();
   els.exportWidthInput.value = String(state.exportWidth);
