@@ -1,17 +1,95 @@
+function createGridSlots(rows, cols) {
+  const slots = [];
+  for (let y = 0; y < rows; y += 1) {
+    for (let x = 0; x < cols; x += 1) {
+      slots.push({ x, y, w: 1, h: 1 });
+    }
+  }
+  return slots;
+}
+
 const PRESETS = [
-  { label: "2 Felder (oben/unten)", rows: 2, cols: 1 },
-  { label: "2 Felder (links/rechts)", rows: 1, cols: 2 },
-  { label: "2 x 2", rows: 2, cols: 2 },
-  { label: "3 x 3", rows: 3, cols: 3 },
-  { label: "2 x 3", rows: 2, cols: 3 },
-  { label: "3 x 2", rows: 3, cols: 2 },
-  { label: "4 x 3", rows: 4, cols: 3 },
-  { label: "1 x 4", rows: 1, cols: 4 },
+  {
+    id: "mosaic-top1-bottom2",
+    label: "Oben 1, unten 2",
+    rows: 2,
+    cols: 2,
+    slots: [
+      { x: 0, y: 0, w: 2, h: 1 },
+      { x: 0, y: 1, w: 1, h: 1 },
+      { x: 1, y: 1, w: 1, h: 1 },
+    ],
+  },
+  {
+    id: "mosaic-top2-bottom1",
+    label: "Oben 2, unten 1",
+    rows: 2,
+    cols: 2,
+    slots: [
+      { x: 0, y: 0, w: 1, h: 1 },
+      { x: 1, y: 0, w: 1, h: 1 },
+      { x: 0, y: 1, w: 2, h: 1 },
+    ],
+  },
+  {
+    id: "mosaic-left1-right2",
+    label: "Links 1, rechts 2",
+    rows: 2,
+    cols: 2,
+    slots: [
+      { x: 0, y: 0, w: 1, h: 2 },
+      { x: 1, y: 0, w: 1, h: 1 },
+      { x: 1, y: 1, w: 1, h: 1 },
+    ],
+  },
+  {
+    id: "mosaic-left2-right1",
+    label: "Links 2, rechts 1",
+    rows: 2,
+    cols: 2,
+    slots: [
+      { x: 0, y: 0, w: 1, h: 1 },
+      { x: 0, y: 1, w: 1, h: 1 },
+      { x: 1, y: 0, w: 1, h: 2 },
+    ],
+  },
+  {
+    id: "mosaic-top1-bottom3",
+    label: "Oben 1, unten 3",
+    rows: 2,
+    cols: 3,
+    slots: [
+      { x: 0, y: 0, w: 3, h: 1 },
+      { x: 0, y: 1, w: 1, h: 1 },
+      { x: 1, y: 1, w: 1, h: 1 },
+      { x: 2, y: 1, w: 1, h: 1 },
+    ],
+  },
+  {
+    id: "mosaic-top3-bottom1",
+    label: "Oben 3, unten 1",
+    rows: 2,
+    cols: 3,
+    slots: [
+      { x: 0, y: 0, w: 1, h: 1 },
+      { x: 1, y: 0, w: 1, h: 1 },
+      { x: 2, y: 0, w: 1, h: 1 },
+      { x: 0, y: 1, w: 3, h: 1 },
+    ],
+  },
+  { id: "grid-2x1", label: "2 Felder (oben/unten)", rows: 2, cols: 1, slots: createGridSlots(2, 1) },
+  { id: "grid-1x2", label: "2 Felder (links/rechts)", rows: 1, cols: 2, slots: createGridSlots(1, 2) },
+  { id: "grid-2x2", label: "2 x 2", rows: 2, cols: 2, slots: createGridSlots(2, 2) },
+  { id: "grid-3x3", label: "3 x 3", rows: 3, cols: 3, slots: createGridSlots(3, 3) },
+  { id: "grid-2x3", label: "2 x 3", rows: 2, cols: 3, slots: createGridSlots(2, 3) },
+  { id: "grid-3x2", label: "3 x 2", rows: 3, cols: 2, slots: createGridSlots(3, 2) },
+  { id: "grid-4x3", label: "4 x 3", rows: 4, cols: 3, slots: createGridSlots(4, 3) },
+  { id: "grid-1x4", label: "1 x 4", rows: 1, cols: 4, slots: createGridSlots(1, 4) },
 ];
 
 const DEFAULT_VERSION_INFO = Object.freeze({
-  appVersion: "1.0.9",
-  cacheVersion: "v10",
+  appVersion: "1.1.0",
+  cacheVersion: "v11",
   label: "Aktueller Stand",
 });
 
@@ -223,6 +301,7 @@ const I18N = {
 const state = {
   rows: 2,
   cols: 2,
+  activePresetId: "grid-2x2",
   gap: 12,
   outerGap: 12,
   background: "#101828",
@@ -398,7 +477,7 @@ function getDefaultLayoutSettings() {
     gap: 12,
     outerGap: 12,
     background: "#101828",
-    presetKey: "2x2",
+    presetId: "grid-2x2",
   };
 }
 
@@ -411,8 +490,8 @@ function normalizeLayoutSettings(raw) {
   const background = /^#[0-9a-f]{6}$/i.test(String(raw?.background || ""))
     ? String(raw.background)
     : defaults.background;
-  const presetKey = typeof raw?.presetKey === "string" ? raw.presetKey : `${rows}x${cols}`;
-  return { rows, cols, gap, outerGap, background, presetKey };
+  const presetId = typeof raw?.presetId === "string" ? raw.presetId : "";
+  return { rows, cols, gap, outerGap, background, presetId };
 }
 
 function saveLayoutSettings(layout) {
@@ -536,6 +615,55 @@ function renderVersionLabel() {
   els.versionLabel.textContent = parts.join(" \u00b7 ");
 }
 
+function getGridLayout(rows, cols) {
+  return {
+    id: "grid-custom",
+    rows,
+    cols,
+    slots: createGridSlots(rows, cols),
+  };
+}
+
+function getActiveLayoutDefinition() {
+  const preset = PRESETS.find((entry) => entry.id === state.activePresetId);
+  if (preset) {
+    return preset;
+  }
+  return getGridLayout(state.rows, state.cols);
+}
+
+function buildAxis(totalSize, count, innerGap, outerGap) {
+  const usable = Math.max(count, totalSize - outerGap * 2 - innerGap * (count - 1));
+  const base = Math.floor(usable / count);
+  let remainder = usable - base * count;
+  const axis = [];
+  let cursor = outerGap;
+  for (let i = 0; i < count; i += 1) {
+    const size = base + (remainder > 0 ? 1 : 0);
+    if (remainder > 0) remainder -= 1;
+    axis.push({ start: cursor, size });
+    cursor += size + innerGap;
+  }
+  return axis;
+}
+
+function buildLayoutRects(width, height, layout) {
+  const innerGap = state.gap;
+  const outerGap = state.outerGap;
+  const colAxis = buildAxis(width, layout.cols, innerGap, outerGap);
+  const rowAxis = buildAxis(height, layout.rows, innerGap, outerGap);
+
+  return layout.slots.map((slot) => {
+    const x = colAxis[slot.x].start;
+    const y = rowAxis[slot.y].start;
+    const w = Array.from({ length: slot.w }, (_, i) => colAxis[slot.x + i].size).reduce((a, b) => a + b, 0)
+      + innerGap * (slot.w - 1);
+    const h = Array.from({ length: slot.h }, (_, i) => rowAxis[slot.y + i].size).reduce((a, b) => a + b, 0)
+      + innerGap * (slot.h - 1);
+    return { x, y, width: w, height: h };
+  });
+}
+
 function resizeCells(count) {
   while (state.cells.length < count) state.cells.push(createEmptyCell());
   while (state.cells.length > count) disposeCell(state.cells.pop());
@@ -574,8 +702,11 @@ function applyGrid(options = {}) {
   els.outerGapInput.value = state.outerGap;
   els.outerGapValue.textContent = state.outerGap;
   document.documentElement.style.setProperty("--gap", `${state.gap}px`);
-  const matchingPreset = PRESETS.find((preset) => preset.rows === state.rows && preset.cols === state.cols);
-  const presetKey = matchingPreset ? `${matchingPreset.rows}x${matchingPreset.cols}` : `${state.rows}x${state.cols}`;
+  const preset = PRESETS.find((entry) => entry.id === state.activePresetId);
+  if (!preset || preset.rows !== state.rows || preset.cols !== state.cols) {
+    state.activePresetId = "grid-custom";
+  }
+  const layout = getActiveLayoutDefinition();
   if (persist) {
     saveLayoutSettings({
       rows: state.rows,
@@ -583,10 +714,10 @@ function applyGrid(options = {}) {
       gap: state.gap,
       outerGap: state.outerGap,
       background: state.background,
-      presetKey,
+      presetId: state.activePresetId,
     });
   }
-  resizeCells(state.rows * state.cols);
+  resizeCells(layout.slots.length);
   renderAll();
 }
 
@@ -598,18 +729,26 @@ function renderPresets() {
     btn.className = "preset";
     btn.dataset.rows = String(preset.rows);
     btn.dataset.cols = String(preset.cols);
+    btn.dataset.presetId = preset.id;
     btn.innerHTML = `
       <span class="grid-mini" aria-hidden="true"></span>
       <div>
-        <small>${preset.rows * preset.cols} ${t("cells")}</small>
-        <strong>${preset.rows} x ${preset.cols}</strong>
+        <small>${preset.slots.length} ${t("cells")}</small>
+        <strong>${preset.label}</strong>
       </div>
     `;
     const mini = btn.querySelector(".grid-mini");
     mini.style.gridTemplateColumns = `repeat(${preset.cols}, 1fr)`;
     mini.style.gridTemplateRows = `repeat(${preset.rows}, 1fr)`;
-    mini.innerHTML = Array.from({ length: preset.rows * preset.cols }, () => "<span></span>").join("");
+    mini.innerHTML = "";
+    preset.slots.forEach((slot) => {
+      const span = document.createElement("span");
+      span.style.gridColumn = `${slot.x + 1} / span ${slot.w}`;
+      span.style.gridRow = `${slot.y + 1} / span ${slot.h}`;
+      mini.appendChild(span);
+    });
     btn.addEventListener("click", () => {
+      state.activePresetId = preset.id;
       els.rowsInput.value = preset.rows;
       els.colsInput.value = preset.cols;
       applyGrid();
@@ -619,10 +758,8 @@ function renderPresets() {
 }
 
 function updatePresetActive() {
-  const rows = Number(els.rowsInput.value);
-  const cols = Number(els.colsInput.value);
   document.querySelectorAll(".preset").forEach((btn) => {
-    const matches = Number(btn.dataset.rows) === rows && Number(btn.dataset.cols) === cols;
+    const matches = btn.dataset.presetId === state.activePresetId;
     btn.classList.toggle("active", matches);
   });
 }
@@ -712,12 +849,13 @@ function moveCell(from, to) {
 }
 
 function renderPreview() {
-  els.collagePreview.style.gridTemplateColumns = `repeat(${state.cols}, minmax(0, 1fr))`;
-  els.collagePreview.style.gridTemplateRows = `repeat(${state.rows}, minmax(0, 1fr))`;
+  const layout = getActiveLayoutDefinition();
+  els.collagePreview.style.aspectRatio = `${layout.cols} / ${layout.rows}`;
   els.collagePreview.style.setProperty("--grid-gap", `${state.gap}px`);
   els.collagePreview.style.setProperty("--outer-gap", `${state.outerGap}px`);
   els.collagePreview.innerHTML = "";
   const template = document.getElementById("previewCellTemplate");
+  const nodes = [];
   state.cells.forEach((cell, index) => {
     const node = template.content.firstElementChild.cloneNode(true);
     const img = node.querySelector("img");
@@ -745,6 +883,20 @@ function renderPreview() {
       renderPreview();
     });
     els.collagePreview.appendChild(node);
+    nodes.push({ node, img, cell });
+  });
+
+  const width = Math.max(1, els.collagePreview.clientWidth);
+  const height = Math.max(1, els.collagePreview.clientHeight);
+  const rects = buildLayoutRects(width, height, layout);
+  nodes.forEach((entry, index) => {
+    const rect = rects[index];
+    if (!rect) return;
+    const { node, img, cell } = entry;
+    node.style.left = `${rect.x}px`;
+    node.style.top = `${rect.y}px`;
+    node.style.width = `${rect.width}px`;
+    node.style.height = `${rect.height}px`;
     if (cell.bitmap) {
       applyImagePlacement(img, node, cell);
     }
@@ -773,13 +925,14 @@ function syncEditor() {
 }
 
 function renderExportPreview() {
+  const layout = getActiveLayoutDefinition();
   const targetWidth = clamp(Number(els.exportWidthInput.value) || state.exportWidth, 1200, 6000);
   state.exportWidth = targetWidth;
   els.exportWidthInput.value = String(targetWidth);
   els.exportWidthValue.textContent = String(targetWidth);
   const canvas = els.exportCanvas;
   const ctx = canvas.getContext("2d");
-  const height = Math.round(targetWidth * (state.rows / state.cols));
+  const height = Math.round(targetWidth * (layout.rows / layout.cols));
   canvas.width = targetWidth;
   canvas.height = height;
   drawCollage(ctx, canvas.width, canvas.height);
@@ -790,36 +943,19 @@ function hasCompleteGrid() {
 }
 
 function drawCollage(ctx, width, height) {
-  function buildAxis(totalSize, count, innerGap, outerGap) {
-    const usable = Math.max(count, totalSize - outerGap * 2 - innerGap * (count - 1));
-    const base = Math.floor(usable / count);
-    let remainder = usable - base * count;
-    const axis = [];
-    let cursor = outerGap;
-    for (let i = 0; i < count; i += 1) {
-      const size = base + (remainder > 0 ? 1 : 0);
-      if (remainder > 0) remainder -= 1;
-      axis.push({ start: cursor, size });
-      cursor += size + innerGap;
-    }
-    return axis;
-  }
-
+  const layout = getActiveLayoutDefinition();
   ctx.save();
   ctx.fillStyle = state.background;
   ctx.fillRect(0, 0, width, height);
-  const innerGap = state.gap;
-  const outerGap = state.outerGap;
-  const colAxis = buildAxis(width, state.cols, innerGap, outerGap);
-  const rowAxis = buildAxis(height, state.rows, innerGap, outerGap);
+  const rects = buildLayoutRects(width, height, layout);
   for (let i = 0; i < state.cells.length; i += 1) {
     const cell = state.cells[i];
-    const col = i % state.cols;
-    const row = Math.floor(i / state.cols);
-    const x = colAxis[col].start;
-    const y = rowAxis[row].start;
-    const cellWidth = colAxis[col].size;
-    const cellHeight = rowAxis[row].size;
+    const rect = rects[i];
+    if (!rect) continue;
+    const x = rect.x;
+    const y = rect.y;
+    const cellWidth = rect.width;
+    const cellHeight = rect.height;
     ctx.fillStyle = "rgba(255,255,255,0.04)";
     ctx.fillRect(x, y, cellWidth, cellHeight);
     if (cell?.bitmap) {
@@ -852,12 +988,12 @@ function drawCollage(ctx, width, height) {
   ctx.strokeStyle = "rgba(255,255,255,0.18)";
   ctx.lineWidth = 1;
   for (let i = 0; i < state.cells.length; i += 1) {
-    const col = i % state.cols;
-    const row = Math.floor(i / state.cols);
-    const x = colAxis[col].start + 0.5;
-    const y = rowAxis[row].start + 0.5;
-    const cellWidth = Math.max(1, colAxis[col].size - 1);
-    const cellHeight = Math.max(1, rowAxis[row].size - 1);
+    const rect = rects[i];
+    if (!rect) continue;
+    const x = rect.x + 0.5;
+    const y = rect.y + 0.5;
+    const cellWidth = Math.max(1, rect.width - 1);
+    const cellHeight = Math.max(1, rect.height - 1);
     ctx.strokeRect(x, y, cellWidth, cellHeight);
   }
   ctx.restore();
@@ -1140,9 +1276,10 @@ function canvasToBlob(canvas) {
 }
 
 async function renderExportBlob() {
+  const layout = getActiveLayoutDefinition();
   const canvas = document.createElement("canvas");
   const width = clamp(Number(els.exportWidthInput.value) || 3000, 1200, 6000);
-  const height = Math.round(width * (state.rows / state.cols));
+  const height = Math.round(width * (layout.rows / layout.cols));
   canvas.width = width;
   canvas.height = height;
   const ctx = canvas.getContext("2d");
@@ -1286,9 +1423,11 @@ function renderSlotsStatusControls() {
 
 function wireControls() {
   els.rowsInput.addEventListener("change", () => {
+    state.activePresetId = "grid-custom";
     applyGrid();
   });
   els.colsInput.addEventListener("change", () => {
+    state.activePresetId = "grid-custom";
     applyGrid();
   });
   els.gapInput.addEventListener("input", () => {
@@ -1306,6 +1445,7 @@ function wireControls() {
     }
     const defaults = getDefaultLayoutSettings();
     safeStorageRemove(STORAGE_KEYS.layout);
+    state.activePresetId = defaults.presetId;
     els.rowsInput.value = String(defaults.rows);
     els.colsInput.value = String(defaults.cols);
     els.gapInput.value = String(defaults.gap);
@@ -1420,7 +1560,8 @@ function loadInitialLayoutSettings() {
       layout = defaults;
     }
   }
-  const presetMatch = PRESETS.find((preset) => `${preset.rows}x${preset.cols}` === layout.presetKey);
+  const presetMatch = PRESETS.find((preset) => preset.id === layout.presetId);
+  state.activePresetId = presetMatch ? presetMatch.id : "grid-custom";
   if (presetMatch) {
     layout.rows = presetMatch.rows;
     layout.cols = presetMatch.cols;
@@ -1438,7 +1579,7 @@ function init() {
   updateUploadUiForDevice();
   translateStaticUi();
   renderPresets();
-  resizeCells(state.rows * state.cols);
+  resizeCells(getActiveLayoutDefinition().slots.length);
   renderSlotsStatusControls();
   wireControls();
   void loadVersionInfo().then(() => {
