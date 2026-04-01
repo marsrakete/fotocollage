@@ -211,8 +211,8 @@ const PRESET_LABELS = Object.freeze({
 });
 
 const DEFAULT_VERSION_INFO = Object.freeze({
-  appVersion: "1.2.7",
-  cacheVersion: "v29",
+  appVersion: "1.2.10",
+  cacheVersion: "v32",
   label: "Aktueller Stand",
 });
 
@@ -286,6 +286,15 @@ const I18N = {
     resetFocus: "Ausschnitt zur\u00fccksetzen",
     zoomLabel: "Zoom",
     resetZoom: "Zoom zur\u00fccksetzen",
+    textEditorTitle: "Text im Feld",
+    textLabel: "Text",
+    textPlaceholder: "Text im Feld platzieren",
+    textSizeLabel: "Schriftgr\u00f6\u00dfe",
+    textFontLabel: "Schriftart",
+    textBold: "Fett",
+    textItalic: "Kursiv",
+    textColorLabel: "Textfarbe",
+    resetTextPosition: "Textposition zur\u00fccksetzen",
     step1Chip: "1. Vorlage",
     step2Chip: "2. Fotos",
     step3Chip: "3. Feinschliff",
@@ -365,6 +374,15 @@ const I18N = {
     resetFocus: "Reset crop",
     zoomLabel: "Zoom",
     resetZoom: "Reset zoom",
+    textEditorTitle: "Slot text",
+    textLabel: "Text",
+    textPlaceholder: "Place text inside this slot",
+    textSizeLabel: "Font size",
+    textFontLabel: "Font family",
+    textBold: "Bold",
+    textItalic: "Italic",
+    textColorLabel: "Text color",
+    resetTextPosition: "Reset text position",
     step1Chip: "1. Template",
     step2Chip: "2. Photos",
     step3Chip: "3. Fine-tune",
@@ -445,6 +463,15 @@ const I18N = {
     resetFocus: "R\u00e9initialiser le cadrage",
     zoomLabel: "Zoom",
     resetZoom: "R\u00e9initialiser le zoom",
+    textEditorTitle: "Texte du cadre",
+    textLabel: "Texte",
+    textPlaceholder: "Placer du texte dans cette case",
+    textSizeLabel: "Taille de police",
+    textFontLabel: "Police",
+    textBold: "Gras",
+    textItalic: "Italique",
+    textColorLabel: "Couleur du texte",
+    resetTextPosition: "R\u00e9initialiser la position du texte",
     step1Chip: "1. Mod\u00e8le",
     step2Chip: "2. Photos",
     step3Chip: "3. Fignolage",
@@ -477,6 +504,7 @@ const state = {
   cells: [],
   selectedCell: 0,
   dragging: null,
+  textDragging: null,
   dragIndex: null,
   pinch: null,
   touchPoints: new Map(),
@@ -534,6 +562,22 @@ const els = {
   zoomValue: document.getElementById("zoomValue"),
   zoomLabel: document.getElementById("zoomLabel"),
   resetZoom: document.getElementById("resetZoom"),
+  editorTextOverlay: document.getElementById("editorTextOverlay"),
+  textEditorTitle: document.getElementById("textEditorTitle"),
+  textLabel: document.getElementById("textLabel"),
+  textInput: document.getElementById("textInput"),
+  textSizeLabel: document.getElementById("textSizeLabel"),
+  textSizeInput: document.getElementById("textSizeInput"),
+  textSizeValue: document.getElementById("textSizeValue"),
+  textFontLabel: document.getElementById("textFontLabel"),
+  textFontSelect: document.getElementById("textFontSelect"),
+  textBoldInput: document.getElementById("textBoldInput"),
+  textBoldLabel: document.getElementById("textBoldLabel"),
+  textItalicInput: document.getElementById("textItalicInput"),
+  textItalicLabel: document.getElementById("textItalicLabel"),
+  textColorLabel: document.getElementById("textColorLabel"),
+  textColorInput: document.getElementById("textColorInput"),
+  resetTextPosition: document.getElementById("resetTextPosition"),
   exportWidthInput: document.getElementById("exportWidthInput"),
   exportWidthValue: document.getElementById("exportWidthValue"),
   exportFormatLabel: document.getElementById("exportFormatLabel"),
@@ -709,6 +753,14 @@ function createEmptyCell() {
     focusX: 0,
     focusY: 0,
     zoom: 1,
+    text: "",
+    textX: 0.5,
+    textY: 0.82,
+    fontSize: 48,
+    fontFamily: "Segoe UI, system-ui, sans-serif",
+    bold: false,
+    italic: false,
+    color: "#ffffff",
   };
 }
 
@@ -776,6 +828,15 @@ function translateStaticUi() {
   setText(els.resetFocus, "resetFocus");
   setText(els.zoomLabel, "zoomLabel");
   setText(els.resetZoom, "resetZoom");
+  setText(els.textEditorTitle, "textEditorTitle");
+  setText(els.textLabel, "textLabel");
+  setText(els.textSizeLabel, "textSizeLabel");
+  setText(els.textFontLabel, "textFontLabel");
+  setText(els.textBoldLabel, "textBold");
+  setText(els.textItalicLabel, "textItalic");
+  setText(els.textColorLabel, "textColorLabel");
+  setText(els.resetTextPosition, "resetTextPosition");
+  els.textInput.placeholder = t("textPlaceholder");
   setText(els.stepChip1, "step1Chip");
   setText(els.stepChip2, "step2Chip");
   setText(els.stepChip3, "step3Chip");
@@ -1307,6 +1368,10 @@ function renderPreview() {
     const node = template.content.firstElementChild.cloneNode(true);
     const img = node.querySelector("img");
     const emptyNote = node.querySelector(".empty-note");
+    const textOverlay = document.createElement("div");
+    textOverlay.className = "preview-text-overlay";
+    textOverlay.hidden = true;
+    node.appendChild(textOverlay);
     node.querySelector(".cell-index").textContent = `#${index + 1}`;
     node.classList.toggle("selected", index === state.selectedCell);
     if (cell.bitmap) {
@@ -1330,7 +1395,7 @@ function renderPreview() {
       renderPreview();
     });
     els.collagePreview.appendChild(node);
-    nodes.push({ node, img, cell });
+    nodes.push({ node, img, cell, textOverlay });
   });
 
   const width = Math.max(1, els.collagePreview.clientWidth);
@@ -1339,7 +1404,7 @@ function renderPreview() {
   nodes.forEach((entry, index) => {
     const rect = rects[index];
     if (!rect) return;
-    const { node, img, cell } = entry;
+    const { node, img, cell, textOverlay } = entry;
     node.style.left = `${rect.x}px`;
     node.style.top = `${rect.y}px`;
     node.style.width = `${rect.width}px`;
@@ -1347,6 +1412,7 @@ function renderPreview() {
     if (cell.bitmap) {
       applyImagePlacement(img, node, cell);
     }
+    applyTextOverlayStyle(textOverlay, cell, rect.width, rect.height);
   });
 }
 
@@ -1369,6 +1435,20 @@ function syncEditor() {
     els.zoomInput.value = "1";
     els.zoomValue.textContent = "100";
   }
+  els.textInput.value = cell.text || "";
+  els.textSizeInput.value = String(clamp(Number(cell.fontSize) || 48, 12, 160));
+  els.textSizeValue.textContent = String(clamp(Number(cell.fontSize) || 48, 12, 160));
+  els.textFontSelect.value = cell.fontFamily || "Segoe UI, system-ui, sans-serif";
+  els.textBoldInput.checked = Boolean(cell.bold);
+  els.textItalicInput.checked = Boolean(cell.italic);
+  els.textColorInput.value = /^#[0-9a-f]{6}$/i.test(String(cell.color || "")) ? cell.color : "#ffffff";
+  const frameRect = els.editorFrame.getBoundingClientRect();
+  applyTextOverlayStyle(
+    els.editorTextOverlay,
+    cell,
+    Math.max(1, frameRect.width || els.editorFrame.clientWidth || 1),
+    Math.max(1, frameRect.height || els.editorFrame.clientHeight || 1)
+  );
 }
 
 function renderExportPreview() {
@@ -1432,6 +1512,7 @@ function drawCollage(ctx, width, height, options = {}) {
       ctx.textBaseline = "top";
       ctx.fillText(`${t("field")} ${i + 1}`, x + 14, y + 34);
     }
+    drawCellText(ctx, cell, x, y, cellWidth, cellHeight);
   }
 
   ctx.save();
@@ -1544,6 +1625,62 @@ function resetImagePlacement(img) {
   img.style.objectFit = "cover";
   img.style.objectPosition = "50% 50%";
   img.style.transform = "none";
+}
+
+function hasCellText(cell) {
+  return Boolean(cell && typeof cell.text === "string" && cell.text.trim().length > 0);
+}
+
+function getCellFontDeclaration(cell, sizePx) {
+  const weight = cell.bold ? "700" : "400";
+  const style = cell.italic ? "italic" : "normal";
+  return `${style} ${weight} ${Math.max(10, sizePx)}px ${cell.fontFamily || "Segoe UI, system-ui, sans-serif"}`;
+}
+
+function applyTextOverlayStyle(element, cell, frameWidth, frameHeight) {
+  element.hidden = !hasCellText(cell);
+  if (!hasCellText(cell)) {
+    element.textContent = "";
+    return;
+  }
+  element.textContent = cell.text;
+  element.style.left = `${clamp(cell.textX, 0, 1) * 100}%`;
+  element.style.top = `${clamp(cell.textY, 0, 1) * 100}%`;
+  const scale = Math.max(0.35, Math.min(frameWidth, frameHeight) / 1000);
+  const fontSize = clamp((cell.fontSize || 48) * scale, 10, 220);
+  element.style.font = getCellFontDeclaration(cell, fontSize);
+  element.style.color = cell.color || "#ffffff";
+}
+
+function drawCellText(ctx, cell, x, y, width, height) {
+  if (!hasCellText(cell)) {
+    return;
+  }
+  const lines = String(cell.text).replace(/\r/g, "").split("\n");
+  const baseSize = clamp(cell.fontSize || 48, 10, 220);
+  const scale = Math.max(0.35, Math.min(width, height) / 1000);
+  const fontSize = clamp(baseSize * scale, 10, 240);
+  const lineHeight = fontSize * 1.2;
+  const centerX = x + clamp(cell.textX, 0, 1) * width;
+  const centerY = y + clamp(cell.textY, 0, 1) * height;
+  const startY = centerY - ((lines.length - 1) * lineHeight) / 2;
+
+  ctx.save();
+  ctx.beginPath();
+  ctx.rect(x, y, width, height);
+  ctx.clip();
+  ctx.font = getCellFontDeclaration(cell, fontSize);
+  ctx.fillStyle = cell.color || "#ffffff";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.shadowColor = "rgba(0,0,0,0.55)";
+  ctx.shadowBlur = Math.max(2, fontSize * 0.14);
+  for (let i = 0; i < lines.length; i += 1) {
+    const line = lines[i];
+    const lineY = startY + i * lineHeight;
+    ctx.fillText(line, centerX, lineY);
+  }
+  ctx.restore();
 }
 
 function getFrameMetrics(frame, cell) {
@@ -1672,6 +1809,46 @@ function onDragMove(event) {
 function stopDrag() {
   window.removeEventListener("pointermove", onDragMove);
   state.dragging = null;
+}
+
+function startTextDrag(event) {
+  const cell = state.cells[state.selectedCell];
+  if (!cell) return;
+  event.preventDefault();
+  event.stopPropagation();
+  const frameRect = els.editorFrame.getBoundingClientRect();
+  state.textDragging = {
+    pointerId: event.pointerId,
+    startX: event.clientX,
+    startY: event.clientY,
+    startTextX: clamp(cell.textX ?? 0.5, 0, 1),
+    startTextY: clamp(cell.textY ?? 0.82, 0, 1),
+    frameWidth: Math.max(1, frameRect.width),
+    frameHeight: Math.max(1, frameRect.height),
+  };
+  els.editorTextOverlay.classList.add("dragging");
+  els.editorTextOverlay.setPointerCapture?.(event.pointerId);
+  window.addEventListener("pointermove", onTextDragMove);
+  window.addEventListener("pointerup", stopTextDrag, { once: true });
+}
+
+function onTextDragMove(event) {
+  if (!state.textDragging || event.pointerId !== state.textDragging.pointerId) return;
+  const cell = state.cells[state.selectedCell];
+  if (!cell) return;
+  const deltaX = (event.clientX - state.textDragging.startX) / state.textDragging.frameWidth;
+  const deltaY = (event.clientY - state.textDragging.startY) / state.textDragging.frameHeight;
+  cell.textX = clamp(state.textDragging.startTextX + deltaX, 0, 1);
+  cell.textY = clamp(state.textDragging.startTextY + deltaY, 0, 1);
+  syncEditor();
+  renderPreview();
+  renderExportPreview();
+}
+
+function stopTextDrag() {
+  window.removeEventListener("pointermove", onTextDragMove);
+  state.textDragging = null;
+  els.editorTextOverlay.classList.remove("dragging");
 }
 
 function buildTimestampFilename(extension, now = new Date()) {
@@ -2221,6 +2398,67 @@ function wireControls() {
   });
   els.resetZoom.addEventListener("click", () => {
     setCellZoom(state.selectedCell, 1);
+  });
+  els.editorTextOverlay.addEventListener("pointerdown", startTextDrag);
+  els.textInput.addEventListener("input", () => {
+    const cell = state.cells[state.selectedCell];
+    if (!cell) return;
+    cell.text = els.textInput.value;
+    syncEditor();
+    renderPreview();
+    renderExportPreview();
+  });
+  els.textSizeInput.addEventListener("input", () => {
+    const cell = state.cells[state.selectedCell];
+    if (!cell) return;
+    const value = clamp(Number(els.textSizeInput.value) || 48, 12, 160);
+    cell.fontSize = value;
+    els.textSizeInput.value = String(value);
+    els.textSizeValue.textContent = String(value);
+    syncEditor();
+    renderPreview();
+    renderExportPreview();
+  });
+  els.textFontSelect.addEventListener("change", () => {
+    const cell = state.cells[state.selectedCell];
+    if (!cell) return;
+    cell.fontFamily = els.textFontSelect.value;
+    syncEditor();
+    renderPreview();
+    renderExportPreview();
+  });
+  els.textBoldInput.addEventListener("change", () => {
+    const cell = state.cells[state.selectedCell];
+    if (!cell) return;
+    cell.bold = els.textBoldInput.checked;
+    syncEditor();
+    renderPreview();
+    renderExportPreview();
+  });
+  els.textItalicInput.addEventListener("change", () => {
+    const cell = state.cells[state.selectedCell];
+    if (!cell) return;
+    cell.italic = els.textItalicInput.checked;
+    syncEditor();
+    renderPreview();
+    renderExportPreview();
+  });
+  els.textColorInput.addEventListener("input", () => {
+    const cell = state.cells[state.selectedCell];
+    if (!cell) return;
+    cell.color = els.textColorInput.value;
+    syncEditor();
+    renderPreview();
+    renderExportPreview();
+  });
+  els.resetTextPosition.addEventListener("click", () => {
+    const cell = state.cells[state.selectedCell];
+    if (!cell) return;
+    cell.textX = 0.5;
+    cell.textY = 0.82;
+    syncEditor();
+    renderPreview();
+    renderExportPreview();
   });
   els.replaceCell.addEventListener("click", () => {
     els.replaceInput.click();

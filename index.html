@@ -16,7 +16,9 @@
       content="In wenigen Schritten zur fertigen Collage: Vorlage wählen, Fotos hochladen, Ausschnitte feinjustieren und als PNG speichern."
     />
     <meta property="og:url" content="https://marsrakete.github.io/fotocollage/" />
-    <meta property="og:image" content="https://marsrakete.github.io/fotocollage/icon-512.png" />
+    <meta property="og:image" content="https://marsrakete.github.io/fotocollage/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="800" />
     <meta property="og:image:alt" content="Vorschau der Foto-Collagen-App" />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="Foto-Collage" />
@@ -24,7 +26,7 @@
       name="twitter:description"
       content="In wenigen Schritten zur fertigen Collage: Vorlage wählen, Fotos hochladen, Ausschnitte feinjustieren und als PNG speichern."
     />
-    <meta name="twitter:image" content="https://marsrakete.github.io/fotocollage/icon-512.png" />
+    <meta name="twitter:image" content="https://marsrakete.github.io/fotocollage/og-image.png" />
     <link rel="manifest" href="./manifest.json" />
     <link rel="icon" href="./icon.svg" type="image/svg+xml" />
     <link rel="icon" href="./icon-192.png" sizes="192x192" type="image/png" />
@@ -167,6 +169,7 @@
                 </div>
                 <div class="editor-frame" id="editorFrame">
                   <img id="editorImage" alt="" />
+                  <div id="editorTextOverlay" class="editor-text-overlay" hidden></div>
                   <div class="editor-overlay">
                     <span id="dragHint">Zum Verschieben ziehen</span>
                   </div>
@@ -183,6 +186,37 @@
                   <strong><span id="zoomValue">100</span> %</strong>
                 </label>
                 <button class="secondary" id="resetZoom" type="button">Zoom zurücksetzen</button>
+                <div class="field text-editor-field">
+                  <strong id="textEditorTitle">Text</strong>
+                  <label>
+                    <span id="textLabel">Text</span>
+                    <textarea id="textInput" rows="3" placeholder="Text im Feld platzieren"></textarea>
+                  </label>
+                  <label>
+                    <span id="textSizeLabel">Schriftgröße</span>
+                    <input id="textSizeInput" type="range" min="12" max="160" step="1" value="48" />
+                    <strong><span id="textSizeValue">48</span> px</strong>
+                  </label>
+                  <label>
+                    <span id="textFontLabel">Schriftart</span>
+                    <select id="textFontSelect">
+                      <option value="Segoe UI, system-ui, sans-serif">Segoe UI</option>
+                      <option value="Arial, Helvetica, sans-serif">Arial</option>
+                      <option value="'Times New Roman', Times, serif">Times New Roman</option>
+                      <option value="'Courier New', Courier, monospace">Courier New</option>
+                      <option value="Georgia, serif">Georgia</option>
+                    </select>
+                  </label>
+                  <div class="text-toggle-row">
+                    <label><input id="textBoldInput" type="checkbox" /> <span id="textBoldLabel">Fett</span></label>
+                    <label><input id="textItalicInput" type="checkbox" /> <span id="textItalicLabel">Kursiv</span></label>
+                  </div>
+                  <label>
+                    <span id="textColorLabel">Textfarbe</span>
+                    <input id="textColorInput" type="color" value="#ffffff" />
+                  </label>
+                  <button class="secondary" id="resetTextPosition" type="button">Textposition zurücksetzen</button>
+                </div>
                 <input id="replaceInput" type="file" accept="image/*" hidden />
               </aside>
             </div>
