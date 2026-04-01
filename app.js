@@ -122,11 +122,102 @@ const PRESETS = [
   { id: "grid-1x4", label: "1 x 4", rows: 1, cols: 4, slots: createGridSlots(1, 4) },
 ];
 
+const PRESET_LABELS = Object.freeze({
+  "mosaic-top1-bottom2": {
+    de: "Oben 1, unten 2",
+    en: "Top 1, bottom 2",
+    fr: "En haut 1, en bas 2",
+  },
+  "mosaic-top2-bottom1": {
+    de: "Oben 2, unten 1",
+    en: "Top 2, bottom 1",
+    fr: "En haut 2, en bas 1",
+  },
+  "mosaic-left1-right2": {
+    de: "Links 1, rechts 2",
+    en: "Left 1, right 2",
+    fr: "A gauche 1, a droite 2",
+  },
+  "mosaic-left2-right1": {
+    de: "Links 2, rechts 1",
+    en: "Left 2, right 1",
+    fr: "A gauche 2, a droite 1",
+  },
+  "mosaic-top1-bottom3": {
+    de: "Oben 1, unten 3",
+    en: "Top 1, bottom 3",
+    fr: "En haut 1, en bas 3",
+  },
+  "mosaic-top3-bottom1": {
+    de: "Oben 3, unten 1",
+    en: "Top 3, bottom 1",
+    fr: "En haut 3, en bas 1",
+  },
+  "story-left-main": {
+    de: "Story links, rechts 2",
+    en: "Story left, right 2",
+    fr: "Story a gauche, 2 a droite",
+  },
+  "story-right-main": {
+    de: "Story rechts, links 2",
+    en: "Story right, left 2",
+    fr: "Story a droite, 2 a gauche",
+  },
+  "story-center-main": {
+    de: "Story Mitte, Seiten 4",
+    en: "Story center, sides 4",
+    fr: "Story centre, cotes 4",
+  },
+  "grid-2x1": {
+    de: "2 Felder (oben/unten)",
+    en: "2 slots (top/bottom)",
+    fr: "2 cases (haut/bas)",
+  },
+  "grid-1x2": {
+    de: "2 Felder (links/rechts)",
+    en: "2 slots (left/right)",
+    fr: "2 cases (gauche/droite)",
+  },
+  "grid-2x2": {
+    de: "2 x 2",
+    en: "2 x 2",
+    fr: "2 x 2",
+  },
+  "grid-3x3": {
+    de: "3 x 3",
+    en: "3 x 3",
+    fr: "3 x 3",
+  },
+  "grid-2x3": {
+    de: "2 x 3",
+    en: "2 x 3",
+    fr: "2 x 3",
+  },
+  "grid-3x2": {
+    de: "3 x 2",
+    en: "3 x 2",
+    fr: "3 x 2",
+  },
+  "grid-4x3": {
+    de: "4 x 3",
+    en: "4 x 3",
+    fr: "4 x 3",
+  },
+  "grid-1x4": {
+    de: "1 x 4",
+    en: "1 x 4",
+    fr: "1 x 4",
+  },
+});
+
 const DEFAULT_VERSION_INFO = Object.freeze({
-  appVersion: "1.1.5",
-  cacheVersion: "v16",
+  appVersion: "1.2.5",
+  cacheVersion: "v27",
   label: "Aktueller Stand",
 });
+
+const ZOOM_MIN = 0.35;
+const ZOOM_MAX = 4;
 
 const STORAGE_KEYS = {
   language: "fotocollage-language",
@@ -158,8 +249,17 @@ const I18N = {
     step3Desc: "Ziehe ein Bild in der Vorschau, um den Ausschnitt im Kasten zu verschieben.",
     activeCellTitle: "Aktives Feld",
     dragHint: "Zum Verschieben ziehen",
-    step4Title: "Schritt 4: PNG speichern",
-    step4Desc: "Die Collage wird in hoher Aufl\u00f6sung gerendert und kann geteilt oder als PNG gespeichert werden.",
+    step4Title: "Schritt 4: Export",
+    step4Desc: "Die Collage wird in hoher Aufl\u00f6sung gerendert und kann geteilt oder als PNG/JPEG/PDF/GIF gespeichert werden.",
+    exportFormatLabel: "Exportformat",
+    gifDelayLabel: "Sekunden zwischen Frames",
+    exportFormatPng: "PNG",
+    exportFormatJpeg: "JPEG",
+    exportFormatPdf: "PDF",
+    exportFormatGif: "GIF (animiert)",
+    gifRendering: "GIF wird erzeugt …",
+    gifRenderingFrame: "GIF wird erzeugt … Frame {current} von {total}",
+    exportFailed: "Export fehlgeschlagen.",
     exportWidthLabel: "Exportbreite",
     gapLabel: "Abstand",
     outerGapLabel: "Randabstand",
@@ -177,7 +277,7 @@ const I18N = {
     toFineTune: "Weiter zum Feinschliff",
     toExport: "Weiter zum Export",
     share: "Teilen",
-    savePng: "Als PNG speichern",
+    savePng: "Speichern",
     resetSettings: "Einstellungen zur\u00fccksetzen",
     resetSettingsConfirm: "M\u00f6chtest du die Layout-Einstellungen wirklich zur\u00fccksetzen?",
     prevCell: "Vorheriges Feld",
@@ -229,8 +329,17 @@ const I18N = {
     step3Desc: "Drag an image in the preview to shift the crop inside the frame.",
     activeCellTitle: "Active slot",
     dragHint: "Drag to move",
-    step4Title: "Step 4: Save PNG",
-    step4Desc: "The collage is rendered in high resolution and can be shared or saved as a PNG file.",
+    step4Title: "Step 4: Export",
+    step4Desc: "The collage is rendered in high resolution and can be shared or saved as PNG/JPEG/PDF/GIF.",
+    exportFormatLabel: "Export format",
+    gifDelayLabel: "Seconds between frames",
+    exportFormatPng: "PNG",
+    exportFormatJpeg: "JPEG",
+    exportFormatPdf: "PDF",
+    exportFormatGif: "GIF (animated)",
+    gifRendering: "Rendering GIF …",
+    gifRenderingFrame: "Rendering GIF … frame {current} of {total}",
+    exportFailed: "Export failed.",
     exportWidthLabel: "Export width",
     gapLabel: "Spacing",
     outerGapLabel: "Outer gap",
@@ -247,7 +356,7 @@ const I18N = {
     toFineTune: "Continue to fine-tuning",
     toExport: "Continue to export",
     share: "Share",
-    savePng: "Save as PNG",
+    savePng: "Save",
     resetSettings: "Reset settings",
     resetSettingsConfirm: "Do you really want to reset the layout settings?",
     prevCell: "Previous slot",
@@ -299,8 +408,17 @@ const I18N = {
     step3Desc: "Faites glisser une image dans l'aper\u00e7u pour d\u00e9placer le cadrage dans le cadre.",
     activeCellTitle: "Emplacement actif",
     dragHint: "Glisser pour d\u00e9placer",
-    step4Title: "\u00c9tape 4: Enregistrer en PNG",
-    step4Desc: "Le collage est rendu en haute r\u00e9solution et peut \u00eatre partag\u00e9 ou enregistr\u00e9 en PNG.",
+    step4Title: "\u00c9tape 4: Export",
+    step4Desc: "Le collage est rendu en haute r\u00e9solution et peut \u00eatre partag\u00e9 ou enregistr\u00e9 en PNG/JPEG/PDF/GIF.",
+    exportFormatLabel: "Format d'export",
+    gifDelayLabel: "Secondes entre les images",
+    exportFormatPng: "PNG",
+    exportFormatJpeg: "JPEG",
+    exportFormatPdf: "PDF",
+    exportFormatGif: "GIF (animé)",
+    gifRendering: "Création du GIF …",
+    gifRenderingFrame: "Création du GIF … image {current} sur {total}",
+    exportFailed: "Échec de l'export.",
     exportWidthLabel: "Largeur d'export",
     gapLabel: "Espacement",
     outerGapLabel: "Marge ext\u00e9rieure",
@@ -318,7 +436,7 @@ const I18N = {
     toFineTune: "Continuer vers le fignolage",
     toExport: "Continuer vers l'export",
     share: "Partager",
-    savePng: "Enregistrer en PNG",
+    savePng: "Enregistrer",
     resetSettings: "R\u00e9initialiser les param\u00e8tres",
     resetSettingsConfirm: "Voulez-vous vraiment r\u00e9initialiser les param\u00e8tres de mise en page ?",
     prevCell: "Emplacement pr\u00e9c\u00e9dent",
@@ -363,6 +481,8 @@ const state = {
   pinch: null,
   touchPoints: new Map(),
   exportWidth: 3000,
+  exportFormat: "png",
+  gifDelaySeconds: 1,
   languagePreference: "auto",
   language: "de",
   readmeText: "",
@@ -416,8 +536,15 @@ const els = {
   resetZoom: document.getElementById("resetZoom"),
   exportWidthInput: document.getElementById("exportWidthInput"),
   exportWidthValue: document.getElementById("exportWidthValue"),
+  exportFormatLabel: document.getElementById("exportFormatLabel"),
+  exportFormatSelect: document.getElementById("exportFormatSelect"),
+  gifDelayField: document.getElementById("gifDelayField"),
+  gifDelayLabel: document.getElementById("gifDelayLabel"),
+  gifDelayInput: document.getElementById("gifDelayInput"),
+  gifDelayValue: document.getElementById("gifDelayValue"),
   shareButton: document.getElementById("shareButton"),
   downloadButton: document.getElementById("downloadButton"),
+  exportStatus: document.getElementById("exportStatus"),
   exportCanvas: document.getElementById("exportCanvas"),
   settingsDialog: document.getElementById("settingsDialog"),
   settingsForm: document.getElementById("settingsForm"),
@@ -512,10 +639,14 @@ function updateUploadUiForDevice() {
   const touchLike = isTouchLikeDevice();
   document.body.classList.toggle("touch-upload-mode", touchLike);
   if (touchLike) {
+    els.dropZone.setAttribute("role", "button");
+    els.dropZone.setAttribute("tabindex", "0");
     els.uploadTitle.textContent = t("uploadTitleMobile");
     els.uploadDesc.textContent = t("uploadDescMobile");
     return;
   }
+  els.dropZone.removeAttribute("role");
+  els.dropZone.removeAttribute("tabindex");
   setText(els.uploadTitle, "uploadTitle");
   setText(els.uploadDesc, "uploadDesc");
 }
@@ -622,6 +753,8 @@ function translateStaticUi() {
   setText(els.step4Desc, "step4Desc");
   setText(els.gapLabel, "gapLabel");
   setText(els.outerGapLabel, "outerGapLabel");
+  setText(els.exportFormatLabel, "exportFormatLabel");
+  setText(els.gifDelayLabel, "gifDelayLabel");
   setText(els.exportWidthLabel, "exportWidthLabel");
   setText(els.exportHelp, "exportHelp");
   setText(els.settingsTitle, "settingsTitle");
@@ -661,6 +794,18 @@ function translateStaticUi() {
   }
   if (els.languageSelect.options[3]) {
     els.languageSelect.options[3].textContent = "Fran\u00e7ais";
+  }
+  if (els.exportFormatSelect.options[0]) {
+    els.exportFormatSelect.options[0].textContent = t("exportFormatPng");
+  }
+  if (els.exportFormatSelect.options[1]) {
+    els.exportFormatSelect.options[1].textContent = t("exportFormatJpeg");
+  }
+  if (els.exportFormatSelect.options[2]) {
+    els.exportFormatSelect.options[2].textContent = t("exportFormatPdf");
+  }
+  if (els.exportFormatSelect.options[3]) {
+    els.exportFormatSelect.options[3].textContent = t("exportFormatGif");
   }
   if (els.helpDialog.open && !state.readmeText) {
     els.readmeStatus.textContent = t("helpLoading");
@@ -913,6 +1058,14 @@ function getActiveLayoutDefinition() {
   return getGridLayout(state.rows, state.cols);
 }
 
+function getPresetLabel(preset, language = state.language) {
+  const labels = PRESET_LABELS[preset.id];
+  if (labels) {
+    return labels[language] || labels.de || labels.en;
+  }
+  return preset.label || preset.id;
+}
+
 function buildAxis(totalSize, count, innerGap, outerGap) {
   const usable = Math.max(count, totalSize - outerGap * 2 - innerGap * (count - 1));
   const base = Math.floor(usable / count);
@@ -1011,7 +1164,7 @@ function renderPresets() {
     btn.dataset.rows = String(preset.rows);
     btn.dataset.cols = String(preset.cols);
     btn.dataset.presetId = preset.id;
-    const tooltip = `${preset.label} (${preset.slots.length} ${t("cells")})`;
+    const tooltip = `${getPresetLabel(preset)} (${preset.slots.length} ${t("cells")})`;
     btn.title = tooltip;
     btn.setAttribute("aria-label", tooltip);
     btn.innerHTML = `
@@ -1056,6 +1209,19 @@ function renderStatus() {
     : format(t("slotStatusMissing"), { filled, total });
   els.toStep3.disabled = !complete;
   els.toStep4.disabled = !complete;
+  updateUploadConstraints();
+}
+
+function getRemainingUploadSlots() {
+  const emptyCount = state.cells.filter((cell) => !cell.bitmap).length;
+  return Math.max(0, emptyCount);
+}
+
+function updateUploadConstraints() {
+  const remaining = getRemainingUploadSlots();
+  els.fileInput.disabled = remaining === 0;
+  els.fileInput.multiple = remaining !== 1;
+  els.dropZone.classList.toggle("disabled", remaining === 0);
 }
 
 function renderSlots() {
@@ -1223,7 +1389,8 @@ function hasCompleteGrid() {
   return state.cells.length > 0 && state.cells.every((cell) => cell.bitmap);
 }
 
-function drawCollage(ctx, width, height) {
+function drawCollage(ctx, width, height, options = {}) {
+  const visibleCount = typeof options.visibleCount === "number" ? options.visibleCount : state.cells.length;
   const layout = getActiveLayoutDefinition();
   ctx.save();
   ctx.fillStyle = state.background;
@@ -1239,9 +1406,9 @@ function drawCollage(ctx, width, height) {
     const cellHeight = rect.height;
     ctx.fillStyle = "rgba(255,255,255,0.04)";
     ctx.fillRect(x, y, cellWidth, cellHeight);
-    if (cell?.bitmap) {
+    if (cell?.bitmap && i < visibleCount) {
       const scale = Math.max(cellWidth / cell.width, cellHeight / cell.height);
-      const zoom = clamp(cell.zoom || 1, 1, 4);
+      const zoom = clamp(cell.zoom || 1, ZOOM_MIN, ZOOM_MAX);
       const drawWidth = cell.width * scale * zoom;
       const drawHeight = cell.height * scale * zoom;
       const maxOffsetX = Math.max(0, drawWidth - cellWidth);
@@ -1250,12 +1417,14 @@ function drawCollage(ctx, width, height) {
       const focusY = clamp((cell.focusY + 1) / 2, 0, 1);
       const offsetX = focusX * maxOffsetX;
       const offsetY = focusY * maxOffsetY;
+      const drawX = maxOffsetX > 0 ? x - offsetX : x + (cellWidth - drawWidth) / 2;
+      const drawY = maxOffsetY > 0 ? y - offsetY : y + (cellHeight - drawHeight) / 2;
 
       ctx.save();
       ctx.beginPath();
       ctx.rect(x, y, cellWidth, cellHeight);
       ctx.clip();
-      ctx.drawImage(cell.bitmap, x - offsetX, y - offsetY, drawWidth, drawHeight);
+      ctx.drawImage(cell.bitmap, drawX, drawY, drawWidth, drawHeight);
       ctx.restore();
     } else {
       ctx.fillStyle = "rgba(245,247,251,0.72)";
@@ -1307,7 +1476,11 @@ async function setCellImage(index, file) {
 }
 
 async function loadFiles(fileList) {
-  const files = Array.from(fileList).filter((file) => file.type.startsWith("image/"));
+  const remaining = getRemainingUploadSlots();
+  if (remaining <= 0) return;
+  const files = Array.from(fileList)
+    .filter((file) => file.type.startsWith("image/"))
+    .slice(0, remaining);
   if (files.length === 0) return;
   let insertIndex = state.cells.findIndex((cell) => !cell.bitmap);
   if (insertIndex === -1) insertIndex = state.cells.length;
@@ -1322,11 +1495,13 @@ async function loadFiles(fileList) {
 
 function getImageRenderMetrics(cell, frameWidth, frameHeight) {
   const scale = Math.max(frameWidth / cell.width, frameHeight / cell.height);
-  const zoom = clamp(cell.zoom || 1, 1, 4);
+  const zoom = clamp(cell.zoom || 1, ZOOM_MIN, ZOOM_MAX);
   const coverWidth = cell.width * scale * zoom;
   const coverHeight = cell.height * scale * zoom;
   const extraX = Math.max(0, coverWidth - frameWidth);
   const extraY = Math.max(0, coverHeight - frameHeight);
+  const underX = Math.max(0, frameWidth - coverWidth);
+  const underY = Math.max(0, frameHeight - coverHeight);
   const focusX = clamp((cell.focusX + 1) / 2, 0, 1);
   const focusY = clamp((cell.focusY + 1) / 2, 0, 1);
   return {
@@ -1334,8 +1509,8 @@ function getImageRenderMetrics(cell, frameWidth, frameHeight) {
     coverHeight,
     extraX,
     extraY,
-    offsetX: focusX * extraX,
-    offsetY: focusY * extraY,
+    offsetX: extraX > 0 ? focusX * extraX : -underX / 2,
+    offsetY: extraY > 0 ? focusY * extraY : -underY / 2,
   };
 }
 
@@ -1385,7 +1560,7 @@ function getFrameMetrics(frame, cell) {
 function setCellZoom(index, nextZoom) {
   const cell = state.cells[index];
   if (!cell?.bitmap) return;
-  cell.zoom = clamp(nextZoom, 1, 4);
+  cell.zoom = clamp(nextZoom, ZOOM_MIN, ZOOM_MAX);
   syncEditor();
   renderPreview();
   renderExportPreview();
@@ -1397,7 +1572,7 @@ function handleEditorWheel(event) {
   event.preventDefault();
   const delta = -event.deltaY;
   const factor = 1 + delta * 0.0015;
-  const nextZoom = clamp((cell.zoom || 1) * factor, 1, 4);
+  const nextZoom = clamp((cell.zoom || 1) * factor, ZOOM_MIN, ZOOM_MAX);
   setCellZoom(state.selectedCell, nextZoom);
 }
 
@@ -1483,11 +1658,11 @@ function onDragMove(event) {
   const extraY = Math.max(0, state.dragging.coverHeight - state.dragging.frameHeight);
   if (extraX > 0) {
     const deltaX = event.clientX - state.dragging.startX;
-    cell.focusX = clamp(state.dragging.startFocusX + deltaX / (extraX / 2), -1, 1);
+    cell.focusX = clamp(state.dragging.startFocusX - deltaX / (extraX / 2), -1, 1);
   }
   if (extraY > 0) {
     const deltaY = event.clientY - state.dragging.startY;
-    cell.focusY = clamp(state.dragging.startFocusY + deltaY / (extraY / 2), -1, 1);
+    cell.focusY = clamp(state.dragging.startFocusY - deltaY / (extraY / 2), -1, 1);
   }
   syncEditor();
   renderPreview();
@@ -1499,7 +1674,7 @@ function stopDrag() {
   state.dragging = null;
 }
 
-function buildTimestampFilename(now = new Date()) {
+function buildTimestampFilename(extension, now = new Date()) {
   const pad2 = (value) => String(value).padStart(2, "0");
   const y = String(now.getFullYear());
   const m = pad2(now.getMonth() + 1);
@@ -1507,7 +1682,7 @@ function buildTimestampFilename(now = new Date()) {
   const hh = pad2(now.getHours());
   const mm = pad2(now.getMinutes());
   const ss = pad2(now.getSeconds());
-  return `fotocollage_${y}${m}${d}_${hh}${mm}${ss}.png`;
+  return `fotocollage_${y}${m}${d}_${hh}${mm}${ss}.${extension}`;
 }
 
 function downloadBlob(blob, filename) {
@@ -1541,10 +1716,30 @@ function updateExportActionButtons() {
   } catch {
     canShare = typeof navigator !== "undefined" && typeof navigator.share === "function";
   }
-  els.downloadButton.hidden = canShare;
+  const desktopLike = !isTouchLikeDevice();
+  els.downloadButton.hidden = desktopLike ? false : canShare;
 }
 
-function canvasToBlob(canvas) {
+function updateExportFormatUi() {
+  state.exportFormat = String(els.exportFormatSelect.value || "png").toLowerCase();
+  const isGif = state.exportFormat === "gif";
+  els.gifDelayField.hidden = !isGif;
+  els.gifDelayInput.disabled = !isGif;
+  if (isGif) {
+    const delay = clamp(Number(els.gifDelayInput.value) || 1, 0.1, 10);
+    state.gifDelaySeconds = delay;
+    els.gifDelayInput.value = delay.toFixed(1);
+    els.gifDelayValue.textContent = delay.toFixed(1);
+  }
+}
+
+function setExportStatus(message, loading = false) {
+  els.exportStatus.textContent = message;
+  els.exportStatus.hidden = !message;
+  els.exportStatus.classList.toggle("loading", Boolean(loading && message));
+}
+
+function canvasToBlob(canvas, mimeType = "image/png", quality) {
   return new Promise((resolve, reject) => {
     canvas.toBlob((blob) => {
       if (blob) {
@@ -1552,11 +1747,11 @@ function canvasToBlob(canvas) {
         return;
       }
       reject(new Error("Canvas export failed"));
-    }, "image/png");
+    }, mimeType, quality);
   });
 }
 
-async function renderExportBlob() {
+function createExportCanvas() {
   const layout = getActiveLayoutDefinition();
   const canvas = document.createElement("canvas");
   const width = clamp(Number(els.exportWidthInput.value) || 3000, 1200, 6000);
@@ -1565,31 +1760,272 @@ async function renderExportBlob() {
   canvas.height = height;
   const ctx = canvas.getContext("2d");
   drawCollage(ctx, width, height);
-  const filename = buildTimestampFilename(new Date());
-  const blob = await canvasToBlob(canvas);
-  return { blob, canvas, filename };
+  return canvas;
+}
+
+function createGifPalette() {
+  const palette = [];
+  const steps = [0, 51, 102, 153, 204, 255];
+  for (const r of steps) {
+    for (const g of steps) {
+      for (const b of steps) {
+        palette.push(r, g, b);
+      }
+    }
+  }
+  for (let i = 0; i < 40; i += 1) {
+    const v = Math.round((i / 39) * 255);
+    palette.push(v, v, v);
+  }
+  while (palette.length < 256 * 3) {
+    palette.push(0, 0, 0);
+  }
+  return new Uint8Array(palette.slice(0, 256 * 3));
+}
+
+function nearestPaletteIndex(palette, r, g, b) {
+  let best = 0;
+  let bestDist = Number.POSITIVE_INFINITY;
+  for (let i = 0; i < 256; i += 1) {
+    const p = i * 3;
+    const dr = r - palette[p];
+    const dg = g - palette[p + 1];
+    const db = b - palette[p + 2];
+    const dist = dr * dr + dg * dg + db * db;
+    if (dist < bestDist) {
+      bestDist = dist;
+      best = i;
+      if (dist === 0) break;
+    }
+  }
+  return best;
+}
+
+function imageDataToIndexed(imageData, palette) {
+  const { data, width, height } = imageData;
+  const indices = new Uint8Array(width * height);
+  for (let i = 0, px = 0; i < data.length; i += 4, px += 1) {
+    indices[px] = nearestPaletteIndex(palette, data[i], data[i + 1], data[i + 2]);
+  }
+  return indices;
+}
+
+function lzwEncodeLiteral(indices, minCodeSize = 8) {
+  const clearCode = 1 << minCodeSize;
+  const endCode = clearCode + 1;
+  let codeSize = minCodeSize + 1;
+  let nextCode = endCode + 1;
+
+  const outputBytes = [];
+  let bitBuffer = 0;
+  let bitCount = 0;
+
+  const pushCode = (code) => {
+    bitBuffer |= code << bitCount;
+    bitCount += codeSize;
+    while (bitCount >= 8) {
+      outputBytes.push(bitBuffer & 0xff);
+      bitBuffer >>= 8;
+      bitCount -= 8;
+    }
+  };
+
+  const reset = () => {
+    codeSize = minCodeSize + 1;
+    nextCode = endCode + 1;
+  };
+
+  if (!indices.length) {
+    pushCode(clearCode);
+    pushCode(endCode);
+    return new Uint8Array(outputBytes);
+  }
+
+  pushCode(clearCode);
+  pushCode(indices[0]);
+  for (let i = 1; i < indices.length; i += 1) {
+    const code = indices[i];
+    pushCode(code);
+    if (nextCode < 4096) {
+      nextCode += 1;
+      if (nextCode === 1 << codeSize && codeSize < 12) {
+        codeSize += 1;
+      }
+    } else {
+      pushCode(clearCode);
+      reset();
+      pushCode(code);
+    }
+  }
+  pushCode(endCode);
+  if (bitCount > 0) {
+    outputBytes.push(bitBuffer & 0xff);
+  }
+  return new Uint8Array(outputBytes);
+}
+
+function bytesFromString(value) {
+  return new TextEncoder().encode(value);
+}
+
+function wordLE(value) {
+  return new Uint8Array([value & 0xff, (value >> 8) & 0xff]);
+}
+
+function encodeAnimatedGif(frameIndexArrays, width, height, delaySeconds) {
+  const palette = createGifPalette();
+  const delayCs = clamp(Math.round(delaySeconds * 100), 1, 1000);
+  const chunks = [];
+  const push = (chunk) => chunks.push(chunk);
+
+  push(bytesFromString("GIF89a"));
+  push(wordLE(width));
+  push(wordLE(height));
+  push(new Uint8Array([0xf7, 0x00, 0x00]));
+  push(palette);
+  push(new Uint8Array([0x21, 0xff, 0x0b]));
+  push(bytesFromString("NETSCAPE2.0"));
+  push(new Uint8Array([0x03, 0x01, 0x00, 0x00, 0x00]));
+
+  for (const indices of frameIndexArrays) {
+    push(new Uint8Array([0x21, 0xf9, 0x04, 0x04, delayCs & 0xff, (delayCs >> 8) & 0xff, 0x00, 0x00]));
+    push(new Uint8Array([0x2c, 0x00, 0x00, 0x00, 0x00]));
+    push(wordLE(width));
+    push(wordLE(height));
+    push(new Uint8Array([0x00]));
+    push(new Uint8Array([0x08]));
+    const lzwData = lzwEncodeLiteral(indices, 8);
+    for (let i = 0; i < lzwData.length; i += 255) {
+      const size = Math.min(255, lzwData.length - i);
+      push(new Uint8Array([size]));
+      push(lzwData.slice(i, i + size));
+    }
+    push(new Uint8Array([0x00]));
+  }
+
+  push(new Uint8Array([0x3b]));
+  return new Blob(chunks, { type: "image/gif" });
+}
+
+function createPdfFromJpegBytes(jpegBytes, width, height) {
+  const encoder = new TextEncoder();
+  const chunks = [];
+  const offsets = [0];
+  let length = 0;
+
+  const push = (value) => {
+    chunks.push(value);
+    length += value.length;
+  };
+  const pushText = (text) => push(encoder.encode(text));
+  const markOffset = () => offsets.push(length);
+
+  pushText("%PDF-1.3\n");
+  markOffset();
+  pushText("1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj\n");
+  markOffset();
+  pushText("2 0 obj\n<< /Type /Pages /Kids [3 0 R] /Count 1 >>\nendobj\n");
+  markOffset();
+  pushText(`3 0 obj\n<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${width} ${height}] /Resources << /XObject << /Im0 4 0 R >> >> /Contents 5 0 R >>\nendobj\n`);
+  markOffset();
+  pushText(`4 0 obj\n<< /Type /XObject /Subtype /Image /Width ${width} /Height ${height} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${jpegBytes.length} >>\nstream\n`);
+  push(jpegBytes);
+  pushText("\nendstream\nendobj\n");
+  const content = `q\n${width} 0 0 ${height} 0 0 cm\n/Im0 Do\nQ\n`;
+  markOffset();
+  pushText(`5 0 obj\n<< /Length ${content.length} >>\nstream\n${content}endstream\nendobj\n`);
+
+  const xrefOffset = length;
+  pushText(`xref\n0 ${offsets.length}\n`);
+  pushText("0000000000 65535 f \n");
+  for (let i = 1; i < offsets.length; i += 1) {
+    pushText(`${String(offsets[i]).padStart(10, "0")} 00000 n \n`);
+  }
+  pushText(`trailer\n<< /Size ${offsets.length} /Root 1 0 R >>\nstartxref\n${xrefOffset}\n%%EOF`);
+  return new Blob(chunks, { type: "application/pdf" });
+}
+
+function drawBitmapCentered(ctx, bitmap, width, height) {
+  const sourceWidth = bitmap.width || 1;
+  const sourceHeight = bitmap.height || 1;
+  const scale = Math.min(width / sourceWidth, height / sourceHeight);
+  const drawWidth = Math.max(1, Math.round(sourceWidth * scale));
+  const drawHeight = Math.max(1, Math.round(sourceHeight * scale));
+  const drawX = Math.round((width - drawWidth) / 2);
+  const drawY = Math.round((height - drawHeight) / 2);
+  ctx.drawImage(bitmap, drawX, drawY, drawWidth, drawHeight);
+}
+
+async function waitForNextPaint() {
+  await new Promise((resolve) => requestAnimationFrame(() => resolve()));
+}
+
+async function buildExportPayload() {
+  const exportFormat = state.exportFormat;
+  const canvas = createExportCanvas();
+  if (exportFormat === "jpeg") {
+    const blob = await canvasToBlob(canvas, "image/jpeg", 0.92);
+    return { blob, filename: buildTimestampFilename("jpg"), mimeType: "image/jpeg" };
+  }
+  if (exportFormat === "pdf") {
+    const jpegBlob = await canvasToBlob(canvas, "image/jpeg", 0.92);
+    const jpegBytes = new Uint8Array(await jpegBlob.arrayBuffer());
+    const pdfBlob = createPdfFromJpegBytes(jpegBytes, canvas.width, canvas.height);
+    return { blob: pdfBlob, filename: buildTimestampFilename("pdf"), mimeType: "application/pdf" };
+  }
+  if (exportFormat === "gif") {
+    setExportStatus(t("gifRendering"), true);
+    await waitForNextPaint();
+    const gifCanvas = document.createElement("canvas");
+    gifCanvas.width = canvas.width;
+    gifCanvas.height = canvas.height;
+    const gifCtx = gifCanvas.getContext("2d");
+    const palette = createGifPalette();
+    const frames = [];
+    const imageCells = state.cells.filter((cell) => cell.bitmap);
+    const frameCount = Math.max(1, imageCells.length);
+    if (imageCells.length === 0) {
+      gifCtx.clearRect(0, 0, gifCanvas.width, gifCanvas.height);
+      gifCtx.fillStyle = state.background;
+      gifCtx.fillRect(0, 0, gifCanvas.width, gifCanvas.height);
+      const imageData = gifCtx.getImageData(0, 0, gifCanvas.width, gifCanvas.height);
+      frames.push(imageDataToIndexed(imageData, palette));
+    } else {
+      for (let i = 0; i < imageCells.length; i += 1) {
+        const frameNumber = i + 1;
+        setExportStatus(format(t("gifRenderingFrame"), { current: frameNumber, total: frameCount }), true);
+        await waitForNextPaint();
+        gifCtx.clearRect(0, 0, gifCanvas.width, gifCanvas.height);
+        gifCtx.fillStyle = state.background;
+        gifCtx.fillRect(0, 0, gifCanvas.width, gifCanvas.height);
+        drawBitmapCentered(gifCtx, imageCells[i].bitmap, gifCanvas.width, gifCanvas.height);
+        const imageData = gifCtx.getImageData(0, 0, gifCanvas.width, gifCanvas.height);
+        frames.push(imageDataToIndexed(imageData, palette));
+      }
+    }
+    const gifBlob = encodeAnimatedGif(frames, gifCanvas.width, gifCanvas.height, state.gifDelaySeconds);
+    setExportStatus("", false);
+    return { blob: gifBlob, filename: buildTimestampFilename("gif"), mimeType: "image/gif" };
+  }
+
+  const blob = await canvasToBlob(canvas, "image/png");
+  return { blob, filename: buildTimestampFilename("png"), mimeType: "image/png" };
 }
 
 async function exportByDownload() {
   try {
-    const { blob, canvas, filename } = await renderExportBlob();
-    if (blob) {
-      downloadBlob(blob, filename);
-      return;
-    }
-    const link = document.createElement("a");
-    link.download = filename;
-    link.href = canvas.toDataURL("image/png");
-    link.click();
+    const payload = await buildExportPayload();
+    downloadBlob(payload.blob, payload.filename);
+    setExportStatus("", false);
   } catch {
-    // ignore
+    setExportStatus(t("exportFailed"), false);
   }
 }
 
 async function exportByShare() {
   try {
-    const { blob, canvas, filename } = await renderExportBlob();
-    const file = new File([blob], filename, { type: "image/png" });
+    const payload = await buildExportPayload();
+    const file = new File([payload.blob], payload.filename, { type: payload.mimeType });
     if (canShareFiles(file)) {
       try {
         await navigator.share({
@@ -1604,16 +2040,13 @@ async function exportByShare() {
         }
       }
     }
-    if (!els.downloadButton.hidden) {
-      await exportByDownload();
-    } else {
-      const link = document.createElement("a");
-      link.download = filename;
-      link.href = canvas.toDataURL("image/png");
-      link.click();
-    }
+    downloadBlob(payload.blob, payload.filename);
   } catch {
     await exportByDownload();
+  } finally {
+    if (state.exportFormat !== "gif") {
+      setExportStatus("", false);
+    }
   }
 }
 
@@ -1680,10 +2113,12 @@ function registerServiceWorker() {
 
 function renderSlotsStatusControls() {
   els.dropZone.addEventListener("dragenter", (event) => {
+    if (getRemainingUploadSlots() <= 0) return;
     event.preventDefault();
     els.dropZone.classList.add("dragging");
   });
   els.dropZone.addEventListener("dragover", (event) => {
+    if (getRemainingUploadSlots() <= 0) return;
     event.preventDefault();
     els.dropZone.classList.add("dragging");
   });
@@ -1692,6 +2127,7 @@ function renderSlotsStatusControls() {
     els.dropZone.classList.remove("dragging");
   });
   els.dropZone.addEventListener("drop", (event) => {
+    if (getRemainingUploadSlots() <= 0) return;
     event.preventDefault();
     els.dropZone.classList.remove("dragging");
     void loadFiles(event.dataTransfer.files);
@@ -1699,6 +2135,19 @@ function renderSlotsStatusControls() {
   els.fileInput.addEventListener("change", () => {
     void loadFiles(els.fileInput.files);
     els.fileInput.value = "";
+  });
+  els.dropZone.addEventListener("click", (event) => {
+    if (!isTouchLikeDevice()) return;
+    if (els.fileInput.disabled) return;
+    if (event.target === els.fileInput) return;
+    els.fileInput.click();
+  });
+  els.dropZone.addEventListener("keydown", (event) => {
+    if (!isTouchLikeDevice()) return;
+    if (els.fileInput.disabled) return;
+    if (event.key !== "Enter" && event.key !== " ") return;
+    event.preventDefault();
+    els.fileInput.click();
   });
 }
 
@@ -1781,6 +2230,17 @@ function wireControls() {
     els.replaceInput.value = "";
   });
   els.exportWidthInput.addEventListener("input", renderExportPreview);
+  els.exportFormatSelect.addEventListener("change", () => {
+    updateExportFormatUi();
+    setExportStatus("", false);
+    renderExportPreview();
+  });
+  els.gifDelayInput.addEventListener("input", () => {
+    const value = clamp(Number(els.gifDelayInput.value) || 1, 0.1, 10);
+    state.gifDelaySeconds = value;
+    els.gifDelayInput.value = value.toFixed(1);
+    els.gifDelayValue.textContent = value.toFixed(1);
+  });
   els.shareButton.addEventListener("click", () => {
     void exportByShare();
   });
@@ -1880,6 +2340,10 @@ function init() {
   renderAllWithoutExport();
   els.exportWidthInput.value = String(state.exportWidth);
   els.exportWidthValue.textContent = String(state.exportWidth);
+  els.exportFormatSelect.value = state.exportFormat;
+  els.gifDelayInput.value = state.gifDelaySeconds.toFixed(1);
+  els.gifDelayValue.textContent = state.gifDelaySeconds.toFixed(1);
+  updateExportFormatUi();
   els.outerGapInput.value = String(state.outerGap);
   els.outerGapValue.textContent = String(state.outerGap);
   renderVersionLabel();

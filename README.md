@@ -1,5 +1,7 @@
 # Foto-Collage (PWA)
 
+![Foto-Collage Icon](./icon-192.png)
+
 Eine Progressive Web App zum Erstellen von Foto-Collagen direkt im Browser:
 
 - Vorlage waehlen (z. B. 2x2, 3x3, flexibel konfigurierbar)
@@ -65,6 +67,68 @@ Optional anderer Port:
 - `manifest.json` - PWA-Metadaten
 - `version.json` - App- und Cache-Version fuer Update-Pruefung
 - `start-server.ps1` - Lokaler statischer Server (Port 5000)
+
+## Hinweise fuer Programmierer: Presets konfigurieren
+
+Die Vorlagen sind in `app.js` in `const PRESETS = [...]` definiert.
+
+Jedes Preset hat:
+
+- `id`: technische Kennung
+- `label`: Anzeigename
+- `rows` und `cols`: Basisraster
+- `slots`: Liste der Bildflaechen mit Position und Ausdehnung
+
+Ein Slot hat die Form:
+
+```js
+{ x: 0, y: 1, w: 2, h: 1 }
+```
+
+Bedeutung:
+
+- `x`, `y`: Startzelle im Raster (0-basiert)
+- `w`, `h`: Breite/Hoehe in Rasterzellen
+
+Beispiel fuer ein asymmetrisches Preset:
+
+```js
+{
+  id: "mosaic-top1-bottom2",
+  label: "Oben 1, unten 2",
+  rows: 2,
+  cols: 2,
+  slots: [
+    { x: 0, y: 0, w: 2, h: 1 },
+    { x: 0, y: 1, w: 1, h: 1 },
+    { x: 1, y: 1, w: 1, h: 1 },
+  ],
+}
+```
+
+### Was `createGridSlots(rows, cols)` macht
+
+`createGridSlots(...)` erzeugt automatisch ein gleichmaessiges Standardraster:  
+Fuer jede Rasterzelle wird ein Slot mit `w: 1` und `h: 1` erstellt.
+
+Beispiel:
+
+```js
+createGridSlots(2, 2)
+```
+
+ergibt sinngemaess:
+
+```js
+[
+  { x: 0, y: 0, w: 1, h: 1 },
+  { x: 1, y: 0, w: 1, h: 1 },
+  { x: 0, y: 1, w: 1, h: 1 },
+  { x: 1, y: 1, w: 1, h: 1 },
+]
+```
+
+Das ist praktisch fuer klassische `2x2`, `3x3`, `2x3` usw., ohne die Slots einzeln zu schreiben.
 
 ## Update- und Versionierungslogik
 

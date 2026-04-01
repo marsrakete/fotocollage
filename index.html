@@ -156,7 +156,7 @@
                 </div>
                 <label class="field zoom-field">
                   <span id="zoomLabel">Zoom</span>
-                  <input id="zoomInput" type="range" min="1" max="4" step="0.05" value="1" />
+                  <input id="zoomInput" type="range" min="0.35" max="4" step="0.05" value="1" />
                   <strong><span id="zoomValue">100</span> %</strong>
                 </label>
                 <button class="secondary" id="resetZoom" type="button">Zoom zurücksetzen</button>
@@ -172,15 +172,29 @@
 
           <section class="step-panel" data-step="4">
             <div class="panel-head">
-              <h2 id="step4Title">Schritt 4: PNG speichern</h2>
+              <h2 id="step4Title">Schritt 4: Export</h2>
               <p id="step4Desc">
-                Die Collage wird in hoher Auflösung gerendert und direkt als
-                PNG-Datei heruntergeladen.
+                Die Collage wird in hoher Auflösung gerendert und kann geteilt
+                oder in mehreren Formaten gespeichert werden.
               </p>
             </div>
 
             <div class="export-layout">
               <div class="export-card">
+                <label class="field">
+                  <span id="exportFormatLabel">Exportformat</span>
+                  <select id="exportFormatSelect">
+                    <option value="png">PNG</option>
+                    <option value="jpeg">JPEG</option>
+                    <option value="pdf">PDF</option>
+                    <option value="gif">GIF (animiert)</option>
+                  </select>
+                </label>
+                <label class="field" id="gifDelayField" hidden>
+                  <span id="gifDelayLabel">Sekunden zwischen Frames</span>
+                  <input id="gifDelayInput" type="range" min="0.1" max="10" step="0.1" value="1.0" />
+                  <strong><span id="gifDelayValue">1.0</span> s</strong>
+                </label>
                 <label class="field">
                   <span id="exportWidthLabel">Exportbreite</span>
                   <input id="exportWidthInput" type="range" min="1200" max="6000" step="100" value="3000" />
@@ -194,6 +208,7 @@
                   <button class="primary" id="shareButton">Teilen</button>
                   <button class="secondary" id="downloadButton" hidden>Als PNG speichern</button>
                 </div>
+                <p class="settings-status export-status" id="exportStatus" hidden></p>
               </div>
 
               <div class="export-preview">
