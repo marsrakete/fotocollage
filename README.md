@@ -85,19 +85,6 @@ Wenn du nur `index.html` direkt als Datei (`file://...`) oeffnest:
 
 Deshalb muss die App mindestens einmal ueber einen lokalen Server gestartet werden.
 
-## Beispielfotos fuer Collagen
-
-Kostenfreie Beispielbilder (Lorem Picsum), die du direkt fuer Tests nutzen kannst:
-
-![Beispielfoto 1](https://picsum.photos/id/1015/1200/800)
-![Beispielfoto 2](https://picsum.photos/id/1025/1200/800)
-![Beispielfoto 3](https://picsum.photos/id/1035/1200/800)
-![Beispielfoto 4](https://picsum.photos/id/1043/1200/800)
-
-Tipps:
-- Fuer `2 x 1` (oben/unten) funktionieren Landschaftsbilder gut.
-- Fuer `1 x 2` (links/rechts) funktionieren Hochformate gut.
-
 ## Update- und Versionierungslogik
 
 - `version.json` enthaelt:
