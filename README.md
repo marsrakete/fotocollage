@@ -12,6 +12,37 @@ Die App laeuft komplett clientseitig und benoetigt kein Backend.
 
 Repository: [https://github.com/marsrakete/fotocollage](https://github.com/marsrakete/fotocollage)
 
+## Installation (PWA)
+
+### Fuer normale Anwender (empfohlen)
+
+1. App direkt im Browser oeffnen:
+
+[https://marsrakete.github.io/fotocollage/](https://marsrakete.github.io/fotocollage/)
+
+2. Als App installieren:
+- Edge/Chrome Desktop: Adressleiste -> App installieren
+- Android (Chrome/Edge): Menue -> App installieren / Zum Startbildschirm
+- iOS (Safari): Teilen -> Zum Home-Bildschirm
+
+### Fuer Nerds (lokal ueber localhost)
+
+1. Server starten:
+
+```powershell
+.\start-server.ps1
+```
+
+2. App im Browser oeffnen:
+
+`http://localhost:5000/`
+
+Optional anderer Port:
+
+```powershell
+.\start-server.ps1 -Port 5050
+```
+
 ## Features
 
 - 4-Schritt-Workflow fuer schnelle Collage-Erstellung
@@ -35,58 +66,6 @@ Repository: [https://github.com/marsrakete/fotocollage](https://github.com/marsr
 - `version.json` - App- und Cache-Version fuer Update-Pruefung
 - `start-server.ps1` - Lokaler statischer Server (Port 5000)
 
-## Lokaler Start
-
-Voraussetzung: PowerShell unter Windows.
-
-```powershell
-.\start-server.ps1
-```
-
-Dann im Browser oeffnen:
-
-`http://localhost:5000/`
-
-Optional anderer Port:
-
-```powershell
-.\start-server.ps1 -Port 5050
-```
-
-## PWA installieren (Desktop + Mobil)
-
-Die Installation erfolgt ueber den Browser, nachdem die App mindestens einmal per HTTP geladen wurde.
-
-1. Lokalen Server starten:
-
-```powershell
-.\start-server.ps1
-```
-
-2. App im Browser oeffnen:
-
-`http://localhost:5000/`
-
-3. Installieren:
-- Edge/Chrome Desktop: Adressleiste -> App installieren
-- Android (Chrome/Edge): Menue -> App installieren / Zum Startbildschirm
-- iOS (Safari): Teilen -> Zum Home-Bildschirm
-
-### Warum mindestens einmal ein Server noetig ist
-
-Eine PWA basiert auf `manifest.json` und `service-worker.js`.  
-Service Worker werden von Browsern nur in einem sicheren Kontext akzeptiert:
-
-- `https://...` (normaler Betrieb)
-- oder `http://localhost` (lokale Entwicklung)
-
-Wenn du nur `index.html` direkt als Datei (`file://...`) oeffnest:
-- kein Service Worker
-- kein echtes Offline-Caching
-- keine vollstaendige PWA-Installation
-
-Deshalb muss die App mindestens einmal ueber einen lokalen Server gestartet werden.
-
 ## Update- und Versionierungslogik
 
 - `version.json` enthaelt:
@@ -96,6 +75,27 @@ Deshalb muss die App mindestens einmal ueber einen lokalen Server gestartet werd
 - In den Einstellungen kann ueber **Auf Update pruefen** eine neue Version erkannt werden.
 - Bei neuer Version wird **Neu laden** angeboten.
 - Der Service Worker cached statische Assets und behandelt `version.json` mit Netz-Prioritaet (Fallback auf Cache).
+
+## Warum mindestens einmal ein Server noetig ist
+
+Eine PWA basiert auf `manifest.json` und `service-worker.js`.  
+Service Worker werden von Browsern nur in einem sicheren Kontext akzeptiert:
+
+- `https://...` (normaler Betrieb, z. B. GitHub Pages)
+- oder `http://localhost` (lokale Entwicklung)
+
+Wenn du nur `index.html` direkt als Datei (`file://...`) oeffnest:
+- kein Service Worker
+- kein echtes Offline-Caching
+- keine vollstaendige PWA-Installation
+
+Deshalb muss die App mindestens einmal ueber HTTPS oder localhost geladen werden.
+
+Lokalen Server starten (Nerd-Variante):
+
+```powershell
+.\start-server.ps1
+```
 
 ## GitHub-Publikation
 

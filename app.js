@@ -123,8 +123,8 @@ const PRESETS = [
 ];
 
 const DEFAULT_VERSION_INFO = Object.freeze({
-  appVersion: "1.1.4",
-  cacheVersion: "v15",
+  appVersion: "1.1.5",
+  cacheVersion: "v16",
   label: "Aktueller Stand",
 });
 
