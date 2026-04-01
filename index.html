@@ -17,10 +17,16 @@
           <p class="eyebrow" id="heroEyebrow">Marsrakete</p>
           <div class="hero-title-row">
             <h1 id="appTitle">Foto-Collage</h1>
-            <button id="settingsButton" class="secondary settings-button" type="button" aria-label="Einstellungen">
-              <span aria-hidden="true">⚙</span>
-              <span id="settingsButtonLabel">Einstellungen</span>
-            </button>
+            <div class="hero-actions">
+              <button id="settingsButton" class="secondary settings-button" type="button" aria-label="Einstellungen">
+                <span aria-hidden="true">⚙</span>
+                <span id="settingsButtonLabel">Einstellungen</span>
+              </button>
+              <button id="helpButton" class="secondary settings-button" type="button" aria-label="Hilfe öffnen">
+                <span aria-hidden="true">?</span>
+                <span id="helpButtonLabel">Hilfe</span>
+              </button>
+            </div>
           </div>
           <p class="lede" id="heroLede">
             In wenigen Schritten zur fertigen Collage: Vorlage wählen, Fotos
@@ -244,6 +250,20 @@
             <button id="reloadAppButton" class="primary" type="button" hidden>Neu laden</button>
           </div>
         </section>
+        <div class="settings-footer">
+          <button class="secondary" value="cancel" type="submit">Schließen</button>
+        </div>
+      </form>
+    </dialog>
+
+    <dialog id="helpDialog" class="settings-dialog">
+      <form id="helpForm" method="dialog" class="settings-panel help-panel">
+        <div class="dialog-head">
+          <h2 id="helpTitle">Hilfe</h2>
+          <button class="secondary icon-only" value="cancel" aria-label="Schließen" type="submit">✕</button>
+        </div>
+        <p id="readmeStatus" class="settings-status"></p>
+        <div id="readmeContent" class="help-content"></div>
         <div class="settings-footer">
           <button class="secondary" value="cancel" type="submit">Schließen</button>
         </div>

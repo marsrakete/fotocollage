@@ -10,6 +10,8 @@ Eine Progressive Web App zum Erstellen von Foto-Collagen direkt im Browser:
 
 Die App laeuft komplett clientseitig und benoetigt kein Backend.
 
+Repository: [https://github.com/marsrakete/fotocollage](https://github.com/marsrakete/fotocollage)
+
 ## Features
 
 - 4-Schritt-Workflow fuer schnelle Collage-Erstellung
@@ -114,3 +116,8 @@ Falls bereits ein Git-Repository existiert, nur `add/commit/push` verwenden.
 
 Dieses Projekt steht unter der Apache License 2.0.
 Siehe [LICENSE](./LICENSE).
+
+## Urheber und Kontakt
+
+- Urheber: millux
+- Kontakt: [millux@marsrakete.de](mailto:millux@marsrakete.de)

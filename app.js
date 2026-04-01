@@ -77,6 +77,41 @@ const PRESETS = [
       { x: 0, y: 1, w: 3, h: 1 },
     ],
   },
+  {
+    id: "story-left-main",
+    label: "Story links, rechts 2",
+    rows: 2,
+    cols: 3,
+    slots: [
+      { x: 0, y: 0, w: 1, h: 2 },
+      { x: 1, y: 0, w: 2, h: 1 },
+      { x: 1, y: 1, w: 2, h: 1 },
+    ],
+  },
+  {
+    id: "story-right-main",
+    label: "Story rechts, links 2",
+    rows: 2,
+    cols: 3,
+    slots: [
+      { x: 0, y: 0, w: 2, h: 1 },
+      { x: 0, y: 1, w: 2, h: 1 },
+      { x: 2, y: 0, w: 1, h: 2 },
+    ],
+  },
+  {
+    id: "story-center-main",
+    label: "Story Mitte, Seiten 4",
+    rows: 2,
+    cols: 3,
+    slots: [
+      { x: 1, y: 0, w: 1, h: 2 },
+      { x: 0, y: 0, w: 1, h: 1 },
+      { x: 0, y: 1, w: 1, h: 1 },
+      { x: 2, y: 0, w: 1, h: 1 },
+      { x: 2, y: 1, w: 1, h: 1 },
+    ],
+  },
   { id: "grid-2x1", label: "2 Felder (oben/unten)", rows: 2, cols: 1, slots: createGridSlots(2, 1) },
   { id: "grid-1x2", label: "2 Felder (links/rechts)", rows: 1, cols: 2, slots: createGridSlots(1, 2) },
   { id: "grid-2x2", label: "2 x 2", rows: 2, cols: 2, slots: createGridSlots(2, 2) },
@@ -88,8 +123,8 @@ const PRESETS = [
 ];
 
 const DEFAULT_VERSION_INFO = Object.freeze({
-  appVersion: "1.1.0",
-  cacheVersion: "v11",
+  appVersion: "1.1.4",
+  cacheVersion: "v15",
   label: "Aktueller Stand",
 });
 
@@ -106,6 +141,11 @@ const I18N = {
       "In wenigen Schritten zur fertigen Collage: Vorlage w\u00e4hlen, Fotos hochladen, Ausschnitte feinjustieren und als PNG speichern.",
     settingsAria: "Einstellungen \u00f6ffnen",
     settingsButtonLabel: "Einstellungen",
+    helpAria: "Hilfe \u00f6ffnen",
+    helpButtonLabel: "Hilfe",
+    helpTitle: "Hilfe",
+    helpLoading: "README wird geladen \u2026",
+    helpFailed: "README konnte nicht geladen werden.",
     step1Title: "Schritt 1: Collage-Vorlage",
     step1Desc: "W\u00e4hle ein Raster oder passe Zeilen und Spalten flexibel an.",
     step2Title: "Schritt 2: Fotos hochladen",
@@ -172,6 +212,11 @@ const I18N = {
       "Create a finished collage in a few steps: choose a template, upload photos, fine-tune the crop, and save as PNG.",
     settingsAria: "Open settings",
     settingsButtonLabel: "Settings",
+    helpAria: "Open help",
+    helpButtonLabel: "Help",
+    helpTitle: "Help",
+    helpLoading: "Loading README \u2026",
+    helpFailed: "Could not load README.",
     step1Title: "Step 1: Collage template",
     step1Desc: "Choose a grid or adjust rows and columns freely.",
     step2Title: "Step 2: Upload photos",
@@ -237,6 +282,11 @@ const I18N = {
       "Cr\u00e9ez un collage en quelques \u00e9tapes: choisissez un mod\u00e8le, envoyez vos photos, ajustez le cadrage et enregistrez en PNG.",
     settingsAria: "Ouvrir les param\u00e8tres",
     settingsButtonLabel: "Param\u00e8tres",
+    helpAria: "Ouvrir l'aide",
+    helpButtonLabel: "Aide",
+    helpTitle: "Aide",
+    helpLoading: "Chargement du README \u2026",
+    helpFailed: "Impossible de charger le README.",
     step1Title: "\u00c9tape 1: Mod\u00e8le de collage",
     step1Desc: "Choisissez une grille ou adaptez librement les lignes et les colonnes.",
     step2Title: "\u00c9tape 2: Envoyer les photos",
@@ -315,6 +365,7 @@ const state = {
   exportWidth: 3000,
   languagePreference: "auto",
   language: "de",
+  readmeText: "",
   versionInfo: { ...DEFAULT_VERSION_INFO },
   serviceWorkerRegistration: null,
   updateInProgress: false,
@@ -326,6 +377,8 @@ const els = {
   heroLede: document.getElementById("heroLede"),
   settingsButton: document.getElementById("settingsButton"),
   settingsButtonLabel: document.getElementById("settingsButtonLabel"),
+  helpButton: document.getElementById("helpButton"),
+  helpButtonLabel: document.getElementById("helpButtonLabel"),
   versionLabel: document.getElementById("versionLabel"),
   gridSummary: document.getElementById("gridSummary"),
   filledSummary: document.getElementById("filledSummary"),
@@ -368,6 +421,11 @@ const els = {
   exportCanvas: document.getElementById("exportCanvas"),
   settingsDialog: document.getElementById("settingsDialog"),
   settingsForm: document.getElementById("settingsForm"),
+  helpDialog: document.getElementById("helpDialog"),
+  helpForm: document.getElementById("helpForm"),
+  helpTitle: document.getElementById("helpTitle"),
+  readmeStatus: document.getElementById("readmeStatus"),
+  readmeContent: document.getElementById("readmeContent"),
   settingsTitle: document.getElementById("settingsTitle"),
   settingsIntro: document.getElementById("settingsIntro"),
   updatesTitle: document.getElementById("updatesTitle"),
@@ -548,7 +606,9 @@ function translateStaticUi() {
   setText(els.appTitle, "appTitle");
   setText(els.heroLede, "heroLede");
   setText(els.settingsButtonLabel, "settingsButtonLabel");
+  setText(els.helpButtonLabel, "helpButtonLabel");
   els.settingsButton.setAttribute("aria-label", t("settingsAria"));
+  els.helpButton.setAttribute("aria-label", t("helpAria"));
   setText(els.step1Title, "step1Title");
   setText(els.step1Desc, "step1Desc");
   setText(els.step2Title, "step2Title");
@@ -566,6 +626,7 @@ function translateStaticUi() {
   setText(els.exportHelp, "exportHelp");
   setText(els.settingsTitle, "settingsTitle");
   setText(els.settingsIntro, "settingsIntro");
+  setText(els.helpTitle, "helpTitle");
   setText(els.updatesTitle, "updatesTitle");
   setText(els.languageLabel, "languageLabel");
   setText(els.checkForUpdatesButton, "checkForUpdates");
@@ -601,6 +662,9 @@ function translateStaticUi() {
   if (els.languageSelect.options[3]) {
     els.languageSelect.options[3].textContent = "Fran\u00e7ais";
   }
+  if (els.helpDialog.open && !state.readmeText) {
+    els.readmeStatus.textContent = t("helpLoading");
+  }
 }
 
 function renderVersionLabel() {
@@ -613,6 +677,223 @@ function renderVersionLabel() {
     parts.push(info.label);
   }
   els.versionLabel.textContent = parts.join(" \u00b7 ");
+}
+
+async function loadReadmeContent() {
+  if (state.readmeText) {
+    els.readmeStatus.textContent = "";
+    els.readmeContent.innerHTML = renderMarkdownAsHtml(state.readmeText);
+    return;
+  }
+  els.readmeStatus.textContent = t("helpLoading");
+  els.readmeContent.innerHTML = "";
+  try {
+    const response = await fetch("./README.md", { cache: "no-cache" });
+    if (!response.ok) {
+      throw new Error("README unavailable");
+    }
+    const text = await response.text();
+    state.readmeText = text;
+    els.readmeStatus.textContent = "";
+    els.readmeContent.innerHTML = renderMarkdownAsHtml(text);
+  } catch {
+    els.readmeStatus.textContent = t("helpFailed");
+    if (!state.readmeText) {
+      els.readmeContent.innerHTML = "";
+    }
+  }
+}
+
+function renderMarkdownAsHtml(markdown) {
+  const lines = markdown.replace(/\r/g, "").split("\n");
+  const parts = [];
+  let listType = null;
+  let listItems = [];
+  let paragraphLines = [];
+  let codeLines = [];
+  let blockquoteLines = [];
+  let tableLines = [];
+  let inCodeBlock = false;
+
+  const flushList = () => {
+    if (!listItems.length) return;
+    const tag = listType || "ul";
+    parts.push(`<${tag}>${listItems.map((item) => `<li>${renderInlineMarkdown(item)}</li>`).join("")}</${tag}>`);
+    listType = null;
+    listItems = [];
+  };
+
+  const flushParagraph = () => {
+    if (!paragraphLines.length) return;
+    parts.push(`<p>${renderInlineMarkdown(paragraphLines.join(" "))}</p>`);
+    paragraphLines = [];
+  };
+
+  const flushCode = () => {
+    if (!codeLines.length) return;
+    parts.push(`<pre><code>${escapeHtml(codeLines.join("\n"))}</code></pre>`);
+    codeLines = [];
+  };
+
+  const flushBlockquote = () => {
+    if (!blockquoteLines.length) return;
+    parts.push(`<blockquote>${renderInlineMarkdown(blockquoteLines.join(" "))}</blockquote>`);
+    blockquoteLines = [];
+  };
+
+  const flushTable = () => {
+    if (tableLines.length < 2 || !/^\s*\|?[\s:-]+\|[\s|:-]*$/.test(tableLines[1])) {
+      paragraphLines.push(...tableLines);
+      tableLines = [];
+      return;
+    }
+    const rows = tableLines.map((line) => line.trim().replace(/^\||\|$/g, "").split("|").map((cell) => cell.trim()));
+    const [header, , ...body] = rows;
+    const headerMarkup = header.map((cell) => `<th>${renderInlineMarkdown(cell)}</th>`).join("");
+    const bodyMarkup = body.map((row) => `<tr>${row.map((cell) => `<td>${renderInlineMarkdown(cell)}</td>`).join("")}</tr>`).join("");
+    parts.push(`<table><thead><tr>${headerMarkup}</tr></thead><tbody>${bodyMarkup}</tbody></table>`);
+    tableLines = [];
+  };
+
+  const flushAll = () => {
+    flushList();
+    flushParagraph();
+    flushBlockquote();
+    flushTable();
+  };
+
+  for (const line of lines) {
+    if (line.startsWith("```")) {
+      flushAll();
+      if (inCodeBlock) {
+        flushCode();
+      }
+      inCodeBlock = !inCodeBlock;
+      continue;
+    }
+
+    if (inCodeBlock) {
+      codeLines.push(line);
+      continue;
+    }
+
+    if (!line.trim()) {
+      flushAll();
+      continue;
+    }
+
+    const headingMatch = /^(#{1,3})\s+(.+)$/.exec(line);
+    if (headingMatch) {
+      flushAll();
+      const level = headingMatch[1].length;
+      parts.push(`<h${level}>${renderInlineMarkdown(headingMatch[2])}</h${level}>`);
+      continue;
+    }
+
+    if (/^\|.+\|\s*$/.test(line.trim())) {
+      flushList();
+      flushParagraph();
+      flushBlockquote();
+      tableLines.push(line);
+      continue;
+    }
+
+    flushTable();
+
+    const unorderedListMatch = /^[-*]\s+(.+)$/.exec(line);
+    if (unorderedListMatch) {
+      flushParagraph();
+      flushBlockquote();
+      if (listType && listType !== "ul") {
+        flushList();
+      }
+      listType = "ul";
+      listItems.push(unorderedListMatch[1]);
+      continue;
+    }
+
+    const orderedListMatch = /^\d+\.\s+(.+)$/.exec(line);
+    if (orderedListMatch) {
+      flushParagraph();
+      flushBlockquote();
+      if (listType && listType !== "ol") {
+        flushList();
+      }
+      listType = "ol";
+      listItems.push(orderedListMatch[1]);
+      continue;
+    }
+
+    const blockquoteMatch = /^>\s?(.*)$/.exec(line);
+    if (blockquoteMatch) {
+      flushList();
+      flushParagraph();
+      blockquoteLines.push(blockquoteMatch[1]);
+      continue;
+    }
+
+    if (/^(-{3,}|\*{3,}|_{3,})$/.test(line.trim())) {
+      flushAll();
+      parts.push("<hr>");
+      continue;
+    }
+
+    const imageMatch = /^!\[([^\]]*)\]\(([^)]+)\)$/.exec(line.trim());
+    if (imageMatch) {
+      flushAll();
+      const src = sanitizeMarkdownUrl(imageMatch[2]);
+      if (src) {
+        parts.push(`<figure><img src="${escapeAttribute(src)}" alt="${escapeAttribute(imageMatch[1])}" loading="lazy"></figure>`);
+      }
+      continue;
+    }
+
+    paragraphLines.push(line.trim());
+  }
+
+  flushAll();
+  flushCode();
+  return parts.join("");
+}
+
+function renderInlineMarkdown(text) {
+  let html = escapeHtml(text);
+  html = html.replace(/`([^`]+)`/g, "<code>$1</code>");
+  html = html.replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
+  html = html.replace(/(^|[^\*])\*([^*]+)\*/g, "$1<em>$2</em>");
+  html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (_match, label, href) => {
+    const safeHref = sanitizeMarkdownUrl(href);
+    if (safeHref) {
+      const external = /^https?:\/\//i.test(safeHref);
+      return `<a href="${escapeAttribute(safeHref)}"${external ? ' target="_blank" rel="noreferrer"' : ""}>${escapeHtml(label)}</a>`;
+    }
+    return escapeHtml(label);
+  });
+  return html;
+}
+
+function sanitizeMarkdownUrl(url) {
+  if (typeof url !== "string") {
+    return "";
+  }
+  const trimmed = url.trim();
+  if (!trimmed || /^javascript:/i.test(trimmed)) {
+    return "";
+  }
+  return trimmed;
+}
+
+function escapeHtml(text) {
+  return String(text)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll("\"", "&quot;")
+    .replaceAll("'", "&#39;");
+}
+
+function escapeAttribute(value) {
+  return escapeHtml(value).replaceAll("`", "&#96;");
 }
 
 function getGridLayout(rows, cols) {
@@ -730,12 +1011,12 @@ function renderPresets() {
     btn.dataset.rows = String(preset.rows);
     btn.dataset.cols = String(preset.cols);
     btn.dataset.presetId = preset.id;
+    const tooltip = `${preset.label} (${preset.slots.length} ${t("cells")})`;
+    btn.title = tooltip;
+    btn.setAttribute("aria-label", tooltip);
     btn.innerHTML = `
       <span class="grid-mini" aria-hidden="true"></span>
-      <div>
-        <small>${preset.slots.length} ${t("cells")}</small>
-        <strong>${preset.label}</strong>
-      </div>
+      <span class="sr-only">${tooltip}</span>
     `;
     const mini = btn.querySelector(".grid-mini");
     mini.style.gridTemplateColumns = `repeat(${preset.cols}, 1fr)`;
@@ -1510,6 +1791,10 @@ function wireControls() {
     setUpdateStatus("", false);
     els.settingsDialog.showModal();
   });
+  els.helpButton.addEventListener("click", () => {
+    els.helpDialog.showModal();
+    void loadReadmeContent();
+  });
   els.languageSelect.addEventListener("change", () => {
     applyLanguagePreference(els.languageSelect.value);
   });
@@ -1521,6 +1806,10 @@ function wireControls() {
   els.settingsForm.addEventListener("submit", (event) => {
     event.preventDefault();
     els.settingsDialog.close();
+  });
+  els.helpForm.addEventListener("submit", (event) => {
+    event.preventDefault();
+    els.helpDialog.close();
   });
   window.addEventListener("resize", () => {
     updateUploadUiForDevice();

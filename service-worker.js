@@ -1,5 +1,5 @@
 const CACHE_PREFIX = "fotocollage-cache";
-const CACHE_VERSION = "v11";
+const CACHE_VERSION = "v15";
 const CACHE_NAME = `${CACHE_PREFIX}-${CACHE_VERSION}`;
 const ASSETS = [
   "./",
@@ -8,6 +8,7 @@ const ASSETS = [
   "./app.js",
   "./manifest.json",
   "./version.json",
+  "./README.md",
   "./icon.svg",
   "./icon-192.png",
   "./icon-512.png",
@@ -37,7 +38,7 @@ self.addEventListener("fetch", (event) => {
   }
 
   const requestUrl = new URL(event.request.url);
-  if (requestUrl.pathname.endsWith("/version.json")) {
+  if (requestUrl.pathname.endsWith("/version.json") || requestUrl.pathname.endsWith("/README.md")) {
     event.respondWith(
       fetch(event.request)
         .then((response) => {
@@ -46,7 +47,11 @@ self.addEventListener("fetch", (event) => {
           return response;
         })
         .catch(() =>
-          caches.match(event.request).then((cached) => cached || caches.match("./version.json"))
+          caches.match(event.request).then((cached) => {
+            if (cached) return cached;
+            if (requestUrl.pathname.endsWith("/README.md")) return caches.match("./README.md");
+            return caches.match("./version.json");
+          })
         )
     );
     return;
