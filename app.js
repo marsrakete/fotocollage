@@ -211,8 +211,8 @@ const PRESET_LABELS = Object.freeze({
 });
 
 const DEFAULT_VERSION_INFO = Object.freeze({
-  appVersion: "1.2.5",
-  cacheVersion: "v27",
+  appVersion: "1.2.7",
+  cacheVersion: "v29",
   label: "Aktueller Stand",
 });
 
@@ -1838,6 +1838,9 @@ function lzwEncodeLiteral(indices, minCodeSize = 8) {
   if (!indices.length) {
     pushCode(clearCode);
     pushCode(endCode);
+    if (bitCount > 0) {
+      outputBytes.push(bitBuffer & 0xff);
+    }
     return new Uint8Array(outputBytes);
   }
 
@@ -1845,16 +1848,17 @@ function lzwEncodeLiteral(indices, minCodeSize = 8) {
   pushCode(indices[0]);
   for (let i = 1; i < indices.length; i += 1) {
     const code = indices[i];
-    pushCode(code);
-    if (nextCode < 4096) {
-      nextCode += 1;
-      if (nextCode === 1 << codeSize && codeSize < 12) {
-        codeSize += 1;
-      }
-    } else {
+    if (nextCode >= 4096) {
+      // Reset dictionary before writing the next literal to keep the decoder aligned.
       pushCode(clearCode);
       reset();
       pushCode(code);
+      continue;
+    }
+    pushCode(code);
+    nextCode += 1;
+    if (nextCode === 1 << codeSize && codeSize < 12) {
+      codeSize += 1;
     }
   }
   pushCode(endCode);
