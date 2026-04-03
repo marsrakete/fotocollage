@@ -75,7 +75,7 @@ Die Vorlagen sind in `app.js` in `const PRESETS = [...]` definiert.
 Jedes Preset hat:
 
 - `id`: technische Kennung
-- `label`: Anzeigename
+- `label`: technischer Fallback-Name (falls keine Lokalisierung vorhanden ist)
 - `rows` und `cols`: Basisraster
 - `slots`: Liste der Bildflaechen mit Position und Ausdehnung
 
@@ -129,6 +129,43 @@ ergibt sinngemaess:
 ```
 
 Das ist praktisch fuer klassische `2x2`, `3x3`, `2x3` usw., ohne die Slots einzeln zu schreiben.
+
+### Preset-Lokalisierung
+
+Die sichtbaren Preset-Texte werden ueber `const PRESET_LABELS = { ... }` in `app.js` lokalisiert.
+
+Beispiel:
+
+```js
+"grid-1x4-square": {
+  de: "1 x 4 (quadratisch)",
+  en: "1 x 4 (square)",
+  fr: "1 x 4 (carre)",
+}
+```
+
+Fuer neue Presets:
+
+1. Preset in `PRESETS` anlegen.
+2. Passenden Eintrag mit gleicher `id` in `PRESET_LABELS` ergaenzen (`de`, `en`, `fr`).
+3. Optional `label` im Preset als technischer Fallback belassen.
+
+Wenn ein Sprachwert fehlt, faellt die App auf `de` und danach auf `label` zurueck.
+
+### Neue freie Einheiten-Presets
+
+Es gibt freie Presets mit asymmetrischen Einheiten, zum Beispiel:
+
+- `grid-3x1-tall3` -> 3 Bilder, jeweils 3 Einheiten hoch
+- `grid-1x3-wide3` -> 3 Bilder, jeweils 3 Einheiten breit
+- `grid-4x1-tall4` -> 4 Bilder, jeweils 4 Einheiten hoch
+- `grid-1x4-wide4` -> 4 Bilder, jeweils 4 Einheiten breit
+
+Weitere hinzugefuegte Vorlagen:
+
+- `grid-1x4-square`, `grid-4x1-square`
+- `grid-4x1-tall2`, `grid-1x4-wide2`
+- `triptych-vertical`, `triptych-horizontal`
 
 ## Update- und Versionierungslogik
 

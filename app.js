@@ -112,6 +112,62 @@ const PRESETS = [
       { x: 2, y: 1, w: 1, h: 1 },
     ],
   },
+  {
+    id: "corner-2x2-top-left",
+    label: "3x3 Ecke: 2x2 oben links",
+    rows: 3,
+    cols: 3,
+    slots: [
+      { x: 0, y: 0, w: 2, h: 2 },
+      { x: 2, y: 0, w: 1, h: 1 },
+      { x: 2, y: 1, w: 1, h: 1 },
+      { x: 0, y: 2, w: 1, h: 1 },
+      { x: 1, y: 2, w: 1, h: 1 },
+      { x: 2, y: 2, w: 1, h: 1 },
+    ],
+  },
+  {
+    id: "corner-2x2-top-right",
+    label: "3x3 Ecke: 2x2 oben rechts",
+    rows: 3,
+    cols: 3,
+    slots: [
+      { x: 1, y: 0, w: 2, h: 2 },
+      { x: 0, y: 0, w: 1, h: 1 },
+      { x: 0, y: 1, w: 1, h: 1 },
+      { x: 0, y: 2, w: 1, h: 1 },
+      { x: 1, y: 2, w: 1, h: 1 },
+      { x: 2, y: 2, w: 1, h: 1 },
+    ],
+  },
+  {
+    id: "corner-2x2-bottom-left",
+    label: "3x3 Ecke: 2x2 unten links",
+    rows: 3,
+    cols: 3,
+    slots: [
+      { x: 0, y: 1, w: 2, h: 2 },
+      { x: 0, y: 0, w: 1, h: 1 },
+      { x: 1, y: 0, w: 1, h: 1 },
+      { x: 2, y: 0, w: 1, h: 1 },
+      { x: 2, y: 1, w: 1, h: 1 },
+      { x: 2, y: 2, w: 1, h: 1 },
+    ],
+  },
+  {
+    id: "corner-2x2-bottom-right",
+    label: "3x3 Ecke: 2x2 unten rechts",
+    rows: 3,
+    cols: 3,
+    slots: [
+      { x: 1, y: 1, w: 2, h: 2 },
+      { x: 0, y: 0, w: 1, h: 1 },
+      { x: 1, y: 0, w: 1, h: 1 },
+      { x: 2, y: 0, w: 1, h: 1 },
+      { x: 0, y: 1, w: 1, h: 1 },
+      { x: 0, y: 2, w: 1, h: 1 },
+    ],
+  },
   { id: "grid-2x1", label: "2 Felder (oben/unten)", rows: 2, cols: 1, slots: createGridSlots(2, 1) },
   { id: "grid-1x2", label: "2 Felder (links/rechts)", rows: 1, cols: 2, slots: createGridSlots(1, 2) },
   { id: "grid-2x2", label: "2 x 2", rows: 2, cols: 2, slots: createGridSlots(2, 2) },
@@ -119,7 +175,92 @@ const PRESETS = [
   { id: "grid-2x3", label: "2 x 3", rows: 2, cols: 3, slots: createGridSlots(2, 3) },
   { id: "grid-3x2", label: "3 x 2", rows: 3, cols: 2, slots: createGridSlots(3, 2) },
   { id: "grid-4x3", label: "4 x 3", rows: 4, cols: 3, slots: createGridSlots(4, 3) },
-  { id: "grid-1x4", label: "1 x 4", rows: 1, cols: 4, slots: createGridSlots(1, 4) },
+  { id: "grid-1x4-square", label: "1 x 4 (quadratisch)", rows: 1, cols: 4, slots: createGridSlots(1, 4) },
+  { id: "grid-4x1-square", label: "4 x 1 (quadratisch)", rows: 4, cols: 1, slots: createGridSlots(4, 1) },
+  {
+    id: "grid-4x1-tall2",
+    label: "4 x 1 (2 Einheiten Höhe)",
+    rows: 2,
+    cols: 4,
+    slots: [
+      { x: 0, y: 0, w: 1, h: 2 },
+      { x: 1, y: 0, w: 1, h: 2 },
+      { x: 2, y: 0, w: 1, h: 2 },
+      { x: 3, y: 0, w: 1, h: 2 },
+    ],
+  },
+  {
+    id: "grid-1x4-wide2",
+    label: "1 x 4 (2 Einheiten Breite)",
+    rows: 4,
+    cols: 2,
+    slots: [
+      { x: 0, y: 0, w: 2, h: 1 },
+      { x: 0, y: 1, w: 2, h: 1 },
+      { x: 0, y: 2, w: 2, h: 1 },
+      { x: 0, y: 3, w: 2, h: 1 },
+    ],
+  },
+  {
+    id: "grid-3x1-tall3",
+    label: "3 x 1 (3 Einheiten Hoehe)",
+    rows: 3,
+    cols: 3,
+    slots: [
+      { x: 0, y: 0, w: 1, h: 3 },
+      { x: 1, y: 0, w: 1, h: 3 },
+      { x: 2, y: 0, w: 1, h: 3 },
+    ],
+  },
+  {
+    id: "grid-1x3-wide3",
+    label: "1 x 3 (3 Einheiten Breite)",
+    rows: 3,
+    cols: 3,
+    slots: [
+      { x: 0, y: 0, w: 3, h: 1 },
+      { x: 0, y: 1, w: 3, h: 1 },
+      { x: 0, y: 2, w: 3, h: 1 },
+    ],
+  },
+  {
+    id: "grid-4x1-tall4",
+    label: "4 x 1 (4 Einheiten Hoehe)",
+    rows: 4,
+    cols: 4,
+    slots: [
+      { x: 0, y: 0, w: 1, h: 4 },
+      { x: 1, y: 0, w: 1, h: 4 },
+      { x: 2, y: 0, w: 1, h: 4 },
+      { x: 3, y: 0, w: 1, h: 4 },
+    ],
+  },
+  {
+    id: "grid-1x4-wide4",
+    label: "1 x 4 (4 Einheiten Breite)",
+    rows: 4,
+    cols: 4,
+    slots: [
+      { x: 0, y: 0, w: 4, h: 1 },
+      { x: 0, y: 1, w: 4, h: 1 },
+      { x: 0, y: 2, w: 4, h: 1 },
+      { x: 0, y: 3, w: 4, h: 1 },
+    ],
+  },
+  {
+    id: "triptych-vertical",
+    label: "Triptychon vertikal",
+    rows: 1,
+    cols: 3,
+    slots: createGridSlots(1, 3),
+  },
+  {
+    id: "triptych-horizontal",
+    label: "Triptychon horizontal",
+    rows: 3,
+    cols: 1,
+    slots: createGridSlots(3, 1),
+  },
 ];
 
 const PRESET_LABELS = Object.freeze({
@@ -168,6 +309,26 @@ const PRESET_LABELS = Object.freeze({
     en: "Story center, sides 4",
     fr: "Story centre, cotes 4",
   },
+  "corner-2x2-top-left": {
+    de: "3x3 Ecke: 2x2 oben links",
+    en: "3x3 corner: 2x2 top left",
+    fr: "Coin 3x3: 2x2 en haut a gauche",
+  },
+  "corner-2x2-top-right": {
+    de: "3x3 Ecke: 2x2 oben rechts",
+    en: "3x3 corner: 2x2 top right",
+    fr: "Coin 3x3: 2x2 en haut a droite",
+  },
+  "corner-2x2-bottom-left": {
+    de: "3x3 Ecke: 2x2 unten links",
+    en: "3x3 corner: 2x2 bottom left",
+    fr: "Coin 3x3: 2x2 en bas a gauche",
+  },
+  "corner-2x2-bottom-right": {
+    de: "3x3 Ecke: 2x2 unten rechts",
+    en: "3x3 corner: 2x2 bottom right",
+    fr: "Coin 3x3: 2x2 en bas a droite",
+  },
   "grid-2x1": {
     de: "2 Felder (oben/unten)",
     en: "2 slots (top/bottom)",
@@ -203,16 +364,177 @@ const PRESET_LABELS = Object.freeze({
     en: "4 x 3",
     fr: "4 x 3",
   },
-  "grid-1x4": {
-    de: "1 x 4",
-    en: "1 x 4",
-    fr: "1 x 4",
+  "grid-1x4-square": {
+    de: "1 x 4 (quadratisch)",
+    en: "1 x 4 (square)",
+    fr: "1 x 4 (carre)",
+  },
+  "grid-4x1-square": {
+    de: "4 x 1 (quadratisch)",
+    en: "4 x 1 (square)",
+    fr: "4 x 1 (carre)",
+  },
+  "grid-4x1-tall2": {
+    de: "4 x 1 (2 Einheiten Höhe)",
+    en: "4 x 1 (2 units height)",
+    fr: "4 x 1 (hauteur 2 unites)",
+  },
+  "grid-1x4-wide2": {
+    de: "1 x 4 (2 Einheiten Breite)",
+    en: "1 x 4 (2 units width)",
+    fr: "1 x 4 (largeur 2 unites)",
+  },
+  "grid-3x1-tall3": {
+    de: "3 x 1 (3 Einheiten Hoehe)",
+    en: "3 x 1 (3 units height)",
+    fr: "3 x 1 (hauteur 3 unites)",
+  },
+  "grid-1x3-wide3": {
+    de: "1 x 3 (3 Einheiten Breite)",
+    en: "1 x 3 (3 units width)",
+    fr: "1 x 3 (largeur 3 unites)",
+  },
+  "grid-4x1-tall4": {
+    de: "4 x 1 (4 Einheiten Hoehe)",
+    en: "4 x 1 (4 units height)",
+    fr: "4 x 1 (hauteur 4 unites)",
+  },
+  "grid-1x4-wide4": {
+    de: "1 x 4 (4 Einheiten Breite)",
+    en: "1 x 4 (4 units width)",
+    fr: "1 x 4 (largeur 4 unites)",
+  },
+  "triptych-vertical": {
+    de: "Triptychon vertikal",
+    en: "Triptych vertical",
+    fr: "Triptyque vertical",
+  },
+  "triptych-horizontal": {
+    de: "Triptychon horizontal",
+    en: "Triptych horizontal",
+    fr: "Triptyque horizontal",
+  },
+});
+
+const GIF_EXPORT_WIDTH = 800;
+
+const EXPORT_PRESETS = Object.freeze([
+  { id: "free", group: "free", aspectWidth: null, aspectHeight: null, width: null },
+  { id: "ratio-1-1", group: "free", aspectWidth: 1, aspectHeight: 1, width: null },
+  { id: "ratio-4-5", group: "free", aspectWidth: 4, aspectHeight: 5, width: null },
+  { id: "ratio-3-4", group: "free", aspectWidth: 3, aspectHeight: 4, width: null },
+  { id: "ratio-9-16", group: "free", aspectWidth: 9, aspectHeight: 16, width: null },
+  { id: "ratio-16-9", group: "free", aspectWidth: 16, aspectHeight: 9, width: null },
+  { id: "ratio-3x1-high", group: "free", aspectWidth: 1, aspectHeight: 3, width: null },
+  { id: "ratio-1x3-wide", group: "free", aspectWidth: 3, aspectHeight: 1, width: null },
+  { id: "ratio-4x1-high", group: "free", aspectWidth: 1, aspectHeight: 4, width: null },
+  { id: "ratio-1x4-wide", group: "free", aspectWidth: 4, aspectHeight: 1, width: null },
+  { id: "instagram-feed", group: "social", aspectWidth: 4, aspectHeight: 5, width: 1080 },
+  { id: "instagram-square", group: "social", aspectWidth: 1, aspectHeight: 1, width: 1080 },
+  { id: "instagram-landscape", group: "social", aspectWidth: 191, aspectHeight: 100, width: 1080 },
+  { id: "story-reel", group: "social", aspectWidth: 9, aspectHeight: 16, width: 1080 },
+  { id: "facebook-feed", group: "social", aspectWidth: 4, aspectHeight: 5, width: 1080 },
+  { id: "x-landscape", group: "social", aspectWidth: 16, aspectHeight: 9, width: 1600 },
+  { id: "linkedin-wide", group: "social", aspectWidth: 191, aspectHeight: 100, width: 1200 },
+  { id: "pinterest-pin", group: "social", aspectWidth: 2, aspectHeight: 3, width: 1000 },
+]);
+
+const EXPORT_PRESET_LABELS = Object.freeze({
+  free: {
+    de: { title: "Frei", subtitle: "Aktuelles Collage-Format" },
+    en: { title: "Free", subtitle: "Current collage ratio" },
+    fr: { title: "Libre", subtitle: "Format actuel du collage" },
+  },
+  "ratio-1-1": {
+    de: { title: "Quadratisch", subtitle: "1:1 · freie Breite" },
+    en: { title: "Square", subtitle: "1:1 · free width" },
+    fr: { title: "Carre", subtitle: "1:1 · largeur libre" },
+  },
+  "ratio-4-5": {
+    de: { title: "Portrait", subtitle: "4:5 · freie Breite" },
+    en: { title: "Portrait", subtitle: "4:5 · free width" },
+    fr: { title: "Portrait", subtitle: "4:5 · largeur libre" },
+  },
+  "ratio-3-4": {
+    de: { title: "Portrait klassisch", subtitle: "3:4 · freie Breite" },
+    en: { title: "Classic portrait", subtitle: "3:4 · free width" },
+    fr: { title: "Portrait classique", subtitle: "3:4 · largeur libre" },
+  },
+  "ratio-9-16": {
+    de: { title: "Story Hochformat", subtitle: "9:16 · freie Breite" },
+    en: { title: "Story portrait", subtitle: "9:16 · free width" },
+    fr: { title: "Story portrait", subtitle: "9:16 · largeur libre" },
+  },
+  "ratio-16-9": {
+    de: { title: "Breitbild", subtitle: "16:9 · freie Breite" },
+    en: { title: "Widescreen", subtitle: "16:9 · free width" },
+    fr: { title: "Grand ecran", subtitle: "16:9 · largeur libre" },
+  },
+  "ratio-3x1-high": {
+    de: { title: "3x1 hoch", subtitle: "1:3 · freie Breite" },
+    en: { title: "3x1 tall", subtitle: "1:3 · free width" },
+    fr: { title: "3x1 haut", subtitle: "1:3 · largeur libre" },
+  },
+  "ratio-1x3-wide": {
+    de: { title: "1x3 breit", subtitle: "3:1 · freie Breite" },
+    en: { title: "1x3 wide", subtitle: "3:1 · free width" },
+    fr: { title: "1x3 large", subtitle: "3:1 · largeur libre" },
+  },
+  "ratio-4x1-high": {
+    de: { title: "4x1 hoch", subtitle: "1:4 · freie Breite" },
+    en: { title: "4x1 tall", subtitle: "1:4 · free width" },
+    fr: { title: "4x1 haut", subtitle: "1:4 · largeur libre" },
+  },
+  "ratio-1x4-wide": {
+    de: { title: "1x4 breit", subtitle: "4:1 · freie Breite" },
+    en: { title: "1x4 wide", subtitle: "4:1 · free width" },
+    fr: { title: "1x4 large", subtitle: "4:1 · largeur libre" },
+  },
+  "instagram-feed": {
+    de: { title: "Instagram Feed", subtitle: "4:5 · 1080 px" },
+    en: { title: "Instagram Feed", subtitle: "4:5 · 1080 px" },
+    fr: { title: "Instagram Feed", subtitle: "4:5 · 1080 px" },
+  },
+  "instagram-square": {
+    de: { title: "Instagram Quadrat", subtitle: "1:1 · 1080 px" },
+    en: { title: "Instagram Square", subtitle: "1:1 · 1080 px" },
+    fr: { title: "Instagram Carre", subtitle: "1:1 · 1080 px" },
+  },
+  "instagram-landscape": {
+    de: { title: "Instagram Quer", subtitle: "1,91:1 · 1080 px" },
+    en: { title: "Instagram Landscape", subtitle: "1.91:1 · 1080 px" },
+    fr: { title: "Instagram Paysage", subtitle: "1,91:1 · 1080 px" },
+  },
+  "story-reel": {
+    de: { title: "Story / Reel", subtitle: "9:16 · 1080 px" },
+    en: { title: "Story / Reel", subtitle: "9:16 · 1080 px" },
+    fr: { title: "Story / Reel", subtitle: "9:16 · 1080 px" },
+  },
+  "facebook-feed": {
+    de: { title: "Facebook Feed", subtitle: "4:5 · 1080 px" },
+    en: { title: "Facebook Feed", subtitle: "4:5 · 1080 px" },
+    fr: { title: "Facebook Feed", subtitle: "4:5 · 1080 px" },
+  },
+  "x-landscape": {
+    de: { title: "X / Twitter", subtitle: "16:9 · 1600 px" },
+    en: { title: "X / Twitter", subtitle: "16:9 · 1600 px" },
+    fr: { title: "X / Twitter", subtitle: "16:9 · 1600 px" },
+  },
+  "linkedin-wide": {
+    de: { title: "LinkedIn", subtitle: "1,91:1 · 1200 px" },
+    en: { title: "LinkedIn", subtitle: "1.91:1 · 1200 px" },
+    fr: { title: "LinkedIn", subtitle: "1,91:1 · 1200 px" },
+  },
+  "pinterest-pin": {
+    de: { title: "Pinterest Pin", subtitle: "2:3 · 1000 px" },
+    en: { title: "Pinterest Pin", subtitle: "2:3 · 1000 px" },
+    fr: { title: "Pinterest Pin", subtitle: "2:3 · 1000 px" },
   },
 });
 
 const DEFAULT_VERSION_INFO = Object.freeze({
-  appVersion: "1.2.10",
-  cacheVersion: "v32",
+  appVersion: "1.2.16",
+  cacheVersion: "v38",
   label: "Aktueller Stand",
 });
 
@@ -222,6 +544,7 @@ const ZOOM_MAX = 4;
 const STORAGE_KEYS = {
   language: "fotocollage-language",
   layout: "fotocollage-layout",
+  watermark: "fotocollage-watermark",
 };
 
 const I18N = {
@@ -257,6 +580,21 @@ const I18N = {
     exportFormatJpeg: "JPEG",
     exportFormatPdf: "PDF",
     exportFormatGif: "GIF (animiert)",
+    exportPresetLabel: "Export-Preset",
+    exportPresetGroupFree: "Freie Formate",
+    exportPresetGroupSocial: "Social Media",
+    watermarkTitle: "Wasserzeichen",
+    watermarkTextLabel: "Text",
+    watermarkPositionLabel: "Position",
+    watermarkFontLabel: "Schriftart",
+    watermarkColorLabel: "Textfarbe",
+    watermarkSizeLabel: "Schriftgröße",
+    watermarkEnabledLabel: "Immer im Export anzeigen",
+    watermarkTopLeft: "Links oben",
+    watermarkTopRight: "Rechts oben",
+    watermarkBottomLeft: "Links unten",
+    watermarkBottomRight: "Rechts unten",
+    watermarkCenter: "Mittig",
     gifRendering: "GIF wird erzeugt …",
     gifRenderingFrame: "GIF wird erzeugt … Frame {current} von {total}",
     exportFailed: "Export fehlgeschlagen.",
@@ -346,6 +684,21 @@ const I18N = {
     exportFormatJpeg: "JPEG",
     exportFormatPdf: "PDF",
     exportFormatGif: "GIF (animated)",
+    exportPresetLabel: "Export preset",
+    exportPresetGroupFree: "Flexible formats",
+    exportPresetGroupSocial: "Social media",
+    watermarkTitle: "Watermark",
+    watermarkTextLabel: "Text",
+    watermarkPositionLabel: "Position",
+    watermarkFontLabel: "Font family",
+    watermarkColorLabel: "Text color",
+    watermarkSizeLabel: "Font size",
+    watermarkEnabledLabel: "Always on export",
+    watermarkTopLeft: "Top left",
+    watermarkTopRight: "Top right",
+    watermarkBottomLeft: "Bottom left",
+    watermarkBottomRight: "Bottom right",
+    watermarkCenter: "Center",
     gifRendering: "Rendering GIF …",
     gifRenderingFrame: "Rendering GIF … frame {current} of {total}",
     exportFailed: "Export failed.",
@@ -434,6 +787,21 @@ const I18N = {
     exportFormatJpeg: "JPEG",
     exportFormatPdf: "PDF",
     exportFormatGif: "GIF (animé)",
+    exportPresetLabel: "Preset d'export",
+    exportPresetGroupFree: "Formats libres",
+    exportPresetGroupSocial: "Reseaux sociaux",
+    watermarkTitle: "Filigrane",
+    watermarkTextLabel: "Texte",
+    watermarkPositionLabel: "Position",
+    watermarkFontLabel: "Police",
+    watermarkColorLabel: "Couleur du texte",
+    watermarkSizeLabel: "Taille de police",
+    watermarkEnabledLabel: "Toujours visible à l'export",
+    watermarkTopLeft: "En haut à gauche",
+    watermarkTopRight: "En haut à droite",
+    watermarkBottomLeft: "En bas à gauche",
+    watermarkBottomRight: "En bas à droite",
+    watermarkCenter: "Milieu",
     gifRendering: "Création du GIF …",
     gifRenderingFrame: "Création du GIF … image {current} sur {total}",
     exportFailed: "Échec de l'export.",
@@ -509,6 +877,16 @@ const state = {
   pinch: null,
   touchPoints: new Map(),
   exportWidth: 3000,
+  customExportWidth: 3000,
+  exportPresetId: "free",
+  watermark: {
+    text: "",
+    position: "bottom-right",
+    fontFamily: "Segoe UI, system-ui, sans-serif",
+    color: "#ffffff",
+    size: 32,
+    enabled: false,
+  },
   exportFormat: "png",
   gifDelaySeconds: 1,
   languagePreference: "auto",
@@ -580,6 +958,8 @@ const els = {
   resetTextPosition: document.getElementById("resetTextPosition"),
   exportWidthInput: document.getElementById("exportWidthInput"),
   exportWidthValue: document.getElementById("exportWidthValue"),
+  exportPresetLabel: document.getElementById("exportPresetLabel"),
+  exportPresetGrid: document.getElementById("exportPresetGrid"),
   exportFormatLabel: document.getElementById("exportFormatLabel"),
   exportFormatSelect: document.getElementById("exportFormatSelect"),
   gifDelayField: document.getElementById("gifDelayField"),
@@ -590,6 +970,20 @@ const els = {
   downloadButton: document.getElementById("downloadButton"),
   exportStatus: document.getElementById("exportStatus"),
   exportCanvas: document.getElementById("exportCanvas"),
+  watermarkTitle: document.getElementById("watermarkTitle"),
+  watermarkTextLabel: document.getElementById("watermarkTextLabel"),
+  watermarkTextInput: document.getElementById("watermarkTextInput"),
+  watermarkPositionLabel: document.getElementById("watermarkPositionLabel"),
+  watermarkPositionSelect: document.getElementById("watermarkPositionSelect"),
+  watermarkFontLabel: document.getElementById("watermarkFontLabel"),
+  watermarkFontSelect: document.getElementById("watermarkFontSelect"),
+  watermarkColorLabel: document.getElementById("watermarkColorLabel"),
+  watermarkColorInput: document.getElementById("watermarkColorInput"),
+  watermarkSizeLabel: document.getElementById("watermarkSizeLabel"),
+  watermarkSizeInput: document.getElementById("watermarkSizeInput"),
+  watermarkSizeValue: document.getElementById("watermarkSizeValue"),
+  watermarkEnabledLabel: document.getElementById("watermarkEnabledLabel"),
+  watermarkEnabledInput: document.getElementById("watermarkEnabledInput"),
   settingsDialog: document.getElementById("settingsDialog"),
   settingsForm: document.getElementById("settingsForm"),
   helpDialog: document.getElementById("helpDialog"),
@@ -731,6 +1125,54 @@ function saveLayoutSettings(layout) {
   safeStorageSet(STORAGE_KEYS.layout, JSON.stringify(layout));
 }
 
+function getDefaultWatermarkSettings() {
+  return {
+    text: "",
+    position: "bottom-right",
+    fontFamily: "Segoe UI, system-ui, sans-serif",
+    color: "#ffffff",
+    size: 32,
+    enabled: false,
+  };
+}
+
+function loadWatermarkSettings() {
+  const defaults = getDefaultWatermarkSettings();
+  let settings = defaults;
+  const persisted = safeStorageGet(STORAGE_KEYS.watermark);
+  if (persisted) {
+    try {
+      const parsed = JSON.parse(persisted);
+      settings = { ...defaults, ...parsed };
+    } catch {
+      settings = defaults;
+    }
+  }
+  state.watermark = settings;
+  applyWatermarkToUi();
+}
+
+function saveWatermarkSettings() {
+  safeStorageSet(STORAGE_KEYS.watermark, JSON.stringify(state.watermark));
+}
+
+function applyWatermarkToUi() {
+  const { text, position, fontFamily, color, size, enabled } = state.watermark;
+  if (els.watermarkTextInput) els.watermarkTextInput.value = text;
+  if (els.watermarkPositionSelect) els.watermarkPositionSelect.value = position;
+  if (els.watermarkFontSelect) els.watermarkFontSelect.value = fontFamily;
+  if (els.watermarkColorInput) els.watermarkColorInput.value = color;
+  if (els.watermarkSizeInput) {
+    els.watermarkSizeInput.value = String(size);
+  }
+  if (els.watermarkSizeValue) {
+    els.watermarkSizeValue.textContent = String(size);
+  }
+  if (els.watermarkEnabledInput) {
+    els.watermarkEnabledInput.checked = Boolean(enabled);
+  }
+}
+
 function normalizeVersionInfo(raw) {
   return {
     appVersion: raw?.appVersion ? String(raw.appVersion) : DEFAULT_VERSION_INFO.appVersion,
@@ -803,6 +1245,7 @@ function translateStaticUi() {
   setText(els.dragHint, "dragHint");
   setText(els.step4Title, "step4Title");
   setText(els.step4Desc, "step4Desc");
+  setText(els.exportPresetLabel, "exportPresetLabel");
   setText(els.gapLabel, "gapLabel");
   setText(els.outerGapLabel, "outerGapLabel");
   setText(els.exportFormatLabel, "exportFormatLabel");
@@ -837,6 +1280,13 @@ function translateStaticUi() {
   setText(els.textColorLabel, "textColorLabel");
   setText(els.resetTextPosition, "resetTextPosition");
   els.textInput.placeholder = t("textPlaceholder");
+  setText(els.watermarkTitle, "watermarkTitle");
+  setText(els.watermarkTextLabel, "watermarkTextLabel");
+  setText(els.watermarkPositionLabel, "watermarkPositionLabel");
+  setText(els.watermarkFontLabel, "watermarkFontLabel");
+  setText(els.watermarkColorLabel, "watermarkColorLabel");
+  setText(els.watermarkSizeLabel, "watermarkSizeLabel");
+  setText(els.watermarkEnabledLabel, "watermarkEnabledLabel");
   setText(els.stepChip1, "step1Chip");
   setText(els.stepChip2, "step2Chip");
   setText(els.stepChip3, "step3Chip");
@@ -871,6 +1321,7 @@ function translateStaticUi() {
   if (els.helpDialog.open && !state.readmeText) {
     els.readmeStatus.textContent = t("helpLoading");
   }
+  renderExportPresets();
 }
 
 function renderVersionLabel() {
@@ -1127,6 +1578,72 @@ function getPresetLabel(preset, language = state.language) {
   return preset.label || preset.id;
 }
 
+function getExportPresetDefinition() {
+  return EXPORT_PRESETS.find((preset) => preset.id === state.exportPresetId) || EXPORT_PRESETS[0];
+}
+
+function getExportPresetCopy(preset, language = state.language) {
+  const labels = EXPORT_PRESET_LABELS[preset.id];
+  return labels?.[language] || labels?.de || labels?.en || { title: preset.id, subtitle: "" };
+}
+
+function renderExportPresets() {
+  els.exportPresetGrid.innerHTML = "";
+  let currentGroup = "";
+  for (const preset of EXPORT_PRESETS) {
+    if (preset.group !== currentGroup) {
+      currentGroup = preset.group;
+      const title = document.createElement("div");
+      title.className = "export-preset-group-title";
+      title.textContent = preset.group === "social" ? t("exportPresetGroupSocial") : t("exportPresetGroupFree");
+      els.exportPresetGrid.appendChild(title);
+    }
+    const copy = getExportPresetCopy(preset);
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "export-preset";
+    button.dataset.exportPresetId = preset.id;
+    button.innerHTML = `<strong>${copy.title}</strong><small>${copy.subtitle}</small>`;
+    button.classList.toggle("active", preset.id === state.exportPresetId);
+    button.addEventListener("click", () => {
+      state.exportPresetId = preset.id;
+      updateExportFormatUi();
+      renderExportPresets();
+      renderExportPreview();
+    });
+    els.exportPresetGrid.appendChild(button);
+  }
+}
+
+function getExportTargetSize() {
+  const layout = getActiveLayoutDefinition();
+  const preset = getExportPresetDefinition();
+  const width = state.exportFormat === "gif"
+    ? GIF_EXPORT_WIDTH
+    : clamp(Number(state.exportWidth) || 3000, 600, 6000);
+  const aspectWidth = preset.aspectWidth || layout.cols;
+  const aspectHeight = preset.aspectHeight || layout.rows;
+  const height = Math.max(1, Math.round(width * (aspectHeight / aspectWidth)));
+  return { width, height };
+}
+
+function getCollageContentRect(canvasWidth, canvasHeight) {
+  const layout = getActiveLayoutDefinition();
+  const collageRatio = layout.rows / layout.cols;
+  let width = canvasWidth;
+  let height = Math.round(width * collageRatio);
+  if (height > canvasHeight) {
+    height = canvasHeight;
+    width = Math.round(height / collageRatio);
+  }
+  return {
+    x: Math.round((canvasWidth - width) / 2),
+    y: Math.round((canvasHeight - height) / 2),
+    width,
+    height,
+  };
+}
+
 function buildAxis(totalSize, count, innerGap, outerGap) {
   const usable = Math.max(count, totalSize - outerGap * 2 - innerGap * (count - 1));
   const base = Math.floor(usable / count);
@@ -1233,8 +1750,14 @@ function renderPresets() {
       <span class="sr-only">${tooltip}</span>
     `;
     const mini = btn.querySelector(".grid-mini");
+    const miniCellSize = 14;
+    const miniGap = 4;
+    const miniWidth = preset.cols * miniCellSize + Math.max(0, preset.cols - 1) * miniGap;
+    const miniHeight = preset.rows * miniCellSize + Math.max(0, preset.rows - 1) * miniGap;
     mini.style.gridTemplateColumns = `repeat(${preset.cols}, 1fr)`;
     mini.style.gridTemplateRows = `repeat(${preset.rows}, 1fr)`;
+    mini.style.width = `${miniWidth}px`;
+    mini.style.height = `${miniHeight}px`;
     mini.innerHTML = "";
     preset.slots.forEach((slot) => {
       const span = document.createElement("span");
@@ -1452,16 +1975,12 @@ function syncEditor() {
 }
 
 function renderExportPreview() {
-  const layout = getActiveLayoutDefinition();
-  const targetWidth = clamp(Number(els.exportWidthInput.value) || state.exportWidth, 1200, 6000);
-  state.exportWidth = targetWidth;
-  els.exportWidthInput.value = String(targetWidth);
-  els.exportWidthValue.textContent = String(targetWidth);
+  updateExportFormatUi();
   const canvas = els.exportCanvas;
   const ctx = canvas.getContext("2d");
-  const height = Math.round(targetWidth * (layout.rows / layout.cols));
-  canvas.width = targetWidth;
-  canvas.height = height;
+  const targetSize = getExportTargetSize();
+  canvas.width = targetSize.width;
+  canvas.height = targetSize.height;
   drawCollage(ctx, canvas.width, canvas.height);
 }
 
@@ -1472,10 +1991,16 @@ function hasCompleteGrid() {
 function drawCollage(ctx, width, height, options = {}) {
   const visibleCount = typeof options.visibleCount === "number" ? options.visibleCount : state.cells.length;
   const layout = getActiveLayoutDefinition();
+  const contentRect = options.contentRect || getCollageContentRect(width, height);
   ctx.save();
   ctx.fillStyle = state.background;
   ctx.fillRect(0, 0, width, height);
-  const rects = buildLayoutRects(width, height, layout);
+  const rects = buildLayoutRects(contentRect.width, contentRect.height, layout).map((rect) => ({
+    x: rect.x + contentRect.x,
+    y: rect.y + contentRect.y,
+    width: rect.width,
+    height: rect.height,
+  }));
   for (let i = 0; i < state.cells.length; i += 1) {
     const cell = state.cells[i];
     const rect = rects[i];
@@ -1529,6 +2054,7 @@ function drawCollage(ctx, width, height, options = {}) {
   }
   ctx.restore();
   ctx.restore();
+  drawWatermark(ctx, width, height);
 }
 
 function renderAll() {
@@ -1679,6 +2205,45 @@ function drawCellText(ctx, cell, x, y, width, height) {
     const line = lines[i];
     const lineY = startY + i * lineHeight;
     ctx.fillText(line, centerX, lineY);
+  }
+  ctx.restore();
+}
+
+function drawWatermark(ctx, canvasWidth, canvasHeight) {
+  const { text, position, fontFamily, color, size, enabled } = state.watermark;
+  if (!enabled || !text) return;
+  const cleaned = String(text || "").trim();
+  if (!cleaned) return;
+  const lineHeight = clamp(Number(size) || 32, 12, 200) * 1.2;
+  const scaleFont = Math.max(12, Math.min(240, size));
+  ctx.save();
+  ctx.font = `normal ${scaleFont}px ${fontFamily || "Segoe UI, system-ui, sans-serif"}`;
+  ctx.fillStyle = color || "#ffffff";
+  ctx.textBaseline = "top";
+  ctx.textAlign = position === "center" ? "center" : position.endsWith("right") ? "right" : "left";
+  ctx.shadowColor = "rgba(0,0,0,0.55)";
+  ctx.shadowBlur = Math.max(2, scaleFont * 0.2);
+  const padding = 24;
+  const lines = cleaned.split("\n");
+  let baseX = padding;
+  let baseY = padding;
+  if (position === "top-right") {
+    baseX = canvasWidth - padding;
+    baseY = padding;
+  } else if (position === "bottom-left") {
+    baseX = padding;
+    baseY = canvasHeight - padding - (lines.length * lineHeight);
+  } else if (position === "bottom-right") {
+    baseX = canvasWidth - padding;
+    baseY = canvasHeight - padding - (lines.length * lineHeight);
+  } else if (position === "center") {
+    baseX = canvasWidth / 2;
+    baseY = (canvasHeight - lines.length * lineHeight) / 2;
+  }
+  for (let i = 0; i < lines.length; i += 1) {
+    const line = lines[i];
+    const lineY = baseY + i * lineHeight;
+    ctx.fillText(line, baseX, lineY);
   }
   ctx.restore();
 }
@@ -1899,9 +2464,22 @@ function updateExportActionButtons() {
 
 function updateExportFormatUi() {
   state.exportFormat = String(els.exportFormatSelect.value || "png").toLowerCase();
+  const preset = getExportPresetDefinition();
   const isGif = state.exportFormat === "gif";
+  const widthLocked = isGif || Boolean(preset.width);
+  if (isGif) {
+    state.exportWidth = GIF_EXPORT_WIDTH;
+  } else if (preset.width) {
+    state.exportWidth = preset.width;
+  } else {
+    state.customExportWidth = clamp(Number(els.exportWidthInput.value) || state.customExportWidth, 600, 6000);
+    state.exportWidth = state.customExportWidth;
+  }
   els.gifDelayField.hidden = !isGif;
   els.gifDelayInput.disabled = !isGif;
+  els.exportWidthInput.disabled = widthLocked;
+  els.exportWidthInput.value = String(state.exportWidth);
+  els.exportWidthValue.textContent = String(state.exportWidth);
   if (isGif) {
     const delay = clamp(Number(els.gifDelayInput.value) || 1, 0.1, 10);
     state.gifDelaySeconds = delay;
@@ -1929,14 +2507,12 @@ function canvasToBlob(canvas, mimeType = "image/png", quality) {
 }
 
 function createExportCanvas() {
-  const layout = getActiveLayoutDefinition();
   const canvas = document.createElement("canvas");
-  const width = clamp(Number(els.exportWidthInput.value) || 3000, 1200, 6000);
-  const height = Math.round(width * (layout.rows / layout.cols));
-  canvas.width = width;
-  canvas.height = height;
+  const targetSize = getExportTargetSize();
+  canvas.width = targetSize.width;
+  canvas.height = targetSize.height;
   const ctx = canvas.getContext("2d");
-  drawCollage(ctx, width, height);
+  drawCollage(ctx, canvas.width, canvas.height);
   return canvas;
 }
 
@@ -2471,12 +3047,31 @@ function wireControls() {
     });
     els.replaceInput.value = "";
   });
-  els.exportWidthInput.addEventListener("input", renderExportPreview);
+  els.exportWidthInput.addEventListener("input", () => {
+    state.customExportWidth = clamp(Number(els.exportWidthInput.value) || state.customExportWidth, 600, 6000);
+    renderExportPreview();
+  });
   els.exportFormatSelect.addEventListener("change", () => {
     updateExportFormatUi();
+    renderExportPresets();
     setExportStatus("", false);
     renderExportPreview();
   });
+  const watermarkHandler = (updates) => {
+    state.watermark = { ...state.watermark, ...updates };
+    saveWatermarkSettings();
+    renderExportPreview();
+  };
+  els.watermarkTextInput.addEventListener("input", () => watermarkHandler({ text: els.watermarkTextInput.value }));
+  els.watermarkPositionSelect.addEventListener("change", () => watermarkHandler({ position: els.watermarkPositionSelect.value }));
+  els.watermarkFontSelect.addEventListener("change", () => watermarkHandler({ fontFamily: els.watermarkFontSelect.value }));
+  els.watermarkColorInput.addEventListener("input", () => watermarkHandler({ color: els.watermarkColorInput.value }));
+  els.watermarkSizeInput.addEventListener("input", () => {
+    const value = clamp(Number(els.watermarkSizeInput.value) || 32, 12, 160);
+    els.watermarkSizeValue.textContent = String(value);
+    watermarkHandler({ size: value });
+  });
+  els.watermarkEnabledInput.addEventListener("change", () => watermarkHandler({ enabled: els.watermarkEnabledInput.checked }));
   els.gifDelayInput.addEventListener("input", () => {
     const value = clamp(Number(els.gifDelayInput.value) || 1, 0.1, 10);
     state.gifDelaySeconds = value;
@@ -2567,6 +3162,7 @@ function loadInitialLayoutSettings() {
 function init() {
   loadInitialPreferences();
   loadInitialLayoutSettings();
+  loadWatermarkSettings();
   updateUploadUiForDevice();
   translateStaticUi();
   renderPresets();

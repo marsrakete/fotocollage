@@ -238,6 +238,10 @@
 
             <div class="export-layout">
               <div class="export-card">
+                <div class="field">
+                  <span id="exportPresetLabel">Export-Preset</span>
+                  <div id="exportPresetGrid" class="export-preset-grid"></div>
+                </div>
                 <label class="field">
                   <span id="exportFormatLabel">Exportformat</span>
                   <select id="exportFormatSelect">
@@ -254,7 +258,7 @@
                 </label>
                 <label class="field">
                   <span id="exportWidthLabel">Exportbreite</span>
-                  <input id="exportWidthInput" type="range" min="1200" max="6000" step="100" value="3000" />
+                  <input id="exportWidthInput" type="range" min="600" max="6000" step="100" value="3000" />
                   <strong><span id="exportWidthValue">3000</span> px</strong>
                 </label>
                 <p class="helper" id="exportHelp">
@@ -321,6 +325,46 @@
             <p id="updateCheckStatus" class="settings-status" hidden></p>
             <button id="reloadAppButton" class="primary" type="button" hidden>Neu laden</button>
           </div>
+        </section>
+        <section class="updates-block">
+          <h3 id="watermarkTitle">Wasserzeichen</h3>
+          <label class="field">
+            <span id="watermarkTextLabel">Text</span>
+            <input id="watermarkTextInput" type="text" maxlength="140" />
+          </label>
+          <label class="field">
+            <span id="watermarkPositionLabel">Position</span>
+            <select id="watermarkPositionSelect">
+              <option value="top-left">Links oben</option>
+              <option value="top-right">Rechts oben</option>
+              <option value="bottom-left">Links unten</option>
+              <option value="bottom-right">Rechts unten</option>
+              <option value="center">Mittig</option>
+            </select>
+          </label>
+          <label class="field">
+            <span id="watermarkFontLabel">Schriftart</span>
+            <select id="watermarkFontSelect">
+              <option value="Segoe UI, system-ui, sans-serif">Segoe UI</option>
+              <option value="Arial, Helvetica, sans-serif">Arial</option>
+              <option value="'Times New Roman', Times, serif">Times New Roman</option>
+              <option value="'Courier New', Courier, monospace">Courier New</option>
+              <option value="Georgia, serif">Georgia</option>
+            </select>
+          </label>
+          <label class="field">
+            <span id="watermarkColorLabel">Textfarbe</span>
+            <input id="watermarkColorInput" type="color" value="#ffffff" />
+          </label>
+          <label class="field">
+            <span id="watermarkSizeLabel">Schriftgröße</span>
+            <input id="watermarkSizeInput" type="range" min="12" max="160" step="1" value="32" />
+            <strong><span id="watermarkSizeValue">32</span> px</strong>
+          </label>
+          <label class="watermark-toggle">
+            <input id="watermarkEnabledInput" type="checkbox" />
+            <span id="watermarkEnabledLabel">Immer im Export anzeigen</span>
+          </label>
         </section>
         <div class="settings-footer">
           <button class="secondary" value="cancel" type="submit">Schließen</button>
