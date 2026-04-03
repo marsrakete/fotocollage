@@ -533,8 +533,8 @@ const EXPORT_PRESET_LABELS = Object.freeze({
 });
 
 const DEFAULT_VERSION_INFO = Object.freeze({
-  appVersion: "1.2.16",
-  cacheVersion: "v38",
+  appVersion: "1.2.17",
+  cacheVersion: "v39",
   label: "Aktueller Stand",
 });
 
@@ -552,7 +552,7 @@ const I18N = {
     appTitle: "Foto-Collage",
     heroEyebrow: "Marsrakete",
     heroLede:
-      "In wenigen Schritten zur fertigen Collage: Vorlage w\u00e4hlen, Fotos hochladen, Ausschnitte feinjustieren und als PNG speichern.",
+      "In wenigen Schritten zur fertigen Collage: Vorlage wählen, Fotos laden, Ausschnitte feinjustieren und als PNG, JPG, PDF oder animiertes GIF speichern.",
     settingsAria: "Einstellungen \u00f6ffnen",
     settingsButtonLabel: "Einstellungen",
     helpAria: "Hilfe \u00f6ffnen",
@@ -656,7 +656,7 @@ const I18N = {
     appTitle: "Photo Collage",
     heroEyebrow: "Marsrakete",
     heroLede:
-      "Create a finished collage in a few steps: choose a template, upload photos, fine-tune the crop, and save as PNG.",
+      "Create a collage in just a few steps: Choose a template, upload photos, fine-tune the cropping, and save as a PNG, JPG, PDF, or animated GIF.",
     settingsAria: "Open settings",
     settingsButtonLabel: "Settings",
     helpAria: "Open help",
@@ -759,7 +759,7 @@ const I18N = {
     appTitle: "Collage photo",
     heroEyebrow: "Marsrakete",
     heroLede:
-      "Cr\u00e9ez un collage en quelques \u00e9tapes: choisissez un mod\u00e8le, envoyez vos photos, ajustez le cadrage et enregistrez en PNG.",
+      "Cr\u00e9ez un collage en quelques \u00e9tapes: choisissez un mod\u00e8le, imoprtez vos photos, ajustez le cadrage et enregistrez en PNG, JPG, PDF ou GIF animé.",
     settingsAria: "Ouvrir les param\u00e8tres",
     settingsButtonLabel: "Param\u00e8tres",
     helpAria: "Ouvrir l'aide",
