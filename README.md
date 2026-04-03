@@ -5,12 +5,15 @@
 Eine Progressive Web App zum Erstellen von Foto-Collagen direkt im Browser:
 
 - Vorlage waehlen (z. B. 2x2, 3x3, flexibel konfigurierbar)
-- Fotos hochladen
+- Fotos laden
 - Bildausschnitte pro Feld anpassen
 - Reihenfolge der Bilder per Drag-and-drop aendern
-- Collage als PNG exportieren
+- Text pro Bildfeld platzieren und verschieben
+- Wasserzeichen im Export einblenden
+- Collage als PNG, JPEG, PDF oder GIF exportieren
 
 Die App laeuft komplett clientseitig und benoetigt kein Backend.
+Die Fotos werden nirgends hochgeladen. Sie bleiben auf deinem Geraet!
 
 Repository: [https://github.com/marsrakete/fotocollage](https://github.com/marsrakete/fotocollage)
 
@@ -48,15 +51,48 @@ Optional anderer Port:
 ## Features
 
 - 4-Schritt-Workflow fuer schnelle Collage-Erstellung
+- Viele Presets inkl. asymmetrischer Layouts und freier Einheiten-Presets
 - Flexible Raster (Zeilen/Spalten frei konfigurierbar)
 - Drag-and-drop Upload
+- Upload-Limit passend zur Anzahl der benoetigten Felder
 - Feinschliff des Bildausschnitts pro Feld
 - Drag-and-drop Sortierung der Bildfelder
-- PNG-Export (Exportbreite und Randabstand einstellbar)
+- Feld-Textoverlay (Schriftart, Groesse, Fett/Kursiv, Farbe, Position)
+- Wasserzeichen (Text, Position, Schriftart, Groesse, Farbe, persistent speicherbar)
+- Export in PNG/JPEG/PDF/GIF inkl. Teilen-Funktion
+- Export-Presets (freie Formate + Social-Media-Formate)
 - Mehrsprachig: Deutsch, Englisch, Franzoesisch
 - Automatische Sprachwahl anhand der Browsersprache
 - Einstellungen-Dialog mit Update-Pruefung
 - PWA mit Service Worker und Offline-Cache
+
+## Export-Formate
+
+In Schritt 4 kann zwischen folgenden Formaten gewechselt werden:
+
+- `PNG`: verlustfrei, gut fuer Nachbearbeitung
+- `JPEG`: kleinere Datei, leichte Kompression
+- `PDF`: Einzelseite mit eingebettetem Bild
+- `GIF`: animiert, zeigt Bilder nacheinander
+
+Hinweise zu GIF:
+
+- Die GIF-Breite ist fest auf `800 px` gesetzt, damit Dateigroesse und Renderzeit besser kontrollierbar bleiben.
+- Die Option `Sekunden zwischen Frames` ist nur bei GIF aktiv.
+- Bei GIF wird jeweils ein Bild pro Frame zentriert dargestellt.
+
+## Export-Presets
+
+Schritt 4 enthaelt Export-Presets in zwei Gruppen:
+
+- `Freie Formate`: z. B. `1:1`, `4:5`, `3:4`, `9:16`, `16:9`, `1:3`, `3:1`, `1:4`, `4:1`
+- `Social Media`: z. B. Instagram Feed/Square/Landscape, Story/Reel, Facebook Feed, X, LinkedIn, Pinterest
+
+Wichtig:
+
+- `Frei` ist der Standard.
+- Freie Formate lassen die Exportbreite weiterhin einstellbar.
+- Social-Media-Presets setzen ein fixes Seitenverhaeltnis und eine sinnvolle Zielbreite.
 
 ## Projektstruktur
 
@@ -151,6 +187,8 @@ Fuer neue Presets:
 3. Optional `label` im Preset als technischer Fallback belassen.
 
 Wenn ein Sprachwert fehlt, faellt die App auf `de` und danach auf `label` zurueck.
+
+Export-Presets sind separat in `const EXPORT_PRESET_LABELS = { ... }` lokalisiert (ebenfalls `de/en/fr`).
 
 ### Neue freie Einheiten-Presets
 

@@ -533,8 +533,8 @@ const EXPORT_PRESET_LABELS = Object.freeze({
 });
 
 const DEFAULT_VERSION_INFO = Object.freeze({
-  appVersion: "1.2.17",
-  cacheVersion: "v39",
+  appVersion: "1.2.18",
+  cacheVersion: "v40",
   label: "Aktueller Stand",
 });
 
