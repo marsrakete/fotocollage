@@ -248,6 +248,26 @@ const PRESETS = [
     ],
   },
   {
+    id: "grid-1x2-wide2",
+    label: "1 x 2 (2 Einheiten Breite)",
+    rows: 2,
+    cols: 2,
+    slots: [
+      { x: 0, y: 0, w: 2, h: 1 },
+      { x: 0, y: 1, w: 2, h: 1 },
+    ],
+  },
+  {
+    id: "grid-2x1-tall2",
+    label: "2 x 1 (2 Einheiten Hoehe)",
+    rows: 2,
+    cols: 2,
+    slots: [
+      { x: 0, y: 0, w: 1, h: 2 },
+      { x: 1, y: 0, w: 1, h: 2 },
+    ],
+  },
+  {
     id: "triptych-vertical",
     label: "Triptychon vertikal",
     rows: 1,
@@ -404,6 +424,16 @@ const PRESET_LABELS = Object.freeze({
     en: "1 x 4 (4 units width)",
     fr: "1 x 4 (largeur 4 unites)",
   },
+  "grid-1x2-wide2": {
+    de: "1 x 2 (2 Einheiten Breite)",
+    en: "1 x 2 (2 units width)",
+    fr: "1 x 2 (largeur 2 unites)",
+  },
+  "grid-2x1-tall2": {
+    de: "2 x 1 (2 Einheiten Hoehe)",
+    en: "2 x 1 (2 units height)",
+    fr: "2 x 1 (hauteur 2 unites)",
+  },
   "triptych-vertical": {
     de: "Triptychon vertikal",
     en: "Triptych vertical",
@@ -532,14 +562,21 @@ const EXPORT_PRESET_LABELS = Object.freeze({
   },
 });
 
+const DEFAULT_SOCIAL_SAFE_AREA = Object.freeze({ top: 0.05, right: 0.05, bottom: 0.05, left: 0.05 });
+const SAFE_AREA_RATIOS_BY_PRESET = Object.freeze({
+  "story-reel": Object.freeze({ top: 0.14, right: 0.06, bottom: 0.2, left: 0.06 }),
+});
+
 const DEFAULT_VERSION_INFO = Object.freeze({
-  appVersion: "1.2.18",
-  cacheVersion: "v40",
-  label: "Aktueller Stand",
+  appVersion: "1.2.29",
+  cacheVersion: "v51",
+  label: "Button-Breite und Slider-Abstand in Schritt 3 angepasst",
 });
 
 const ZOOM_MIN = 0.35;
 const ZOOM_MAX = 4;
+const TEXT_INSET_PX = 6;
+const DEFAULT_TEXT_Y = 0.9;
 
 const STORAGE_KEYS = {
   language: "fotocollage-language",
@@ -561,15 +598,15 @@ const I18N = {
     helpLoading: "README wird geladen \u2026",
     helpFailed: "README konnte nicht geladen werden.",
     step1Title: "Schritt 1: Collage-Vorlage",
-    step1Desc: "W\u00e4hle ein Raster oder passe Zeilen und Spalten flexibel an.",
-    step2Title: "Schritt 2: Fotos hochladen",
-    step2Desc: "Lade genau so viele Fotos hoch, wie das Raster ben\u00f6tigt. Fehlende Pl\u00e4tze bleiben markiert.",
+    step1Desc: "W\u00e4hle eine Vorlage f\u00fcr deine Collage.",
+    step2Title: "Schritt 2: Fotos laden",
+    step2Desc: "Lade genau so viele Fotos, wie das Raster ben\u00f6tigt. Fehlende Pl\u00e4tze bleiben markiert.",
     uploadTitle: "Fotos ziehen oder ausw\u00e4hlen",
-    uploadDesc: "Alle Bilder werden der Reihe nach in die freien Felder gesetzt.",
+    uploadDesc: "Alle Bilder werden der Reihe nach in die freien Felder gesetzt. Reihenfolge per Drag und Drop möglich.",
     uploadTitleMobile: "Fotos ausw\u00e4hlen",
-    uploadDescMobile: "Tippe auf das Feld oben und w\u00e4hle Bilder von deinem Ger\u00e4t aus.",
+    uploadDescMobile: "Tippe auf das Feld oben und w\u00e4hle Bilder von deinem Ger\u00e4t aus. Die Reihenfolge kannst du danach per Drag und Drop \u00e4ndern.",
     step3Title: "Schritt 3: Feinschliff",
-    step3Desc: "Ziehe ein Bild in der Vorschau, um den Ausschnitt im Kasten zu verschieben.",
+    step3Desc: "Ziehe ein Bild in der Vorschau f\u00fcr den Ausschnitt. \u00dcber den Griff kannst du Fotos per Drag und Drop neu anordnen.",
     activeCellTitle: "Aktives Feld",
     dragHint: "Zum Verschieben ziehen",
     step4Title: "Schritt 4: Export",
@@ -603,6 +640,9 @@ const I18N = {
     outerGapLabel: "Randabstand",
     exportHelp:
       "Der Export skaliert das gew\u00e4hlte Raster samt Zwischenr\u00e4umen und verwendet die aktuellen Ausschnitte.",
+    textOverflowWarning: "Der Text ist gr\u00f6\u00dfer als das Feld und wird beschnitten.",
+    safeAreaHint: "Safe Area aktiv f\u00fcr dieses Social-Preset.",
+    safeAreaTextWarning: "Mindestens ein Text liegt au\u00dferhalb der Safe Area.",
     settingsTitle: "Einstellungen",
     settingsIntro: "Sprache und Aktualisierung der App.",
     updatesTitle: "Updates",
@@ -641,8 +681,10 @@ const I18N = {
     field: "Feld",
     fieldEmpty: "Feld ist leer",
     emptySlot: "Leer",
-    slotStatusReady: "Bereit f\u00fcr den Feinschliff.",
+    slotStatusReady: "Bereit f\u00fcr den Feinschliff. Verschiebe Fotos mit Drag und Drop.",
+    reorderPhotosHint: "Reihenfolge \u00e4ndern (Drag und Drop)",
     slotStatusMissing: "{filled} von {total} Feldern belegt. Es fehlen noch Bilder.",
+    uploadLimitExceeded: "Es k\u00f6nnen maximal {max} Bilder f\u00fcr diese Vorlage geladen werden.",
     versionPrefix: "Version",
     offlineVersion: "Cache",
     updateChecking: "Pr\u00fcfe auf Updates \u2026",
@@ -656,7 +698,7 @@ const I18N = {
     appTitle: "Photo Collage",
     heroEyebrow: "Marsrakete",
     heroLede:
-      "Create a collage in just a few steps: Choose a template, upload photos, fine-tune the cropping, and save as a PNG, JPG, PDF, or animated GIF.",
+      "Create a collage in just a few steps: Choose a template, load photos, fine-tune the cropping, and save as a PNG, JPG, PDF, or animated GIF.",
     settingsAria: "Open settings",
     settingsButtonLabel: "Settings",
     helpAria: "Open help",
@@ -665,15 +707,15 @@ const I18N = {
     helpLoading: "Loading README \u2026",
     helpFailed: "Could not load README.",
     step1Title: "Step 1: Collage template",
-    step1Desc: "Choose a grid or adjust rows and columns freely.",
-    step2Title: "Step 2: Upload photos",
-    step2Desc: "Upload exactly as many photos as the grid needs. Empty slots stay highlighted.",
+    step1Desc: "Choose a template for your collage.",
+    step2Title: "Step 2: Load photos",
+    step2Desc: "Load exactly as many photos as the grid needs. Empty slots stay highlighted.",
     uploadTitle: "Drag photos or choose files",
-    uploadDesc: "All images are placed into the free slots in order.",
+    uploadDesc: "All images are placed into the free slots in order. You can reorder them via drag and drop.",
     uploadTitleMobile: "Choose photos",
-    uploadDescMobile: "Tap the field above and pick images from your device.",
+    uploadDescMobile: "Tap the field above and pick images from your device. You can reorder them afterwards via drag and drop.",
     step3Title: "Step 3: Fine-tune",
-    step3Desc: "Drag an image in the preview to shift the crop inside the frame.",
+    step3Desc: "Drag an image in the preview to shift the crop inside the frame. Use the handle to reorder photos via drag and drop.",
     activeCellTitle: "Active slot",
     dragHint: "Drag to move",
     step4Title: "Step 4: Export",
@@ -706,6 +748,9 @@ const I18N = {
     gapLabel: "Spacing",
     outerGapLabel: "Outer gap",
     exportHelp: "The export scales the chosen grid, including spacing, and uses the current crops.",
+    textOverflowWarning: "The text is larger than the slot and will be clipped.",
+    safeAreaHint: "Safe area is active for this social preset.",
+    safeAreaTextWarning: "At least one text is outside the safe area.",
     settingsTitle: "Settings",
     settingsIntro: "Language and app updates.",
     updatesTitle: "Updates",
@@ -744,8 +789,10 @@ const I18N = {
     field: "slot",
     fieldEmpty: "slot is empty",
     emptySlot: "Empty",
-    slotStatusReady: "Ready for fine-tuning.",
+    slotStatusReady: "Ready for fine-tuning. Reorder photos with drag and drop.",
+    reorderPhotosHint: "Change order (drag and drop)",
     slotStatusMissing: "{filled} of {total} slots filled. More photos are needed.",
+    uploadLimitExceeded: "You can load a maximum of {max} images for this template.",
     versionPrefix: "Version",
     offlineVersion: "Cache",
     updateChecking: "Checking for updates \u2026",
@@ -768,15 +815,15 @@ const I18N = {
     helpLoading: "Chargement du README \u2026",
     helpFailed: "Impossible de charger le README.",
     step1Title: "\u00c9tape 1: Mod\u00e8le de collage",
-    step1Desc: "Choisissez une grille ou adaptez librement les lignes et les colonnes.",
-    step2Title: "\u00c9tape 2: Envoyer les photos",
-    step2Desc: "Envoyez exactement autant de photos que la grille en demande. Les emplacements vides restent visibles.",
+    step1Desc: "Choisissez un modele pour votre collage.",
+    step2Title: "\u00c9tape 2: Charger les photos",
+    step2Desc: "Chargez exactement autant de photos que la grille en demande. Les emplacements vides restent visibles.",
     uploadTitle: "Glissez des photos ou choisissez des fichiers",
-    uploadDesc: "Toutes les images sont plac\u00e9es dans les emplacements libres, dans l'ordre.",
+    uploadDesc: "Toutes les images sont plac\u00e9es dans les emplacements libres, dans l'ordre. R\u00e9organisation possible par glisser-d\u00e9poser.",
     uploadTitleMobile: "Choisir des photos",
-    uploadDescMobile: "Touchez le champ ci-dessus et choisissez des images depuis votre appareil.",
+    uploadDescMobile: "Touchez le champ ci-dessus et choisissez des images depuis votre appareil. Vous pourrez ensuite r\u00e9ordonner par glisser-d\u00e9poser.",
     step3Title: "\u00c9tape 3: Fignolage",
-    step3Desc: "Faites glisser une image dans l'aper\u00e7u pour d\u00e9placer le cadrage dans le cadre.",
+    step3Desc: "Faites glisser une image dans l'aper\u00e7u pour d\u00e9placer le cadrage dans le cadre. Utilisez la poign\u00e9e pour r\u00e9ordonner par glisser-d\u00e9poser.",
     activeCellTitle: "Emplacement actif",
     dragHint: "Glisser pour d\u00e9placer",
     step4Title: "\u00c9tape 4: Export",
@@ -810,6 +857,9 @@ const I18N = {
     outerGapLabel: "Marge ext\u00e9rieure",
     exportHelp:
       "L'export met \u00e0 l'\u00e9chelle la grille choisie, espaces compris, avec le cadrage actuel.",
+    textOverflowWarning: "Le texte est plus grand que la case et sera rogn\u00e9.",
+    safeAreaHint: "Safe Area active pour ce preset social.",
+    safeAreaTextWarning: "Au moins un texte est en dehors de la Safe Area.",
     settingsTitle: "Param\u00e8tres",
     settingsIntro: "Langue et mises \u00e0 jour de l'application.",
     updatesTitle: "Mises \u00e0 jour",
@@ -848,8 +898,10 @@ const I18N = {
     field: "case",
     fieldEmpty: "case vide",
     emptySlot: "Vide",
-    slotStatusReady: "Pr\u00eat pour le fignolage.",
+    slotStatusReady: "Pr\u00eat pour le fignolage. R\u00e9ordonnez les photos par glisser-d\u00e9poser.",
+    reorderPhotosHint: "Changer l'ordre (glisser-d\u00e9poser)",
     slotStatusMissing: "{filled} sur {total} cases remplies. Il manque encore des photos.",
+    uploadLimitExceeded: "Vous pouvez charger au maximum {max} images pour ce mod\u00e8le.",
     versionPrefix: "Version",
     offlineVersion: "Cache",
     updateChecking: "Recherche des mises \u00e0 jour \u2026",
@@ -862,8 +914,6 @@ const I18N = {
 };
 
 const state = {
-  rows: 2,
-  cols: 2,
   activePresetId: "grid-2x2",
   gap: 12,
   outerGap: 12,
@@ -874,11 +924,14 @@ const state = {
   dragging: null,
   textDragging: null,
   dragIndex: null,
+  previewReorder: null,
   pinch: null,
   touchPoints: new Map(),
   exportWidth: 3000,
   customExportWidth: 3000,
   exportPresetId: "free",
+  exportWidthLocked: false,
+  hasOpenedExportStep: false,
   watermark: {
     text: "",
     position: "bottom-right",
@@ -910,8 +963,6 @@ const els = {
   filledSummary: document.getElementById("filledSummary"),
   stepSummary: document.getElementById("stepSummary"),
   presetGrid: document.getElementById("presetGrid"),
-  rowsInput: document.getElementById("rowsInput"),
-  colsInput: document.getElementById("colsInput"),
   gapLabel: document.getElementById("gapLabel"),
   gapInput: document.getElementById("gapInput"),
   gapValue: document.getElementById("gapValue"),
@@ -956,10 +1007,12 @@ const els = {
   textColorLabel: document.getElementById("textColorLabel"),
   textColorInput: document.getElementById("textColorInput"),
   resetTextPosition: document.getElementById("resetTextPosition"),
+  textWarning: document.getElementById("textWarning"),
   exportWidthInput: document.getElementById("exportWidthInput"),
   exportWidthValue: document.getElementById("exportWidthValue"),
   exportPresetLabel: document.getElementById("exportPresetLabel"),
   exportPresetGrid: document.getElementById("exportPresetGrid"),
+  exportPresetSelect: document.getElementById("exportPresetSelect"),
   exportFormatLabel: document.getElementById("exportFormatLabel"),
   exportFormatSelect: document.getElementById("exportFormatSelect"),
   gifDelayField: document.getElementById("gifDelayField"),
@@ -1013,6 +1066,7 @@ const els = {
   step4Desc: document.getElementById("step4Desc"),
   exportWidthLabel: document.getElementById("exportWidthLabel"),
   exportHelp: document.getElementById("exportHelp"),
+  exportWarning: document.getElementById("exportWarning"),
   stepChip1: document.getElementById("stepChip1"),
   stepChip2: document.getElementById("stepChip2"),
   stepChip3: document.getElementById("stepChip3"),
@@ -1097,10 +1151,33 @@ function safeStorageRemove(key) {
   }
 }
 
+function getSuggestedFreeExportWidth() {
+  const layout = getActiveLayoutDefinition();
+  const unitWidthCandidates = [];
+  for (let i = 0; i < state.cells.length; i += 1) {
+    const cell = state.cells[i];
+    const slot = layout.slots[i];
+    if (!cell?.bitmap || !slot?.w) continue;
+    if (!Number.isFinite(cell.width) || cell.width <= 0) continue;
+    unitWidthCandidates.push(cell.width / slot.w);
+  }
+  if (unitWidthCandidates.length > 0) {
+    const sorted = [...unitWidthCandidates].sort((a, b) => a - b);
+    const mid = Math.floor(sorted.length / 2);
+    const median = sorted.length % 2 === 0
+      ? (sorted[mid - 1] + sorted[mid]) / 2
+      : sorted[mid];
+    const derivedWidth = Math.round(median * layout.cols);
+    return clamp(derivedWidth, 600, 6000);
+  }
+  const fromPreview = Math.round(els.collagePreview?.clientWidth || 0);
+  const fromCanvas = Math.round(els.exportCanvas?.clientWidth || 0);
+  const fallback = 1200;
+  return clamp(Math.max(fromPreview, fromCanvas, fallback), 600, 6000);
+}
+
 function getDefaultLayoutSettings() {
   return {
-    rows: 2,
-    cols: 2,
     gap: 12,
     outerGap: 12,
     background: "#101828",
@@ -1110,15 +1187,13 @@ function getDefaultLayoutSettings() {
 
 function normalizeLayoutSettings(raw) {
   const defaults = getDefaultLayoutSettings();
-  const rows = clamp(Number(raw?.rows) || defaults.rows, 1, 8);
-  const cols = clamp(Number(raw?.cols) || defaults.cols, 1, 8);
   const gap = clamp(Number(raw?.gap) || defaults.gap, 0, 60);
   const outerGap = clamp(Number(raw?.outerGap) || defaults.outerGap, 0, 80);
   const background = /^#[0-9a-f]{6}$/i.test(String(raw?.background || ""))
     ? String(raw.background)
     : defaults.background;
   const presetId = typeof raw?.presetId === "string" ? raw.presetId : "";
-  return { rows, cols, gap, outerGap, background, presetId };
+  return { gap, outerGap, background, presetId };
 }
 
 function saveLayoutSettings(layout) {
@@ -1197,7 +1272,7 @@ function createEmptyCell() {
     zoom: 1,
     text: "",
     textX: 0.5,
-    textY: 0.82,
+    textY: DEFAULT_TEXT_Y,
     fontSize: 48,
     fontFamily: "Segoe UI, system-ui, sans-serif",
     bold: false,
@@ -1553,21 +1628,9 @@ function escapeAttribute(value) {
   return escapeHtml(value).replaceAll("`", "&#96;");
 }
 
-function getGridLayout(rows, cols) {
-  return {
-    id: "grid-custom",
-    rows,
-    cols,
-    slots: createGridSlots(rows, cols),
-  };
-}
-
 function getActiveLayoutDefinition() {
   const preset = PRESETS.find((entry) => entry.id === state.activePresetId);
-  if (preset) {
-    return preset;
-  }
-  return getGridLayout(state.rows, state.cols);
+  return preset || PRESETS[0];
 }
 
 function getPresetLabel(preset, language = state.language) {
@@ -1589,6 +1652,11 @@ function getExportPresetCopy(preset, language = state.language) {
 
 function renderExportPresets() {
   els.exportPresetGrid.innerHTML = "";
+  els.exportPresetSelect.innerHTML = "";
+  const freeGroup = document.createElement("optgroup");
+  freeGroup.label = t("exportPresetGroupFree");
+  const socialGroup = document.createElement("optgroup");
+  socialGroup.label = t("exportPresetGroupSocial");
   let currentGroup = "";
   for (const preset of EXPORT_PRESETS) {
     if (preset.group !== currentGroup) {
@@ -1599,6 +1667,15 @@ function renderExportPresets() {
       els.exportPresetGrid.appendChild(title);
     }
     const copy = getExportPresetCopy(preset);
+    const option = document.createElement("option");
+    option.value = preset.id;
+    option.textContent = copy.title;
+    option.selected = preset.id === state.exportPresetId;
+    if (preset.group === "social") {
+      socialGroup.appendChild(option);
+    } else {
+      freeGroup.appendChild(option);
+    }
     const button = document.createElement("button");
     button.type = "button";
     button.className = "export-preset";
@@ -1613,6 +1690,13 @@ function renderExportPresets() {
     });
     els.exportPresetGrid.appendChild(button);
   }
+  if (freeGroup.children.length) {
+    els.exportPresetSelect.appendChild(freeGroup);
+  }
+  if (socialGroup.children.length) {
+    els.exportPresetSelect.appendChild(socialGroup);
+  }
+  els.exportPresetSelect.value = state.exportPresetId;
 }
 
 function getExportTargetSize() {
@@ -1686,6 +1770,14 @@ function resizeCells(count) {
 
 function setStep(step) {
   state.activeStep = step;
+  if (step === 4 && !state.hasOpenedExportStep) {
+    state.hasOpenedExportStep = true;
+    if (state.exportPresetId === "free" && state.exportFormat !== "gif") {
+      const width = getSuggestedFreeExportWidth();
+      state.customExportWidth = width;
+      state.exportWidth = width;
+    }
+  }
   document.querySelectorAll(".step-panel").forEach((panel) => {
     panel.classList.toggle("active", Number(panel.dataset.step) === step);
   });
@@ -1702,27 +1794,17 @@ function setStep(step) {
 
 function applyGrid(options = {}) {
   const { persist = true } = options;
-  state.rows = clamp(Number(els.rowsInput.value) || 1, 1, 8);
-  state.cols = clamp(Number(els.colsInput.value) || 1, 1, 8);
   state.gap = clamp(Number(els.gapInput.value) || 0, 0, 60);
   state.outerGap = clamp(Number(els.outerGapInput.value) || 0, 0, 80);
   state.background = els.backgroundInput.value;
-  els.rowsInput.value = state.rows;
-  els.colsInput.value = state.cols;
   els.backgroundInput.value = state.background;
   els.gapValue.textContent = state.gap;
   els.outerGapInput.value = state.outerGap;
   els.outerGapValue.textContent = state.outerGap;
   document.documentElement.style.setProperty("--gap", `${state.gap}px`);
-  const preset = PRESETS.find((entry) => entry.id === state.activePresetId);
-  if (!preset || preset.rows !== state.rows || preset.cols !== state.cols) {
-    state.activePresetId = "grid-custom";
-  }
   const layout = getActiveLayoutDefinition();
   if (persist) {
     saveLayoutSettings({
-      rows: state.rows,
-      cols: state.cols,
       gap: state.gap,
       outerGap: state.outerGap,
       background: state.background,
@@ -1767,8 +1849,6 @@ function renderPresets() {
     });
     btn.addEventListener("click", () => {
       state.activePresetId = preset.id;
-      els.rowsInput.value = preset.rows;
-      els.colsInput.value = preset.cols;
       applyGrid();
     });
     els.presetGrid.appendChild(btn);
@@ -1786,7 +1866,10 @@ function renderStatus() {
   const total = state.cells.length;
   const filled = state.cells.filter((cell) => cell.bitmap).length;
   const complete = total > 0 && filled === total;
-  els.gridSummary.textContent = `${state.rows} x ${state.cols}`;
+  const activePreset = PRESETS.find((preset) => preset.id === state.activePresetId);
+  els.gridSummary.textContent = activePreset
+    ? `${getPresetLabel(activePreset)} (${activePreset.slots.length} ${t("cells")})`
+    : "-";
   els.filledSummary.textContent = `${filled} / ${total}`;
   els.slotStatus.textContent = complete
     ? t("slotStatusReady")
@@ -1805,6 +1888,7 @@ function updateUploadConstraints() {
   const remaining = getRemainingUploadSlots();
   els.fileInput.disabled = remaining === 0;
   els.fileInput.multiple = remaining !== 1;
+  els.fileInput.setAttribute("data-max-files", String(remaining));
   els.dropZone.classList.toggle("disabled", remaining === 0);
 }
 
@@ -1879,11 +1963,97 @@ function moveCell(from, to) {
   renderAll();
 }
 
+function clearPreviewDragClasses() {
+  els.collagePreview.querySelectorAll(".preview-cell.drag-source, .preview-cell.drag-over").forEach((node) => {
+    node.classList.remove("drag-source");
+    node.classList.remove("drag-over");
+  });
+}
+
+function getPreviewIndexFromPoint(clientX, clientY) {
+  const target = document.elementFromPoint(clientX, clientY)?.closest(".preview-cell");
+  if (!target) return -1;
+  const value = Number(target.dataset.index);
+  return Number.isNaN(value) ? -1 : value;
+}
+
+function startPreviewHandleTouchReorder(event, index, node) {
+  if (event.pointerType !== "touch") return;
+  const cell = state.cells[index];
+  if (!cell?.bitmap) return;
+  event.preventDefault();
+  event.stopPropagation();
+
+  const session = {
+    pointerId: event.pointerId,
+    sourceIndex: index,
+    targetIndex: index,
+    startX: event.clientX,
+    startY: event.clientY,
+    armed: false,
+    timer: null,
+  };
+  state.previewReorder = session;
+
+  const cleanup = () => {
+    window.removeEventListener("pointermove", onMove);
+    window.removeEventListener("pointerup", onUp);
+    window.removeEventListener("pointercancel", onUp);
+    if (session.timer) {
+      clearTimeout(session.timer);
+      session.timer = null;
+    }
+    clearPreviewDragClasses();
+    state.dragIndex = null;
+    state.previewReorder = null;
+  };
+
+  const onMove = (moveEvent) => {
+    if (!state.previewReorder || moveEvent.pointerId !== session.pointerId) return;
+    const travel = Math.hypot(moveEvent.clientX - session.startX, moveEvent.clientY - session.startY);
+    if (!session.armed && travel > 12) {
+      cleanup();
+      return;
+    }
+    if (!session.armed) return;
+    moveEvent.preventDefault();
+    const targetIndex = getPreviewIndexFromPoint(moveEvent.clientX, moveEvent.clientY);
+    if (targetIndex < 0) return;
+    session.targetIndex = targetIndex;
+    clearPreviewDragClasses();
+    node.classList.add("drag-source");
+    const targetNode = els.collagePreview.querySelector(`.preview-cell[data-index="${targetIndex}"]`);
+    targetNode?.classList.add("drag-over");
+  };
+
+  const onUp = (upEvent) => {
+    if (!state.previewReorder || upEvent.pointerId !== session.pointerId) return;
+    const shouldMove = session.armed && session.targetIndex >= 0 && session.targetIndex !== session.sourceIndex;
+    cleanup();
+    if (shouldMove) {
+      moveCell(session.sourceIndex, session.targetIndex);
+    }
+  };
+
+  session.timer = setTimeout(() => {
+    if (!state.previewReorder || state.previewReorder.pointerId !== session.pointerId) return;
+    session.armed = true;
+    state.dragIndex = session.sourceIndex;
+    clearPreviewDragClasses();
+    node.classList.add("drag-source");
+  }, 260);
+
+  window.addEventListener("pointermove", onMove, { passive: false });
+  window.addEventListener("pointerup", onUp);
+  window.addEventListener("pointercancel", onUp);
+}
+
 function renderPreview() {
   const layout = getActiveLayoutDefinition();
   els.collagePreview.style.aspectRatio = `${layout.cols} / ${layout.rows}`;
   els.collagePreview.style.setProperty("--grid-gap", `${state.gap}px`);
   els.collagePreview.style.setProperty("--outer-gap", `${state.outerGap}px`);
+  els.collagePreview.style.background = state.background;
   els.collagePreview.innerHTML = "";
   const template = document.getElementById("previewCellTemplate");
   const nodes = [];
@@ -1891,10 +2061,12 @@ function renderPreview() {
     const node = template.content.firstElementChild.cloneNode(true);
     const img = node.querySelector("img");
     const emptyNote = node.querySelector(".empty-note");
+    const reorderHandle = node.querySelector(".preview-reorder-handle");
     const textOverlay = document.createElement("div");
     textOverlay.className = "preview-text-overlay";
     textOverlay.hidden = true;
     node.appendChild(textOverlay);
+    node.dataset.index = String(index);
     node.querySelector(".cell-index").textContent = `#${index + 1}`;
     node.classList.toggle("selected", index === state.selectedCell);
     if (cell.bitmap) {
@@ -1902,6 +2074,7 @@ function renderPreview() {
       img.src = cell.objectUrl;
       img.alt = cell.fileName;
       if (emptyNote) emptyNote.hidden = true;
+      if (reorderHandle) reorderHandle.hidden = false;
     } else {
       node.classList.add("empty");
       img.removeAttribute("src");
@@ -1910,12 +2083,68 @@ function renderPreview() {
         emptyNote.hidden = false;
         emptyNote.textContent = t("emptySlot");
       }
+      if (reorderHandle) reorderHandle.hidden = true;
+    }
+    if (reorderHandle) {
+      const reorderHint = t("reorderPhotosHint");
+      reorderHandle.setAttribute("aria-label", reorderHint);
+      reorderHandle.setAttribute("title", reorderHint);
+      reorderHandle.addEventListener("click", (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+      });
+      reorderHandle.addEventListener("pointerdown", (event) => {
+        startPreviewHandleTouchReorder(event, index, node);
+        event.stopPropagation();
+      });
+      reorderHandle.addEventListener("dragstart", (event) => {
+        if (!cell.bitmap) {
+          event.preventDefault();
+          return;
+        }
+        event.stopPropagation();
+        state.dragIndex = index;
+        event.dataTransfer.effectAllowed = "move";
+        event.dataTransfer.setData("text/plain", String(index));
+        clearPreviewDragClasses();
+        node.classList.add("drag-source");
+      });
+      reorderHandle.addEventListener("dragend", (event) => {
+        event.stopPropagation();
+        state.dragIndex = null;
+        clearPreviewDragClasses();
+      });
     }
     node.addEventListener("pointerdown", (event) => startDrag(event, index, node));
     node.addEventListener("click", () => {
       state.selectedCell = index;
       syncEditor();
       renderPreview();
+    });
+    node.addEventListener("keydown", (event) => {
+      if (event.key !== "Enter" && event.key !== " ") return;
+      event.preventDefault();
+      state.selectedCell = index;
+      syncEditor();
+      renderPreview();
+    });
+    node.addEventListener("dragover", (event) => {
+      if (state.dragIndex === null) return;
+      event.preventDefault();
+      node.classList.add("drag-over");
+    });
+    node.addEventListener("dragleave", () => {
+      node.classList.remove("drag-over");
+    });
+    node.addEventListener("drop", (event) => {
+      if (state.dragIndex === null) return;
+      event.preventDefault();
+      node.classList.remove("drag-over");
+      const from = Number(event.dataTransfer?.getData("text/plain") || state.dragIndex);
+      if (Number.isNaN(from)) return;
+      state.dragIndex = null;
+      clearPreviewDragClasses();
+      moveCell(from, index);
     });
     els.collagePreview.appendChild(node);
     nodes.push({ node, img, cell, textOverlay });
@@ -1932,6 +2161,7 @@ function renderPreview() {
     node.style.top = `${rect.y}px`;
     node.style.width = `${rect.width}px`;
     node.style.height = `${rect.height}px`;
+    node.style.background = state.background;
     if (cell.bitmap) {
       applyImagePlacement(img, node, cell);
     }
@@ -1942,6 +2172,7 @@ function renderPreview() {
 function syncEditor() {
   const cell = state.cells[state.selectedCell];
   if (!cell) return;
+  els.editorFrame.style.background = state.background;
   els.activeCellInfo.textContent = cell.bitmap
     ? `${state.selectedCell + 1}. ${t("field")}: ${cell.fileName}`
     : `${state.selectedCell + 1}. ${t("fieldEmpty")}`;
@@ -1972,6 +2203,7 @@ function syncEditor() {
     Math.max(1, frameRect.width || els.editorFrame.clientWidth || 1),
     Math.max(1, frameRect.height || els.editorFrame.clientHeight || 1)
   );
+  updateTextWarnings();
 }
 
 function renderExportPreview() {
@@ -1982,6 +2214,8 @@ function renderExportPreview() {
   canvas.width = targetSize.width;
   canvas.height = targetSize.height;
   drawCollage(ctx, canvas.width, canvas.height);
+  drawSafeAreaOverlay(ctx, canvas.width, canvas.height);
+  updateTextWarnings();
 }
 
 function hasCompleteGrid() {
@@ -2016,14 +2250,12 @@ function drawCollage(ctx, width, height, options = {}) {
       const zoom = clamp(cell.zoom || 1, ZOOM_MIN, ZOOM_MAX);
       const drawWidth = cell.width * scale * zoom;
       const drawHeight = cell.height * scale * zoom;
-      const maxOffsetX = Math.max(0, drawWidth - cellWidth);
-      const maxOffsetY = Math.max(0, drawHeight - cellHeight);
-      const focusX = clamp((cell.focusX + 1) / 2, 0, 1);
-      const focusY = clamp((cell.focusY + 1) / 2, 0, 1);
-      const offsetX = focusX * maxOffsetX;
-      const offsetY = focusY * maxOffsetY;
-      const drawX = maxOffsetX > 0 ? x - offsetX : x + (cellWidth - drawWidth) / 2;
-      const drawY = maxOffsetY > 0 ? y - offsetY : y + (cellHeight - drawHeight) / 2;
+      const focusX = clamp(cell.focusX || 0, -1, 1);
+      const focusY = clamp(cell.focusY || 0, -1, 1);
+      const panRangeX = Math.abs(drawWidth - cellWidth);
+      const panRangeY = Math.abs(drawHeight - cellHeight);
+      const drawX = x + (cellWidth - drawWidth) / 2 - focusX * (panRangeX / 2);
+      const drawY = y + (cellHeight - drawHeight) / 2 - focusY * (panRangeY / 2);
 
       ctx.save();
       ctx.beginPath();
@@ -2085,9 +2317,11 @@ async function setCellImage(index, file) {
 async function loadFiles(fileList) {
   const remaining = getRemainingUploadSlots();
   if (remaining <= 0) return;
-  const files = Array.from(fileList)
-    .filter((file) => file.type.startsWith("image/"))
-    .slice(0, remaining);
+  const imageFiles = Array.from(fileList).filter((file) => file.type.startsWith("image/"));
+  if (imageFiles.length > remaining) {
+    window.alert(format(t("uploadLimitExceeded"), { max: remaining }));
+  }
+  const files = imageFiles.slice(0, remaining);
   if (files.length === 0) return;
   let insertIndex = state.cells.findIndex((cell) => !cell.bitmap);
   if (insertIndex === -1) insertIndex = state.cells.length;
@@ -2105,19 +2339,19 @@ function getImageRenderMetrics(cell, frameWidth, frameHeight) {
   const zoom = clamp(cell.zoom || 1, ZOOM_MIN, ZOOM_MAX);
   const coverWidth = cell.width * scale * zoom;
   const coverHeight = cell.height * scale * zoom;
-  const extraX = Math.max(0, coverWidth - frameWidth);
-  const extraY = Math.max(0, coverHeight - frameHeight);
-  const underX = Math.max(0, frameWidth - coverWidth);
-  const underY = Math.max(0, frameHeight - coverHeight);
-  const focusX = clamp((cell.focusX + 1) / 2, 0, 1);
-  const focusY = clamp((cell.focusY + 1) / 2, 0, 1);
+  const panRangeX = Math.abs(coverWidth - frameWidth);
+  const panRangeY = Math.abs(coverHeight - frameHeight);
+  const focusX = clamp(cell.focusX || 0, -1, 1);
+  const focusY = clamp(cell.focusY || 0, -1, 1);
+  const drawX = (frameWidth - coverWidth) / 2 - focusX * (panRangeX / 2);
+  const drawY = (frameHeight - coverHeight) / 2 - focusY * (panRangeY / 2);
   return {
     coverWidth,
     coverHeight,
-    extraX,
-    extraY,
-    offsetX: extraX > 0 ? focusX * extraX : -underX / 2,
-    offsetY: extraY > 0 ? focusY * extraY : -underY / 2,
+    panRangeX,
+    panRangeY,
+    drawX,
+    drawY,
   };
 }
 
@@ -2133,8 +2367,8 @@ function applyImagePlacement(img, frame, cell) {
   img.style.bottom = "auto";
   img.style.width = `${metrics.coverWidth}px`;
   img.style.height = `${metrics.coverHeight}px`;
-  img.style.left = `${-metrics.offsetX}px`;
-  img.style.top = `${-metrics.offsetY}px`;
+  img.style.left = `${metrics.drawX}px`;
+  img.style.top = `${metrics.drawY}px`;
   img.style.objectFit = "fill";
   img.style.objectPosition = "50% 50%";
   img.style.transform = "none";
@@ -2163,18 +2397,208 @@ function getCellFontDeclaration(cell, sizePx) {
   return `${style} ${weight} ${Math.max(10, sizePx)}px ${cell.fontFamily || "Segoe UI, system-ui, sans-serif"}`;
 }
 
+function wrapCellTextLines(ctx, text, maxWidth) {
+  const sourceLines = String(text || "").replace(/\r/g, "").split("\n");
+  const lines = [];
+  for (const source of sourceLines) {
+    const trimmed = source.trim();
+    if (!trimmed) {
+      lines.push("");
+      continue;
+    }
+    const words = source.split(/\s+/).filter(Boolean);
+    if (!words.length) {
+      lines.push("");
+      continue;
+    }
+    let current = words[0];
+    for (let i = 1; i < words.length; i += 1) {
+      const next = `${current} ${words[i]}`;
+      if (ctx.measureText(next).width <= maxWidth) {
+        current = next;
+      } else {
+        lines.push(current);
+        current = words[i];
+      }
+    }
+    lines.push(current);
+  }
+  return lines.length ? lines : [""];
+}
+
+function getCellTextLayout(ctx, cell, width, height) {
+  const baseSize = clamp(cell.fontSize || 48, 10, 220);
+  const scale = Math.max(0.35, Math.min(width, height) / 1000);
+  const fontSize = clamp(baseSize * scale, 10, 240);
+  const lineHeight = fontSize * 1.2;
+  const inset = Math.max(4, Math.min(TEXT_INSET_PX, Math.min(width, height) * 0.1));
+  const maxWidth = Math.max(1, width - inset * 2);
+  ctx.save();
+  ctx.font = getCellFontDeclaration(cell, fontSize);
+  const lines = wrapCellTextLines(ctx, cell.text, maxWidth);
+  const lineWidths = lines.map((line) => ctx.measureText(line).width);
+  ctx.restore();
+  const centerX = clamp(Number(cell.textX ?? 0.5), 0, 1) * width;
+  const centerY = clamp(Number(cell.textY ?? DEFAULT_TEXT_Y), 0, 1) * height;
+  const totalHeight = lines.length * lineHeight;
+  const rawStartY = centerY - totalHeight / 2;
+  const minStartY = inset;
+  const maxStartY = Math.max(minStartY, height - inset - totalHeight);
+  const startY = clamp(rawStartY, minStartY, maxStartY);
+  const adjustedCenterY = startY + totalHeight / 2;
+  const overflowX = lineWidths.some((lineWidth) => lineWidth > maxWidth + 0.5);
+  const overflowY = totalHeight > (height - inset * 2) + 0.5;
+  return {
+    fontSize,
+    lineHeight,
+    lines,
+    lineWidths,
+    centerX,
+    centerY: adjustedCenterY,
+    startY,
+    inset,
+    maxWidth,
+    overflowX,
+    overflowY,
+    hasOverflow: overflowX || overflowY,
+  };
+}
+
+function getSafeAreaRatiosForPreset(preset = getExportPresetDefinition()) {
+  if (!preset || preset.group !== "social") return null;
+  return SAFE_AREA_RATIOS_BY_PRESET[preset.id] || DEFAULT_SOCIAL_SAFE_AREA;
+}
+
+function getSafeAreaRect(width, height, preset = getExportPresetDefinition()) {
+  const ratios = getSafeAreaRatiosForPreset(preset);
+  if (!ratios) return null;
+  const left = Math.round(width * ratios.left);
+  const top = Math.round(height * ratios.top);
+  const right = Math.round(width * (1 - ratios.right));
+  const bottom = Math.round(height * (1 - ratios.bottom));
+  return {
+    x: left,
+    y: top,
+    width: Math.max(1, right - left),
+    height: Math.max(1, bottom - top),
+  };
+}
+
+function drawSafeAreaOverlay(ctx, width, height, preset = getExportPresetDefinition()) {
+  const rect = getSafeAreaRect(width, height, preset);
+  if (!rect) return null;
+  ctx.save();
+  ctx.strokeStyle = "rgba(255, 180, 80, 0.95)";
+  ctx.lineWidth = 2;
+  ctx.setLineDash([10, 8]);
+  ctx.strokeRect(rect.x + 0.5, rect.y + 0.5, Math.max(1, rect.width - 1), Math.max(1, rect.height - 1));
+  ctx.restore();
+  return rect;
+}
+
+function getTextBoundsForAllCells(ctx, width, height) {
+  const layout = getActiveLayoutDefinition();
+  const contentRect = getCollageContentRect(width, height);
+  const rects = buildLayoutRects(contentRect.width, contentRect.height, layout).map((rect) => ({
+    x: rect.x + contentRect.x,
+    y: rect.y + contentRect.y,
+    width: rect.width,
+    height: rect.height,
+  }));
+  const bounds = [];
+  for (let i = 0; i < state.cells.length; i += 1) {
+    const cell = state.cells[i];
+    const rect = rects[i];
+    if (!rect || !hasCellText(cell)) continue;
+    const textLayout = getCellTextLayout(ctx, cell, rect.width, rect.height);
+    const maxLineWidth = textLayout.lineWidths.length ? Math.max(...textLayout.lineWidths) : 0;
+    const textWidth = Math.min(textLayout.maxWidth, maxLineWidth);
+    const textHeight = textLayout.lines.length * textLayout.lineHeight;
+    bounds.push({
+      index: i,
+      x: rect.x + textLayout.centerX - textWidth / 2,
+      y: rect.y + textLayout.startY,
+      width: textWidth,
+      height: textHeight,
+      overflow: textLayout.hasOverflow,
+    });
+  }
+  return bounds;
+}
+
+function updateTextWarnings() {
+  if (!els.textWarning || !els.exportWarning) {
+    return;
+  }
+  const activeCell = state.cells[state.selectedCell];
+  if (!activeCell || !hasCellText(activeCell)) {
+    els.textWarning.hidden = true;
+    els.textWarning.textContent = "";
+  } else {
+    const frameRect = els.editorFrame.getBoundingClientRect();
+    const probeCtx = document.createElement("canvas").getContext("2d");
+    const textLayout = probeCtx
+      ? getCellTextLayout(
+        probeCtx,
+        activeCell,
+        Math.max(1, frameRect.width || els.editorFrame.clientWidth || 1),
+        Math.max(1, frameRect.height || els.editorFrame.clientHeight || 1)
+      )
+      : null;
+    if (textLayout?.hasOverflow) {
+      els.textWarning.textContent = t("textOverflowWarning");
+      els.textWarning.hidden = false;
+    } else {
+      els.textWarning.hidden = true;
+      els.textWarning.textContent = "";
+    }
+  }
+
+  const exportCtx = els.exportCanvas.getContext("2d");
+  if (!exportCtx) return;
+  const preset = getExportPresetDefinition();
+  const safeRect = getSafeAreaRect(els.exportCanvas.width, els.exportCanvas.height, preset);
+  const textBounds = getTextBoundsForAllCells(exportCtx, els.exportCanvas.width, els.exportCanvas.height);
+  const hasOverflowText = textBounds.some((entry) => entry.overflow);
+  const hasSafeAreaViolation = safeRect
+    ? textBounds.some((entry) =>
+      entry.x < safeRect.x
+      || entry.y < safeRect.y
+      || (entry.x + entry.width) > (safeRect.x + safeRect.width)
+      || (entry.y + entry.height) > (safeRect.y + safeRect.height))
+    : false;
+  const messages = [];
+  if (safeRect) {
+    messages.push(t("safeAreaHint"));
+  }
+  if (hasSafeAreaViolation) {
+    messages.push(t("safeAreaTextWarning"));
+  }
+  if (hasOverflowText) {
+    messages.push(t("textOverflowWarning"));
+  }
+  els.exportWarning.textContent = messages.join(" ");
+  els.exportWarning.hidden = messages.length === 0;
+}
+
 function applyTextOverlayStyle(element, cell, frameWidth, frameHeight) {
   element.hidden = !hasCellText(cell);
   if (!hasCellText(cell)) {
     element.textContent = "";
     return;
   }
-  element.textContent = cell.text;
-  element.style.left = `${clamp(cell.textX, 0, 1) * 100}%`;
-  element.style.top = `${clamp(cell.textY, 0, 1) * 100}%`;
-  const scale = Math.max(0.35, Math.min(frameWidth, frameHeight) / 1000);
-  const fontSize = clamp((cell.fontSize || 48) * scale, 10, 220);
-  element.style.font = getCellFontDeclaration(cell, fontSize);
+  const probeCtx = document.createElement("canvas").getContext("2d");
+  if (!probeCtx) {
+    element.textContent = String(cell.text || "");
+    return;
+  }
+  const layout = getCellTextLayout(probeCtx, cell, frameWidth, frameHeight);
+  element.textContent = layout.lines.join("\n");
+  element.style.left = `${clamp(Number(cell.textX ?? 0.5), 0, 1) * 100}%`;
+  element.style.top = `${(layout.centerY / Math.max(1, frameHeight)) * 100}%`;
+  element.style.maxWidth = `${Math.max(1, frameWidth - layout.inset * 2)}px`;
+  element.style.font = getCellFontDeclaration(cell, layout.fontSize);
+  element.style.lineHeight = `${layout.lineHeight}px`;
   element.style.color = cell.color || "#ffffff";
 }
 
@@ -2182,29 +2606,22 @@ function drawCellText(ctx, cell, x, y, width, height) {
   if (!hasCellText(cell)) {
     return;
   }
-  const lines = String(cell.text).replace(/\r/g, "").split("\n");
-  const baseSize = clamp(cell.fontSize || 48, 10, 220);
-  const scale = Math.max(0.35, Math.min(width, height) / 1000);
-  const fontSize = clamp(baseSize * scale, 10, 240);
-  const lineHeight = fontSize * 1.2;
-  const centerX = x + clamp(cell.textX, 0, 1) * width;
-  const centerY = y + clamp(cell.textY, 0, 1) * height;
-  const startY = centerY - ((lines.length - 1) * lineHeight) / 2;
+  const layout = getCellTextLayout(ctx, cell, width, height);
 
   ctx.save();
   ctx.beginPath();
   ctx.rect(x, y, width, height);
   ctx.clip();
-  ctx.font = getCellFontDeclaration(cell, fontSize);
+  ctx.font = getCellFontDeclaration(cell, layout.fontSize);
   ctx.fillStyle = cell.color || "#ffffff";
   ctx.textAlign = "center";
-  ctx.textBaseline = "middle";
+  ctx.textBaseline = "top";
   ctx.shadowColor = "rgba(0,0,0,0.55)";
-  ctx.shadowBlur = Math.max(2, fontSize * 0.14);
-  for (let i = 0; i < lines.length; i += 1) {
-    const line = lines[i];
-    const lineY = startY + i * lineHeight;
-    ctx.fillText(line, centerX, lineY);
+  ctx.shadowBlur = Math.max(2, layout.fontSize * 0.14);
+  for (let i = 0; i < layout.lines.length; i += 1) {
+    const line = layout.lines[i];
+    const lineY = y + layout.startY + i * layout.lineHeight;
+    ctx.fillText(line, x + layout.centerX, lineY);
   }
   ctx.restore();
 }
@@ -2254,8 +2671,8 @@ function getFrameMetrics(frame, cell) {
   return {
     frameWidth: rect.width,
     frameHeight: rect.height,
-    coverWidth: metrics.coverWidth,
-    coverHeight: metrics.coverHeight,
+    panRangeX: metrics.panRangeX,
+    panRangeY: metrics.panRangeY,
   };
 }
 
@@ -2356,15 +2773,13 @@ function onDragMove(event) {
   if (!state.dragging || event.pointerId !== state.dragging.pointerId) return;
   const cell = state.cells[state.dragging.index];
   if (!cell?.bitmap) return;
-  const extraX = Math.max(0, state.dragging.coverWidth - state.dragging.frameWidth);
-  const extraY = Math.max(0, state.dragging.coverHeight - state.dragging.frameHeight);
-  if (extraX > 0) {
+  if (state.dragging.panRangeX > 0.0001) {
     const deltaX = event.clientX - state.dragging.startX;
-    cell.focusX = clamp(state.dragging.startFocusX - deltaX / (extraX / 2), -1, 1);
+    cell.focusX = clamp(state.dragging.startFocusX - deltaX / (state.dragging.panRangeX / 2), -1, 1);
   }
-  if (extraY > 0) {
+  if (state.dragging.panRangeY > 0.0001) {
     const deltaY = event.clientY - state.dragging.startY;
-    cell.focusY = clamp(state.dragging.startFocusY - deltaY / (extraY / 2), -1, 1);
+    cell.focusY = clamp(state.dragging.startFocusY - deltaY / (state.dragging.panRangeY / 2), -1, 1);
   }
   syncEditor();
   renderPreview();
@@ -2387,7 +2802,7 @@ function startTextDrag(event) {
     startX: event.clientX,
     startY: event.clientY,
     startTextX: clamp(cell.textX ?? 0.5, 0, 1),
-    startTextY: clamp(cell.textY ?? 0.82, 0, 1),
+    startTextY: clamp(cell.textY ?? DEFAULT_TEXT_Y, 0, 1),
     frameWidth: Math.max(1, frameRect.width),
     frameHeight: Math.max(1, frameRect.height),
   };
@@ -2467,6 +2882,9 @@ function updateExportFormatUi() {
   const preset = getExportPresetDefinition();
   const isGif = state.exportFormat === "gif";
   const widthLocked = isGif || Boolean(preset.width);
+  if (!widthLocked && state.exportWidthLocked) {
+    state.customExportWidth = getSuggestedFreeExportWidth();
+  }
   if (isGif) {
     state.exportWidth = GIF_EXPORT_WIDTH;
   } else if (preset.width) {
@@ -2476,6 +2894,7 @@ function updateExportFormatUi() {
     state.exportWidth = state.customExportWidth;
   }
   els.gifDelayField.hidden = !isGif;
+  els.gifDelayField.style.display = isGif ? "" : "none";
   els.gifDelayInput.disabled = !isGif;
   els.exportWidthInput.disabled = widthLocked;
   els.exportWidthInput.value = String(state.exportWidth);
@@ -2486,6 +2905,7 @@ function updateExportFormatUi() {
     els.gifDelayInput.value = delay.toFixed(1);
     els.gifDelayValue.textContent = delay.toFixed(1);
   }
+  state.exportWidthLocked = widthLocked;
 }
 
 function setExportStatus(message, loading = false) {
@@ -2822,36 +3242,46 @@ async function fetchVersionInfo() {
 }
 
 async function loadVersionInfo() {
-  try {
-    state.versionInfo = await fetchVersionInfo();
-  } catch {
-    state.versionInfo = { ...DEFAULT_VERSION_INFO };
-  }
+  state.versionInfo = { ...DEFAULT_VERSION_INFO };
   renderVersionLabel();
 }
 
-async function checkForUpdates() {
+async function checkForUpdates(options = {}) {
+  const {
+    showChecking = true,
+    silentNoChange = false,
+    silentError = false,
+  } = options;
   if (state.updateInProgress) return;
   state.updateInProgress = true;
   els.checkForUpdatesButton.disabled = true;
-  setUpdateStatus(t("updateChecking"), false);
+  if (showChecking) {
+    setUpdateStatus(t("updateChecking"), false);
+  }
   try {
     await state.serviceWorkerRegistration?.update();
     const remoteVersion = await fetchVersionInfo();
     if (!remoteVersion.appVersion || !remoteVersion.cacheVersion) {
-      setUpdateStatus(t("updateVersionIncomplete"), false);
+      if (!silentError) {
+        setUpdateStatus(t("updateVersionIncomplete"), false);
+      }
       return;
     }
-    if (versionSignature(remoteVersion) === versionSignature(state.versionInfo)) {
-      setUpdateStatus(t("updateNoChange"), false);
+    if (versionSignature(remoteVersion) === versionSignature(DEFAULT_VERSION_INFO)) {
+      if (!silentNoChange) {
+        setUpdateStatus(t("updateNoChange"), false);
+      }
       return;
     }
+    const remoteLabel = remoteVersion.label ? ` \u00b7 ${remoteVersion.label}` : "";
     setUpdateStatus(
-      `${t("updateAvailablePrefix")}: ${remoteVersion.appVersion} \u00b7 ${remoteVersion.cacheVersion}. ${t("updateAvailableAction")}`,
+      `${t("updateAvailablePrefix")}: ${remoteVersion.appVersion} \u00b7 ${remoteVersion.cacheVersion}${remoteLabel}. ${t("updateAvailableAction")}`,
       true
     );
   } catch {
-    setUpdateStatus(t("updateFailed"), false);
+    if (!silentError) {
+      setUpdateStatus(t("updateFailed"), false);
+    }
   } finally {
     state.updateInProgress = false;
     els.checkForUpdatesButton.disabled = false;
@@ -2909,14 +3339,6 @@ function renderSlotsStatusControls() {
 }
 
 function wireControls() {
-  els.rowsInput.addEventListener("change", () => {
-    state.activePresetId = "grid-custom";
-    applyGrid();
-  });
-  els.colsInput.addEventListener("change", () => {
-    state.activePresetId = "grid-custom";
-    applyGrid();
-  });
   els.gapInput.addEventListener("input", () => {
     applyGrid();
   });
@@ -2933,8 +3355,6 @@ function wireControls() {
     const defaults = getDefaultLayoutSettings();
     safeStorageRemove(STORAGE_KEYS.layout);
     state.activePresetId = defaults.presetId;
-    els.rowsInput.value = String(defaults.rows);
-    els.colsInput.value = String(defaults.cols);
     els.gapInput.value = String(defaults.gap);
     els.outerGapInput.value = String(defaults.outerGap);
     els.backgroundInput.value = defaults.background;
@@ -3031,7 +3451,7 @@ function wireControls() {
     const cell = state.cells[state.selectedCell];
     if (!cell) return;
     cell.textX = 0.5;
-    cell.textY = 0.82;
+    cell.textY = DEFAULT_TEXT_Y;
     syncEditor();
     renderPreview();
     renderExportPreview();
@@ -3055,6 +3475,14 @@ function wireControls() {
     updateExportFormatUi();
     renderExportPresets();
     setExportStatus("", false);
+    renderExportPreview();
+  });
+  els.exportPresetSelect.addEventListener("change", () => {
+    const nextId = String(els.exportPresetSelect.value || "free");
+    if (!EXPORT_PRESETS.some((preset) => preset.id === nextId)) return;
+    state.exportPresetId = nextId;
+    updateExportFormatUi();
+    renderExportPresets();
     renderExportPreview();
   });
   const watermarkHandler = (updates) => {
@@ -3131,7 +3559,9 @@ function loadInitialPreferences() {
     : "auto";
   state.languagePreference = preference;
   state.language = getEffectiveLanguage(preference);
-  els.languageSelect.value = preference;
+  if (els.languageSelect) {
+    els.languageSelect.value = preference;
+  }
   document.documentElement.lang = state.language;
 }
 
@@ -3147,16 +3577,16 @@ function loadInitialLayoutSettings() {
     }
   }
   const presetMatch = PRESETS.find((preset) => preset.id === layout.presetId);
-  state.activePresetId = presetMatch ? presetMatch.id : "grid-custom";
-  if (presetMatch) {
-    layout.rows = presetMatch.rows;
-    layout.cols = presetMatch.cols;
+  state.activePresetId = presetMatch ? presetMatch.id : defaults.presetId;
+  if (els.gapInput) {
+    els.gapInput.value = String(layout.gap);
   }
-  els.rowsInput.value = String(layout.rows);
-  els.colsInput.value = String(layout.cols);
-  els.gapInput.value = String(layout.gap);
-  els.outerGapInput.value = String(layout.outerGap);
-  els.backgroundInput.value = layout.background;
+  if (els.outerGapInput) {
+    els.outerGapInput.value = String(layout.outerGap);
+  }
+  if (els.backgroundInput) {
+    els.backgroundInput.value = layout.background;
+  }
 }
 
 function init() {
@@ -3171,19 +3601,34 @@ function init() {
   wireControls();
   void loadVersionInfo().then(() => {
     renderVersionLabel();
+    void checkForUpdates({ showChecking: false, silentNoChange: true, silentError: true });
   });
   registerServiceWorker();
   updateExportActionButtons();
   applyGrid();
   renderAllWithoutExport();
-  els.exportWidthInput.value = String(state.exportWidth);
-  els.exportWidthValue.textContent = String(state.exportWidth);
-  els.exportFormatSelect.value = state.exportFormat;
-  els.gifDelayInput.value = state.gifDelaySeconds.toFixed(1);
-  els.gifDelayValue.textContent = state.gifDelaySeconds.toFixed(1);
+  if (els.exportWidthInput) {
+    els.exportWidthInput.value = String(state.exportWidth);
+  }
+  if (els.exportWidthValue) {
+    els.exportWidthValue.textContent = String(state.exportWidth);
+  }
+  if (els.exportFormatSelect) {
+    els.exportFormatSelect.value = state.exportFormat;
+  }
+  if (els.gifDelayInput) {
+    els.gifDelayInput.value = state.gifDelaySeconds.toFixed(1);
+  }
+  if (els.gifDelayValue) {
+    els.gifDelayValue.textContent = state.gifDelaySeconds.toFixed(1);
+  }
   updateExportFormatUi();
-  els.outerGapInput.value = String(state.outerGap);
-  els.outerGapValue.textContent = String(state.outerGap);
+  if (els.outerGapInput) {
+    els.outerGapInput.value = String(state.outerGap);
+  }
+  if (els.outerGapValue) {
+    els.outerGapValue.textContent = String(state.outerGap);
+  }
   renderVersionLabel();
 }
 

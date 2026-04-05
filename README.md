@@ -13,7 +13,7 @@ Eine Progressive Web App zum Erstellen von Foto-Collagen direkt im Browser:
 - Collage als PNG, JPEG, PDF oder GIF exportieren
 
 Die App laeuft komplett clientseitig und benoetigt kein Backend.
-Die Fotos werden nirgends hochgeladen. Sie bleiben auf deinem Geraet!
+Die Fotos verlassen dein Geraet nicht.
 
 Repository: [https://github.com/marsrakete/fotocollage](https://github.com/marsrakete/fotocollage)
 
@@ -53,8 +53,8 @@ Optional anderer Port:
 - 4-Schritt-Workflow fuer schnelle Collage-Erstellung
 - Viele Presets inkl. asymmetrischer Layouts und freier Einheiten-Presets
 - Flexible Raster (Zeilen/Spalten frei konfigurierbar)
-- Drag-and-drop Upload
-- Upload-Limit passend zur Anzahl der benoetigten Felder
+- Drag-and-drop Laden
+- Lade-Limit passend zur Anzahl der benoetigten Felder
 - Feinschliff des Bildausschnitts pro Feld
 - Drag-and-drop Sortierung der Bildfelder
 - Feld-Textoverlay (Schriftart, Groesse, Fett/Kursiv, Farbe, Position)

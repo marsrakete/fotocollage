@@ -90,14 +90,6 @@
 
             <div class="form-grid">
               <label class="field">
-                <span>Zeilen</span>
-                <input id="rowsInput" type="number" min="1" max="8" value="2" />
-              </label>
-              <label class="field">
-                <span>Spalten</span>
-                <input id="colsInput" type="number" min="1" max="8" value="2" />
-              </label>
-              <label class="field">
                 <span id="gapLabel">Abstand</span>
                 <input id="gapInput" type="range" min="0" max="40" value="12" />
                 <strong><span id="gapValue">12</span> px</strong>
@@ -121,9 +113,9 @@
 
           <section class="step-panel" data-step="2">
             <div class="panel-head">
-              <h2 id="step2Title">Schritt 2: Fotos hochladen</h2>
+              <h2 id="step2Title">Schritt 2: Fotos laden</h2>
               <p id="step2Desc">
-                Lade genau so viele Fotos hoch, wie das Raster benötigt.
+                Lade genau so viele Fotos, wie das Raster benötigt.
                 Fehlende Plätze bleiben markiert.
               </p>
             </div>
@@ -132,7 +124,7 @@
               <input id="fileInput" type="file" accept="image/*" multiple />
               <div>
                 <strong id="uploadTitle">Fotos ziehen oder auswählen</strong>
-                <p id="uploadDesc">Alle Bilder werden der Reihe nach in die freien Felder gesetzt.</p>
+                <p id="uploadDesc">Alle Bilder werden der Reihe nach in die freien Felder gesetzt. Reihenfolge per Drag und Drop möglich.</p>
               </div>
             </div>
 
@@ -149,8 +141,8 @@
             <div class="panel-head">
               <h2 id="step3Title">Schritt 3: Feinschliff</h2>
               <p id="step3Desc">
-                Ziehe ein Bild in der Vorschau, um den Ausschnitt im Kasten zu
-                verschieben.
+                Ziehe ein Bild in der Vorschau für den Ausschnitt. Über den Griff
+                kannst du Fotos per Drag und Drop neu anordnen.
               </p>
             </div>
 
@@ -213,6 +205,7 @@
                     <input id="textColorInput" type="color" value="#ffffff" />
                   </label>
                   <button class="secondary" id="resetTextPosition" type="button">Textposition zurücksetzen</button>
+                  <p class="settings-status warning-text" id="textWarning" hidden></p>
                 </div>
                 <input id="replaceInput" type="file" accept="image/*" hidden />
               </aside>
@@ -238,6 +231,7 @@
                 <div class="field">
                   <span id="exportPresetLabel">Export-Preset</span>
                   <div id="exportPresetGrid" class="export-preset-grid"></div>
+                  <select id="exportPresetSelect" class="export-preset-select" aria-label="Export-Preset"></select>
                 </div>
                 <label class="field">
                   <span id="exportFormatLabel">Exportformat</span>
@@ -255,13 +249,14 @@
                 </label>
                 <label class="field">
                   <span id="exportWidthLabel">Exportbreite</span>
-                  <input id="exportWidthInput" type="range" min="600" max="6000" step="100" value="3000" />
-                  <strong><span id="exportWidthValue">3000</span> px</strong>
+                  <input id="exportWidthInput" type="range" min="100" max="6000" step="10" value="1200" />
+                  <strong><span id="exportWidthValue">1200</span> px</strong>
                 </label>
                 <p class="helper" id="exportHelp">
                   Der Export skaliert das gewählte Raster samt Zwischenräumen
                   und verwendet die aktuellen Ausschnitte.
                 </p>
+                <p class="settings-status warning-text" id="exportWarning" hidden></p>
                 <div class="export-actions">
                   <button class="primary" id="shareButton">Teilen</button>
                   <button class="secondary" id="downloadButton" hidden>Als PNG speichern</button>
@@ -291,11 +286,12 @@
     </template>
 
     <template id="previewCellTemplate">
-      <button class="preview-cell" type="button">
+      <div class="preview-cell" role="button" tabindex="0">
         <span class="cell-index"></span>
+        <span class="preview-reorder-handle" role="button" tabindex="0" draggable="true" aria-label="Reihenfolge ändern" title="Reihenfolge ändern">↕</span>
         <img alt="" />
         <span class="empty-note">Bild fehlt</span>
-      </button>
+      </div>
     </template>
 
     <dialog id="settingsDialog" class="settings-dialog">
