@@ -354,6 +354,31 @@
             <span id="watermarkEnabledLabel">Immer im Export anzeigen</span>
           </label>
         </section>
+        <section class="updates-block">
+          <h3 id="exifTitle">EXIF-Metadaten</h3>
+          <label class="watermark-toggle">
+            <input id="exifEnabledInput" type="checkbox" />
+            <span id="exifEnabledLabel">EXIF Felder schreiben</span>
+          </label>
+          <p id="exifUserCommentHint" class="settings-status">UserComment wird aus dem Wasserzeichen-Text uebernommen.</p>
+          <p id="exifJpegOnlyHint" class="settings-status">EXIF wird beim JPEG-Export geschrieben.</p>
+          <label class="field">
+            <span id="exifArtistLabel">Autor</span>
+            <input id="exifArtistInput" type="text" maxlength="120" />
+          </label>
+          <label class="field">
+            <span id="exifCopyrightLabel">Copyright</span>
+            <input id="exifCopyrightInput" type="text" maxlength="180" />
+          </label>
+          <label class="field">
+            <span id="exifDescriptionLabel">Bildbeschreibung</span>
+            <input id="exifDescriptionInput" type="text" maxlength="200" />
+          </label>
+          <label class="field">
+            <span id="exifSoftwareLabel">Software</span>
+            <input id="exifSoftwareInput" type="text" maxlength="120" />
+          </label>
+        </section>
         <div class="settings-footer">
           <button class="secondary" value="cancel" type="submit">Schließen</button>
         </div>

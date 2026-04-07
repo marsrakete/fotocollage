@@ -1,5 +1,5 @@
 const CACHE_PREFIX = "fotocollage-cache";
-const CACHE_VERSION = "v61";
+const CACHE_VERSION = "v64";
 const CACHE_NAME = `${CACHE_PREFIX}-${CACHE_VERSION}`;
 const ASSETS = [
   "./",

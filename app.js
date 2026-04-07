@@ -578,9 +578,9 @@ const SAFE_AREA_RATIOS_BY_PRESET = Object.freeze({
 });
 
 const DEFAULT_VERSION_INFO = Object.freeze({
-  appVersion: "1.2.39",
-  cacheVersion: "v61",
-  label: "README um Schnellstart in 30 Sekunden ergaenzt",
+  appVersion: "1.2.42",
+  cacheVersion: "v64",
+  label: "EXIF-Filter entfernt Emoji vor dem Schreiben",
 });
 
 const ZOOM_MIN = 0.35;
@@ -592,6 +592,7 @@ const STORAGE_KEYS = {
   language: "fotocollage-language",
   layout: "fotocollage-layout",
   watermark: "fotocollage-watermark",
+  exif: "fotocollage-exif",
 };
 
 const I18N = {
@@ -646,6 +647,14 @@ const I18N = {
     watermarkBottomLeft: "Links unten",
     watermarkBottomRight: "Rechts unten",
     watermarkCenter: "Mittig",
+    exifTitle: "EXIF-Metadaten",
+    exifEnabledLabel: "EXIF Felder schreiben",
+    exifUserCommentHint: "UserComment wird aus dem Wasserzeichen-Text uebernommen.",
+    exifJpegOnlyHint: "EXIF wird beim JPEG-Export geschrieben.",
+    exifArtistLabel: "Autor",
+    exifCopyrightLabel: "Copyright",
+    exifDescriptionLabel: "Bildbeschreibung",
+    exifSoftwareLabel: "Software",
     gifRendering: "GIF wird erzeugt …",
     gifRenderingFrame: "GIF wird erzeugt … Frame {current} von {total}",
     exportFailed: "Export fehlgeschlagen.",
@@ -758,6 +767,14 @@ const I18N = {
     watermarkBottomLeft: "Bottom left",
     watermarkBottomRight: "Bottom right",
     watermarkCenter: "Center",
+    exifTitle: "EXIF metadata",
+    exifEnabledLabel: "Write EXIF fields",
+    exifUserCommentHint: "UserComment is copied from the watermark text.",
+    exifJpegOnlyHint: "EXIF is written for JPEG export.",
+    exifArtistLabel: "Author",
+    exifCopyrightLabel: "Copyright",
+    exifDescriptionLabel: "Image description",
+    exifSoftwareLabel: "Software",
     gifRendering: "Rendering GIF …",
     gifRenderingFrame: "Rendering GIF … frame {current} of {total}",
     exportFailed: "Export failed.",
@@ -869,6 +886,14 @@ const I18N = {
     watermarkBottomLeft: "En bas à gauche",
     watermarkBottomRight: "En bas à droite",
     watermarkCenter: "Milieu",
+    exifTitle: "Metadonnees EXIF",
+    exifEnabledLabel: "Ecrire les champs EXIF",
+    exifUserCommentHint: "UserComment est repris du texte du filigrane.",
+    exifJpegOnlyHint: "EXIF est ecrit pour l'export JPEG.",
+    exifArtistLabel: "Auteur",
+    exifCopyrightLabel: "Copyright",
+    exifDescriptionLabel: "Description de l'image",
+    exifSoftwareLabel: "Logiciel",
     gifRendering: "Création du GIF …",
     gifRenderingFrame: "Création du GIF … image {current} sur {total}",
     exportFailed: "Échec de l'export.",
@@ -959,6 +984,13 @@ const state = {
     color: "#ffffff",
     size: 32,
     enabled: false,
+  },
+  exif: {
+    enabled: false,
+    artist: "",
+    copyright: "",
+    description: "",
+    software: "Foto-Collage PWA",
   },
   exportFormat: "png",
   gifDelaySeconds: 1,
@@ -1058,6 +1090,19 @@ const els = {
   watermarkSizeValue: document.getElementById("watermarkSizeValue"),
   watermarkEnabledLabel: document.getElementById("watermarkEnabledLabel"),
   watermarkEnabledInput: document.getElementById("watermarkEnabledInput"),
+  exifTitle: document.getElementById("exifTitle"),
+  exifEnabledInput: document.getElementById("exifEnabledInput"),
+  exifEnabledLabel: document.getElementById("exifEnabledLabel"),
+  exifUserCommentHint: document.getElementById("exifUserCommentHint"),
+  exifJpegOnlyHint: document.getElementById("exifJpegOnlyHint"),
+  exifArtistLabel: document.getElementById("exifArtistLabel"),
+  exifArtistInput: document.getElementById("exifArtistInput"),
+  exifCopyrightLabel: document.getElementById("exifCopyrightLabel"),
+  exifCopyrightInput: document.getElementById("exifCopyrightInput"),
+  exifDescriptionLabel: document.getElementById("exifDescriptionLabel"),
+  exifDescriptionInput: document.getElementById("exifDescriptionInput"),
+  exifSoftwareLabel: document.getElementById("exifSoftwareLabel"),
+  exifSoftwareInput: document.getElementById("exifSoftwareInput"),
   settingsDialog: document.getElementById("settingsDialog"),
   settingsForm: document.getElementById("settingsForm"),
   helpDialog: document.getElementById("helpDialog"),
@@ -1269,6 +1314,61 @@ function applyWatermarkToUi() {
   }
 }
 
+function getDefaultExifSettings() {
+  return {
+    enabled: false,
+    artist: "",
+    copyright: "",
+    description: "",
+    software: "Foto-Collage PWA",
+  };
+}
+
+function loadExifSettings() {
+  const defaults = getDefaultExifSettings();
+  let settings = defaults;
+  const persisted = safeStorageGet(STORAGE_KEYS.exif);
+  if (persisted) {
+    try {
+      const parsed = JSON.parse(persisted);
+      settings = { ...defaults, ...parsed };
+    } catch {
+      settings = defaults;
+    }
+  }
+  state.exif = settings;
+  applyExifToUi();
+}
+
+function saveExifSettings() {
+  safeStorageSet(STORAGE_KEYS.exif, JSON.stringify(state.exif));
+}
+
+function updateExifUiEnabledState() {
+  const enabled = Boolean(state.exif.enabled);
+  const controls = [
+    els.exifArtistInput,
+    els.exifCopyrightInput,
+    els.exifDescriptionInput,
+    els.exifSoftwareInput,
+  ];
+  controls.forEach((control) => {
+    if (!control) return;
+    control.disabled = !enabled;
+    control.closest(".field")?.classList.toggle("exif-disabled", !enabled);
+  });
+}
+
+function applyExifToUi() {
+  const { enabled, artist, copyright, description, software } = state.exif;
+  if (els.exifEnabledInput) els.exifEnabledInput.checked = Boolean(enabled);
+  if (els.exifArtistInput) els.exifArtistInput.value = artist || "";
+  if (els.exifCopyrightInput) els.exifCopyrightInput.value = copyright || "";
+  if (els.exifDescriptionInput) els.exifDescriptionInput.value = description || "";
+  if (els.exifSoftwareInput) els.exifSoftwareInput.value = software || "";
+  updateExifUiEnabledState();
+}
+
 function normalizeVersionInfo(raw) {
   return {
     appVersion: raw?.appVersion ? String(raw.appVersion) : DEFAULT_VERSION_INFO.appVersion,
@@ -1384,6 +1484,14 @@ function translateStaticUi() {
   setText(els.watermarkColorLabel, "watermarkColorLabel");
   setText(els.watermarkSizeLabel, "watermarkSizeLabel");
   setText(els.watermarkEnabledLabel, "watermarkEnabledLabel");
+  setText(els.exifTitle, "exifTitle");
+  setText(els.exifEnabledLabel, "exifEnabledLabel");
+  setText(els.exifUserCommentHint, "exifUserCommentHint");
+  setText(els.exifJpegOnlyHint, "exifJpegOnlyHint");
+  setText(els.exifArtistLabel, "exifArtistLabel");
+  setText(els.exifCopyrightLabel, "exifCopyrightLabel");
+  setText(els.exifDescriptionLabel, "exifDescriptionLabel");
+  setText(els.exifSoftwareLabel, "exifSoftwareLabel");
   setText(els.stepChip1, "step1Chip");
   setText(els.stepChip2, "step2Chip");
   setText(els.stepChip3, "step3Chip");
@@ -3049,6 +3157,233 @@ function wordLE(value) {
   return new Uint8Array([value & 0xff, (value >> 8) & 0xff]);
 }
 
+function toAsciiBytes(value, terminate = true) {
+  const safe = String(value || "");
+  const raw = new TextEncoder().encode(safe);
+  const bytes = [];
+  for (let i = 0; i < raw.length; i += 1) {
+    bytes.push(raw[i] <= 0x7f ? raw[i] : 0x3f);
+  }
+  if (terminate) bytes.push(0x00);
+  return bytes;
+}
+
+function formatExifTimestamp(date) {
+  const pad2 = (value) => String(value).padStart(2, "0");
+  return `${date.getFullYear()}:${pad2(date.getMonth() + 1)}:${pad2(date.getDate())} ${pad2(date.getHours())}:${pad2(date.getMinutes())}:${pad2(date.getSeconds())}`;
+}
+
+function stripEmojiForExif(value) {
+  return String(value || "")
+    .replace(/[\u200d\uFE0E\uFE0F\u20E3]/g, "")
+    .replace(/[\u{1F1E6}-\u{1F1FF}]/gu, "")
+    .replace(/\p{Extended_Pictographic}/gu, "");
+}
+
+function normalizeExifText(value, maxLen = 512) {
+  return stripEmojiForExif(value).replace(/\s+/g, " ").trim().slice(0, maxLen);
+}
+
+function buildExifApp1Segment(meta) {
+  const imageDescription = normalizeExifText(meta.imageDescription, 512);
+  const artist = normalizeExifText(meta.artist, 512);
+  const copyright = normalizeExifText(meta.copyright, 512);
+  const software = normalizeExifText(meta.software, 512);
+  const userCommentText = normalizeExifText(meta.userComment, 1024);
+  const dateTime = normalizeExifText(meta.dateTime, 64);
+
+  const ifd0Entries = [];
+  if (imageDescription) ifd0Entries.push({ tag: 0x010e, type: 2, data: toAsciiBytes(imageDescription, true) });
+  if (artist) ifd0Entries.push({ tag: 0x013b, type: 2, data: toAsciiBytes(artist, true) });
+  if (software) ifd0Entries.push({ tag: 0x0131, type: 2, data: toAsciiBytes(software, true) });
+  if (copyright) ifd0Entries.push({ tag: 0x8298, type: 2, data: toAsciiBytes(copyright, true) });
+  if (dateTime) ifd0Entries.push({ tag: 0x0132, type: 2, data: toAsciiBytes(dateTime, true) });
+  ifd0Entries.push({ tag: 0x8769, type: 4, value: 0, count: 1, isPointer: true });
+
+  const exifEntries = [];
+  if (dateTime) {
+    exifEntries.push({ tag: 0x9003, type: 2, data: toAsciiBytes(dateTime, true) });
+    exifEntries.push({ tag: 0x9004, type: 2, data: toAsciiBytes(dateTime, true) });
+  }
+  if (userCommentText) {
+    const userCommentBytes = [
+      ...toAsciiBytes("ASCII", false),
+      0x00, 0x00, 0x00,
+      ...toAsciiBytes(userCommentText, true),
+    ];
+    exifEntries.push({ tag: 0x9286, type: 7, data: userCommentBytes });
+  }
+
+  const ifd0Count = ifd0Entries.length;
+  const exifCount = exifEntries.length;
+  const ifd0Size = 2 + ifd0Count * 12 + 4;
+  const exifIfdOffset = 8 + ifd0Size;
+  const exifSize = 2 + exifCount * 12 + 4;
+  let dataOffset = 8 + ifd0Size + exifSize;
+
+  const assignOffsets = (entries) => {
+    for (let i = 0; i < entries.length; i += 1) {
+      const entry = entries[i];
+      if (entry.isPointer) {
+        entry.value = exifIfdOffset;
+        entry.count = 1;
+        continue;
+      }
+      const data = entry.data || [];
+      entry.count = data.length;
+      if (data.length > 4) {
+        entry.value = dataOffset;
+        dataOffset += data.length;
+      }
+    }
+  };
+  assignOffsets(ifd0Entries);
+  assignOffsets(exifEntries);
+
+  const tiffBytes = new Uint8Array(dataOffset);
+  const view = new DataView(tiffBytes.buffer);
+  tiffBytes[0] = 0x49;
+  tiffBytes[1] = 0x49;
+  view.setUint16(2, 0x2a, true);
+  view.setUint32(4, 8, true);
+
+  const writeIfd = (offset, entries, nextOffset = 0) => {
+    view.setUint16(offset, entries.length, true);
+    let cursor = offset + 2;
+    for (let i = 0; i < entries.length; i += 1) {
+      const entry = entries[i];
+      view.setUint16(cursor, entry.tag, true);
+      view.setUint16(cursor + 2, entry.type, true);
+      view.setUint32(cursor + 4, entry.count || 0, true);
+      if (entry.data && entry.data.length <= 4) {
+        for (let j = 0; j < 4; j += 1) {
+          tiffBytes[cursor + 8 + j] = entry.data[j] || 0;
+        }
+      } else {
+        view.setUint32(cursor + 8, entry.value || 0, true);
+      }
+      if (entry.data && entry.data.length > 4 && entry.value) {
+        tiffBytes.set(entry.data, entry.value);
+      }
+      cursor += 12;
+    }
+    view.setUint32(cursor, nextOffset, true);
+  };
+
+  writeIfd(8, ifd0Entries, 0);
+  writeIfd(exifIfdOffset, exifEntries, 0);
+
+  const exifHeader = new Uint8Array([0x45, 0x78, 0x69, 0x66, 0x00, 0x00]);
+  const body = new Uint8Array(exifHeader.length + tiffBytes.length);
+  body.set(exifHeader, 0);
+  body.set(tiffBytes, exifHeader.length);
+  const segmentLength = body.length + 2;
+  const app1 = new Uint8Array(body.length + 4);
+  app1[0] = 0xff;
+  app1[1] = 0xe1;
+  app1[2] = (segmentLength >> 8) & 0xff;
+  app1[3] = segmentLength & 0xff;
+  app1.set(body, 4);
+  return app1;
+}
+
+function injectExifIntoJpeg(jpegBytes, app1Segment) {
+  if (!jpegBytes || jpegBytes.length < 4 || jpegBytes[0] !== 0xff || jpegBytes[1] !== 0xd8) {
+    return jpegBytes;
+  }
+  const chunks = [jpegBytes.slice(0, 2)];
+  let pos = 2;
+  let inserted = false;
+
+  const isExifSegment = (start) => {
+    if (start + 10 > jpegBytes.length) return false;
+    return jpegBytes[start] === 0xff
+      && jpegBytes[start + 1] === 0xe1
+      && jpegBytes[start + 4] === 0x45
+      && jpegBytes[start + 5] === 0x78
+      && jpegBytes[start + 6] === 0x69
+      && jpegBytes[start + 7] === 0x66
+      && jpegBytes[start + 8] === 0x00
+      && jpegBytes[start + 9] === 0x00;
+  };
+
+  while (pos < jpegBytes.length) {
+    if (jpegBytes[pos] !== 0xff || pos + 1 >= jpegBytes.length) {
+      chunks.push(jpegBytes.slice(pos));
+      break;
+    }
+    const marker = jpegBytes[pos + 1];
+    if (marker === 0xda) {
+      if (!inserted) {
+        chunks.push(app1Segment);
+        inserted = true;
+      }
+      chunks.push(jpegBytes.slice(pos));
+      break;
+    }
+    if (marker === 0xd9 || marker === 0x01 || (marker >= 0xd0 && marker <= 0xd7)) {
+      chunks.push(jpegBytes.slice(pos, pos + 2));
+      pos += 2;
+      continue;
+    }
+    if (pos + 3 >= jpegBytes.length) {
+      chunks.push(jpegBytes.slice(pos));
+      break;
+    }
+    const segmentLen = (jpegBytes[pos + 2] << 8) | jpegBytes[pos + 3];
+    const segmentEnd = pos + 2 + segmentLen;
+    if (segmentLen < 2 || segmentEnd > jpegBytes.length) {
+      chunks.push(jpegBytes.slice(pos));
+      break;
+    }
+    if (isExifSegment(pos)) {
+      pos = segmentEnd;
+      continue;
+    }
+    chunks.push(jpegBytes.slice(pos, segmentEnd));
+    if (!inserted && marker === 0xe0) {
+      chunks.push(app1Segment);
+      inserted = true;
+    }
+    pos = segmentEnd;
+  }
+
+  if (!inserted) {
+    const merged = new Uint8Array(2 + app1Segment.length + (jpegBytes.length - 2));
+    merged.set(jpegBytes.slice(0, 2), 0);
+    merged.set(app1Segment, 2);
+    merged.set(jpegBytes.slice(2), 2 + app1Segment.length);
+    return merged;
+  }
+  const totalLength = chunks.reduce((sum, chunk) => sum + chunk.length, 0);
+  const merged = new Uint8Array(totalLength);
+  let offset = 0;
+  for (let i = 0; i < chunks.length; i += 1) {
+    merged.set(chunks[i], offset);
+    offset += chunks[i].length;
+  }
+  return merged;
+}
+
+async function applyExifToJpegBlob(jpegBlob, exportedAt = new Date()) {
+  const settings = state.exif;
+  if (!settings?.enabled) {
+    return jpegBlob;
+  }
+  const exifMeta = {
+    artist: settings.artist,
+    copyright: settings.copyright,
+    imageDescription: settings.description,
+    software: settings.software || `Foto-Collage PWA ${state.versionInfo.appVersion}`,
+    userComment: state.watermark.text || "",
+    dateTime: formatExifTimestamp(exportedAt),
+  };
+  const jpegBytes = new Uint8Array(await jpegBlob.arrayBuffer());
+  const app1 = buildExifApp1Segment(exifMeta);
+  const merged = injectExifIntoJpeg(jpegBytes, app1);
+  return new Blob([merged], { type: "image/jpeg" });
+}
+
 function encodeAnimatedGif(frameIndexArrays, width, height, delaySeconds) {
   const palette = createGifPalette();
   const delayCs = clamp(Math.round(delaySeconds * 100), 1, 1000);
@@ -3141,7 +3476,8 @@ async function buildExportPayload() {
   const exportFormat = state.exportFormat;
   const canvas = createExportCanvas();
   if (exportFormat === "jpeg") {
-    const blob = await canvasToBlob(canvas, "image/jpeg", 0.92);
+    const rawBlob = await canvasToBlob(canvas, "image/jpeg", 0.92);
+    const blob = await applyExifToJpegBlob(rawBlob, new Date());
     return { blob, filename: buildTimestampFilename("jpg"), mimeType: "image/jpeg" };
   }
   if (exportFormat === "pdf") {
@@ -3511,6 +3847,16 @@ function wireControls() {
     watermarkHandler({ size: value });
   });
   els.watermarkEnabledInput.addEventListener("change", () => watermarkHandler({ enabled: els.watermarkEnabledInput.checked }));
+  const exifHandler = (updates) => {
+    state.exif = { ...state.exif, ...updates };
+    saveExifSettings();
+    updateExifUiEnabledState();
+  };
+  els.exifEnabledInput?.addEventListener("change", () => exifHandler({ enabled: els.exifEnabledInput.checked }));
+  els.exifArtistInput?.addEventListener("input", () => exifHandler({ artist: els.exifArtistInput.value }));
+  els.exifCopyrightInput?.addEventListener("input", () => exifHandler({ copyright: els.exifCopyrightInput.value }));
+  els.exifDescriptionInput?.addEventListener("input", () => exifHandler({ description: els.exifDescriptionInput.value }));
+  els.exifSoftwareInput?.addEventListener("input", () => exifHandler({ software: els.exifSoftwareInput.value }));
   els.gifDelayInput.addEventListener("input", () => {
     const value = clamp(Number(els.gifDelayInput.value) || 1, 0.1, 10);
     state.gifDelaySeconds = value;
@@ -3604,6 +3950,7 @@ function init() {
   loadInitialPreferences();
   loadInitialLayoutSettings();
   loadWatermarkSettings();
+  loadExifSettings();
   updateUploadUiForDevice();
   translateStaticUi();
   renderPresets();

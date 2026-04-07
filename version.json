@@ -1,5 +1,5 @@
 {
-  "appVersion": "1.2.39",
-  "cacheVersion": "v61",
-  "label": "README um Schnellstart in 30 Sekunden ergaenzt"
+  "appVersion": "1.2.42",
+  "cacheVersion": "v64",
+  "label": "EXIF-Filter entfernt Emoji vor dem Schreiben"
 }

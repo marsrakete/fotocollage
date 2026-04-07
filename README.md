@@ -71,6 +71,7 @@ Optional anderer Port:
 - Sortiermodus zum Umordnen der Bildfelder (Tap Quelle, Tap Ziel)
 - Feld-Textoverlay (Schriftart, Groesse, Fett/Kursiv, Farbe, Position)
 - Wasserzeichen (Text, Position, Schriftart, Groesse, Farbe, persistent speicherbar)
+- EXIF-Metadaten (optional, fuer JPEG-Export)
 - Export in PNG/JPEG/PDF/GIF inkl. Teilen-Funktion
 - Export-Presets (freie Formate + Social-Media-Formate)
 - Mehrsprachig: Deutsch, Englisch, Franzoesisch
@@ -104,6 +105,7 @@ Optional anderer Port:
 
 - Waehle Export-Preset, Format (PNG/JPEG/PDF/GIF) und Breite.
 - GIF nutzt einen Breitenbereich von `480 bis 800 px` und bietet die Frame-Dauer in Sekunden.
+- Wenn in den Einstellungen `EXIF Felder schreiben` aktiv ist, werden beim JPEG-Export EXIF-Daten geschrieben.
 - Teile die Collage direkt oder speichere sie als Datei.
 
 ## Export-Formate
@@ -120,6 +122,17 @@ Hinweise zu GIF:
 - Die GIF-Breite ist per Slider auf `480 bis 800 px` begrenzt, damit Dateigroesse und Renderzeit besser kontrollierbar bleiben.
 - Die Option `Sekunden zwischen Frames` ist nur bei GIF aktiv.
 - Bei GIF wird jeweils ein Bild pro Frame zentriert dargestellt.
+
+Hinweise zu EXIF (JPEG):
+
+- EXIF wird nur fuer `JPEG` geschrieben (wenn aktiviert).
+- Felder aus den Einstellungen:
+  - `Artist` (Autor)
+  - `Copyright`
+  - `ImageDescription` (Bildbeschreibung)
+  - `Software`
+- `UserComment` wird aus dem Wasserzeichen-Text uebernommen.
+- `DateTime`, `DateTimeOriginal` und `DateTimeDigitized` werden beim Export automatisch auf den aktuellen Zeitstempel gesetzt.
 
 Hinweis zu `og:image` / `twitter:image`:
 
