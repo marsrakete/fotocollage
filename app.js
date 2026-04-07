@@ -113,6 +113,55 @@ const PRESETS = [
     ],
   },
   {
+    id: "hero-plus-4",
+    label: "Hero + 4",
+    rows: 3,
+    cols: 4,
+    slots: [
+      { x: 0, y: 0, w: 4, h: 2 },
+      { x: 0, y: 2, w: 1, h: 1 },
+      { x: 1, y: 2, w: 1, h: 1 },
+      { x: 2, y: 2, w: 1, h: 1 },
+      { x: 3, y: 2, w: 1, h: 1 },
+    ],
+  },
+  {
+    id: "panorama-plus-3",
+    label: "Panorama + 3",
+    rows: 2,
+    cols: 3,
+    slots: [
+      { x: 0, y: 0, w: 3, h: 1 },
+      { x: 0, y: 1, w: 1, h: 1 },
+      { x: 1, y: 1, w: 1, h: 1 },
+      { x: 2, y: 1, w: 1, h: 1 },
+    ],
+  },
+  {
+    id: "mosaic-5-asym",
+    label: "Mosaik 5 asymmetrisch",
+    rows: 3,
+    cols: 3,
+    slots: [
+      { x: 0, y: 0, w: 2, h: 2 },
+      { x: 2, y: 0, w: 1, h: 1 },
+      { x: 2, y: 1, w: 1, h: 1 },
+      { x: 0, y: 2, w: 1, h: 1 },
+      { x: 1, y: 2, w: 2, h: 1 },
+    ],
+  },
+  {
+    id: "social-cover-split",
+    label: "Social Cover Split",
+    rows: 2,
+    cols: 6,
+    slots: [
+      { x: 0, y: 0, w: 1, h: 2 },
+      { x: 1, y: 0, w: 2, h: 2 },
+      { x: 3, y: 0, w: 3, h: 2 },
+    ],
+  },
+  {
     id: "corner-2x2-top-left",
     label: "3x3 Ecke: 2x2 oben links",
     rows: 3,
@@ -328,6 +377,26 @@ const PRESET_LABELS = Object.freeze({
     de: "Story Mitte, Seiten 4",
     en: "Story center, sides 4",
     fr: "Story centre, cotes 4",
+  },
+  "hero-plus-4": {
+    de: "Hero + 4",
+    en: "Hero + 4",
+    fr: "Hero + 4",
+  },
+  "panorama-plus-3": {
+    de: "Panorama + 3",
+    en: "Panorama + 3",
+    fr: "Panorama + 3",
+  },
+  "mosaic-5-asym": {
+    de: "Mosaik 5 asymmetrisch",
+    en: "Mosaic 5 asymmetric",
+    fr: "Mosaique 5 asymetrique",
+  },
+  "social-cover-split": {
+    de: "Social Cover Split",
+    en: "Social Cover Split",
+    fr: "Social Cover Split",
   },
   "corner-2x2-top-left": {
     de: "3x3 Ecke: 2x2 oben links",
@@ -578,9 +647,9 @@ const SAFE_AREA_RATIOS_BY_PRESET = Object.freeze({
 });
 
 const DEFAULT_VERSION_INFO = Object.freeze({
-  appVersion: "1.2.47",
-  cacheVersion: "v69",
-  label: "export-preview auf eckige Ecken gesetzt",
+  appVersion: "1.2.48",
+  cacheVersion: "v70",
+  label: "Vier neue Vorlagen hinzugefuegt (Hero+4, Panorama+3, Mosaik5, Cover Split)",
 });
 
 const ZOOM_MIN = 0.35;
