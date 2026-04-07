@@ -98,6 +98,7 @@ Optional anderer Port:
 - Bearbeite direkt in der Vorschau:
 - Ziehen verschiebt den Bildausschnitt.
 - Mausrad (Desktop) oder Pinch (Mobil) aendert den Zoom.
+- Text im Feld kann per Drag-and-drop frei positioniert werden.
 - Nutze den Button `Sortieren`, um Bilder umzutauschen (Quelle antippen, Ziel antippen).
 - Im Bereich `Aktives Feld` steuerst du Text/Formatierung sowie `Ausschnitt zuruecksetzen` und `Zoom zuruecksetzen`.
 

@@ -578,9 +578,9 @@ const SAFE_AREA_RATIOS_BY_PRESET = Object.freeze({
 });
 
 const DEFAULT_VERSION_INFO = Object.freeze({
-  appVersion: "1.2.46",
-  cacheVersion: "v68",
-  label: "collage-preview auf eckige Ecken gesetzt, wrap-Aenderung rueckgaengig",
+  appVersion: "1.2.47",
+  cacheVersion: "v69",
+  label: "export-preview auf eckige Ecken gesetzt",
 });
 
 const ZOOM_MIN = 0.35;

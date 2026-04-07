@@ -276,7 +276,7 @@ h1 { margin: 0; font-size: clamp(2.6rem, 5vw, 4.6rem); line-height: 1; }
   opacity: 1;
 }
 .export-card { align-self: start; }
-.export-preview { min-width: 0; border-radius: 28px; border: 1px solid var(--border); background: rgba(255,255,255,0.04); padding: 20px; }
+.export-preview { min-width: 0; border-radius: 0; border: 1px solid var(--border); background: rgba(255,255,255,0.04); padding: 20px; }
 .export-preview canvas {
   width: 100%;
   height: auto;
