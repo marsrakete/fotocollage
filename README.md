@@ -77,22 +77,46 @@ In Schritt 4 kann zwischen folgenden Formaten gewechselt werden:
 
 Hinweise zu GIF:
 
-- Die GIF-Breite ist fest auf `800 px` gesetzt, damit Dateigroesse und Renderzeit besser kontrollierbar bleiben.
+- Die GIF-Breite ist per Slider auf `480 bis 800 px` begrenzt, damit Dateigroesse und Renderzeit besser kontrollierbar bleiben.
 - Die Option `Sekunden zwischen Frames` ist nur bei GIF aktiv.
 - Bei GIF wird jeweils ein Bild pro Frame zentriert dargestellt.
+
+Hinweis zu `og:image` / `twitter:image`:
+
+- Dafuer gibt es ein eigenes Export-Preset `Open Graph / Twitter` mit `1200 x 630`.
+- Das ist ein Seitenverhaeltnis von `1.91:1`, optimiert fuer Link-Vorschauen.
 
 ## Export-Presets
 
 Schritt 4 enthaelt Export-Presets in zwei Gruppen:
 
 - `Freie Formate`: z. B. `1:1`, `4:5`, `3:4`, `9:16`, `16:9`, `1:3`, `3:1`, `1:4`, `4:1`
-- `Social Media`: z. B. Instagram Feed/Square/Landscape, Story/Reel, Facebook Feed, X, LinkedIn, Pinterest
+- `Social Media`: z. B. Instagram Feed/Square/Landscape, Story/Reel, Facebook Feed, Open Graph/Twitter, X, LinkedIn, Pinterest
 
 Wichtig:
 
 - `Frei` ist der Standard.
 - Freie Formate lassen die Exportbreite weiterhin einstellbar.
 - Social-Media-Presets setzen ein fixes Seitenverhaeltnis und eine sinnvolle Zielbreite.
+
+Empfohlene Vorlagen je Export-Preset:
+
+- `Frei`: alle Vorlagen; ideal zum exakten Beibehalten deines aktuellen Collage-Layouts.
+- `Quadratisch (1:1)`: `2x2`, `3x3`, `1x1 links/rechts`, symmetrische Raster.
+- `Portrait (4:5)` und `Portrait klassisch (3:4)`: `1x2`, `2x1 (2 Einheiten Hoehe)`, `oben 1 / unten 2`, `oben 1 / unten 3`.
+- `Story Hochformat (9:16)`: vertikale Vorlagen wie `1x3`, `1x4`, `triptych-vertical`.
+- `Breitbild (16:9)`: horizontale Vorlagen wie `3x1`, `4x1`, `triptych-horizontal`.
+- `3x1 hoch (1:3)` und `4x1 hoch (1:4)`: sehr hohe Story- oder Pin-Motive mit wenigen, grossen Feldern.
+- `1x3 breit (3:1)` und `1x4 breit (4:1)`: Banner, Header, Timeline-Motive.
+- `Instagram Feed (4:5)`: Portrait-lastige Vorlagen (`oben 1 / unten 2`, `2x3`, `1x2`).
+- `Instagram Quadrat (1:1)`: `2x2`, `3x3`, quadratische Misch-Layouts.
+- `Instagram Quer (1,91:1)`: `3x1`, `4x1`, breite Mosaik-Vorlagen.
+- `Story / Reel (9:16)`: `1x3`, `1x4`, vertikale Split-Layouts.
+- `Facebook Feed (4:5)`: analog zu Instagram Feed; gut fuer Portrait-Collagen.
+- `Open Graph / Twitter (1200x630)`: breite Vorlagen (`3x1`, `4x1`, `oben 3 / unten 1`) fuer Link-Cards.
+- `X / Twitter (16:9)`: breite Vorlagen mit klarer Motivmitte, z. B. `3x1` oder `4x1`.
+- `LinkedIn (1,91:1)`: breite Business-Layouts, z. B. `3x1`, `4x1`, `oben 3 / unten 1`.
+- `Pinterest Pin (2:3)`: vertikale Vorlagen (`1x2`, `1x3`, `oben 1 / unten 2`).
 
 ## Projektstruktur
 

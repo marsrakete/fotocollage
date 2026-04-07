@@ -446,7 +446,11 @@ const PRESET_LABELS = Object.freeze({
   },
 });
 
-const GIF_EXPORT_WIDTH = 800;
+const EXPORT_WIDTH_MIN = 600;
+const EXPORT_WIDTH_MAX = 6000;
+const GIF_EXPORT_MIN_WIDTH = 480;
+const GIF_EXPORT_MAX_WIDTH = 800;
+const GIF_EXPORT_DEFAULT_WIDTH = 800;
 
 const EXPORT_PRESETS = Object.freeze([
   { id: "free", group: "free", aspectWidth: null, aspectHeight: null, width: null },
@@ -464,6 +468,7 @@ const EXPORT_PRESETS = Object.freeze([
   { id: "instagram-landscape", group: "social", aspectWidth: 191, aspectHeight: 100, width: 1080 },
   { id: "story-reel", group: "social", aspectWidth: 9, aspectHeight: 16, width: 1080 },
   { id: "facebook-feed", group: "social", aspectWidth: 4, aspectHeight: 5, width: 1080 },
+  { id: "open-graph", group: "social", aspectWidth: 1200, aspectHeight: 630, width: 1200 },
   { id: "x-landscape", group: "social", aspectWidth: 16, aspectHeight: 9, width: 1600 },
   { id: "linkedin-wide", group: "social", aspectWidth: 191, aspectHeight: 100, width: 1200 },
   { id: "pinterest-pin", group: "social", aspectWidth: 2, aspectHeight: 3, width: 1000 },
@@ -545,6 +550,11 @@ const EXPORT_PRESET_LABELS = Object.freeze({
     en: { title: "Facebook Feed", subtitle: "4:5 · 1080 px" },
     fr: { title: "Facebook Feed", subtitle: "4:5 · 1080 px" },
   },
+  "open-graph": {
+    de: { title: "Open Graph / Twitter", subtitle: "1200 x 630 · 1200 px" },
+    en: { title: "Open Graph / Twitter", subtitle: "1200 x 630 · 1200 px" },
+    fr: { title: "Open Graph / Twitter", subtitle: "1200 x 630 · 1200 px" },
+  },
   "x-landscape": {
     de: { title: "X / Twitter", subtitle: "16:9 · 1600 px" },
     en: { title: "X / Twitter", subtitle: "16:9 · 1600 px" },
@@ -568,9 +578,9 @@ const SAFE_AREA_RATIOS_BY_PRESET = Object.freeze({
 });
 
 const DEFAULT_VERSION_INFO = Object.freeze({
-  appVersion: "1.2.29",
-  cacheVersion: "v51",
-  label: "Button-Breite und Slider-Abstand in Schritt 3 angepasst",
+  appVersion: "1.2.34",
+  cacheVersion: "v56",
+  label: "GIF-Exportbreite als Bereich 480 bis 800 Pixel",
 });
 
 const ZOOM_MIN = 0.35;
@@ -606,9 +616,9 @@ const I18N = {
     uploadTitleMobile: "Fotos ausw\u00e4hlen",
     uploadDescMobile: "Tippe auf das Feld oben und w\u00e4hle Bilder von deinem Ger\u00e4t aus. Die Reihenfolge kannst du danach per Drag und Drop \u00e4ndern.",
     step3Title: "Schritt 3: Feinschliff",
-    step3Desc: "Ziehe ein Bild in der Vorschau f\u00fcr den Ausschnitt. \u00dcber den Griff kannst du Fotos per Drag und Drop neu anordnen.",
+    step3Desc: "Bearbeite direkt in der Vorschau: ziehen f\u00fcr den Ausschnitt, Mausrad/Pinch f\u00fcr Zoom. \u00dcber den Griff kannst du Fotos per Drag und Drop neu anordnen.",
     activeCellTitle: "Aktives Feld",
-    dragHint: "Zum Verschieben ziehen",
+    dragHint: "Direkt in der Vorschau verschieben und zoomen",
     step4Title: "Schritt 4: Export",
     step4Desc: "Die Collage wird in hoher Aufl\u00f6sung gerendert und kann geteilt oder als PNG/JPEG/PDF/GIF gespeichert werden.",
     exportFormatLabel: "Exportformat",
@@ -715,9 +725,9 @@ const I18N = {
     uploadTitleMobile: "Choose photos",
     uploadDescMobile: "Tap the field above and pick images from your device. You can reorder them afterwards via drag and drop.",
     step3Title: "Step 3: Fine-tune",
-    step3Desc: "Drag an image in the preview to shift the crop inside the frame. Use the handle to reorder photos via drag and drop.",
+    step3Desc: "Edit directly in the preview: drag to pan, mouse wheel or pinch to zoom. Use the handle to reorder photos via drag and drop.",
     activeCellTitle: "Active slot",
-    dragHint: "Drag to move",
+    dragHint: "Move and zoom directly in the preview",
     step4Title: "Step 4: Export",
     step4Desc: "The collage is rendered in high resolution and can be shared or saved as PNG/JPEG/PDF/GIF.",
     exportFormatLabel: "Export format",
@@ -823,9 +833,9 @@ const I18N = {
     uploadTitleMobile: "Choisir des photos",
     uploadDescMobile: "Touchez le champ ci-dessus et choisissez des images depuis votre appareil. Vous pourrez ensuite r\u00e9ordonner par glisser-d\u00e9poser.",
     step3Title: "\u00c9tape 3: Fignolage",
-    step3Desc: "Faites glisser une image dans l'aper\u00e7u pour d\u00e9placer le cadrage dans le cadre. Utilisez la poign\u00e9e pour r\u00e9ordonner par glisser-d\u00e9poser.",
+    step3Desc: "Modifiez directement dans l'aper\u00e7u: glisser pour le cadrage, molette/pincement pour zoomer. Utilisez la poign\u00e9e pour r\u00e9ordonner par glisser-d\u00e9poser.",
     activeCellTitle: "Emplacement actif",
-    dragHint: "Glisser pour d\u00e9placer",
+    dragHint: "Deplacez et zoomez directement dans l'aper\u00e7u",
     step4Title: "\u00c9tape 4: Export",
     step4Desc: "Le collage est rendu en haute r\u00e9solution et peut \u00eatre partag\u00e9 ou enregistr\u00e9 en PNG/JPEG/PDF/GIF.",
     exportFormatLabel: "Format d'export",
@@ -1703,8 +1713,8 @@ function getExportTargetSize() {
   const layout = getActiveLayoutDefinition();
   const preset = getExportPresetDefinition();
   const width = state.exportFormat === "gif"
-    ? GIF_EXPORT_WIDTH
-    : clamp(Number(state.exportWidth) || 3000, 600, 6000);
+    ? clamp(Number(state.exportWidth) || GIF_EXPORT_DEFAULT_WIDTH, GIF_EXPORT_MIN_WIDTH, GIF_EXPORT_MAX_WIDTH)
+    : clamp(Number(state.exportWidth) || 3000, EXPORT_WIDTH_MIN, EXPORT_WIDTH_MAX);
   const aspectWidth = preset.aspectWidth || layout.cols;
   const aspectHeight = preset.aspectHeight || layout.rows;
   const height = Math.max(1, Math.round(width * (aspectHeight / aspectWidth)));
@@ -1977,6 +1987,29 @@ function getPreviewIndexFromPoint(clientX, clientY) {
   return Number.isNaN(value) ? -1 : value;
 }
 
+function getPreviewCellNode(index = state.selectedCell) {
+  return els.collagePreview.querySelector(`.preview-cell[data-index="${index}"]`);
+}
+
+function getCellFrameSize(index = state.selectedCell) {
+  const previewNode = getPreviewCellNode(index);
+  if (previewNode) {
+    const rect = previewNode.getBoundingClientRect();
+    if (rect.width > 0 && rect.height > 0) {
+      return { width: rect.width, height: rect.height };
+    }
+  }
+  const layout = getActiveLayoutDefinition();
+  const width = Math.max(1, els.collagePreview.clientWidth || 1);
+  const height = Math.max(1, els.collagePreview.clientHeight || 1);
+  const rects = buildLayoutRects(width, height, layout);
+  const rect = rects[index];
+  if (rect) {
+    return { width: Math.max(1, rect.width), height: Math.max(1, rect.height) };
+  }
+  return { width: 1, height: 1 };
+}
+
 function startPreviewHandleTouchReorder(event, index, node) {
   if (event.pointerType !== "touch") return;
   const cell = state.cells[index];
@@ -2115,7 +2148,8 @@ function renderPreview() {
         clearPreviewDragClasses();
       });
     }
-    node.addEventListener("pointerdown", (event) => startDrag(event, index, node));
+    node.addEventListener("pointerdown", (event) => handlePreviewPointerDown(event, index, node));
+    node.addEventListener("wheel", (event) => handlePreviewWheel(event, index), { passive: false });
     node.addEventListener("click", () => {
       state.selectedCell = index;
       syncEditor();
@@ -2146,6 +2180,7 @@ function renderPreview() {
       clearPreviewDragClasses();
       moveCell(from, index);
     });
+    textOverlay.addEventListener("pointerdown", (event) => startTextDrag(event, index, node, textOverlay));
     els.collagePreview.appendChild(node);
     nodes.push({ node, img, cell, textOverlay });
   });
@@ -2166,6 +2201,7 @@ function renderPreview() {
       applyImagePlacement(img, node, cell);
     }
     applyTextOverlayStyle(textOverlay, cell, rect.width, rect.height);
+    textOverlay.classList.toggle("interactive", index === state.selectedCell && hasCellText(cell));
   });
 }
 
@@ -2177,15 +2213,9 @@ function syncEditor() {
     ? `${state.selectedCell + 1}. ${t("field")}: ${cell.fileName}`
     : `${state.selectedCell + 1}. ${t("fieldEmpty")}`;
   if (cell.bitmap) {
-    els.editorImage.src = cell.objectUrl;
-    els.editorImage.alt = cell.fileName;
-    applyImagePlacement(els.editorImage, els.editorFrame, cell);
     els.zoomInput.value = String(cell.zoom || 1);
     els.zoomValue.textContent = String(Math.round((cell.zoom || 1) * 100));
   } else {
-    els.editorImage.removeAttribute("src");
-    els.editorImage.alt = "";
-    resetImagePlacement(els.editorImage);
     els.zoomInput.value = "1";
     els.zoomValue.textContent = "100";
   }
@@ -2196,13 +2226,6 @@ function syncEditor() {
   els.textBoldInput.checked = Boolean(cell.bold);
   els.textItalicInput.checked = Boolean(cell.italic);
   els.textColorInput.value = /^#[0-9a-f]{6}$/i.test(String(cell.color || "")) ? cell.color : "#ffffff";
-  const frameRect = els.editorFrame.getBoundingClientRect();
-  applyTextOverlayStyle(
-    els.editorTextOverlay,
-    cell,
-    Math.max(1, frameRect.width || els.editorFrame.clientWidth || 1),
-    Math.max(1, frameRect.height || els.editorFrame.clientHeight || 1)
-  );
   updateTextWarnings();
 }
 
@@ -2535,14 +2558,14 @@ function updateTextWarnings() {
     els.textWarning.hidden = true;
     els.textWarning.textContent = "";
   } else {
-    const frameRect = els.editorFrame.getBoundingClientRect();
+    const frameSize = getCellFrameSize(state.selectedCell);
     const probeCtx = document.createElement("canvas").getContext("2d");
     const textLayout = probeCtx
       ? getCellTextLayout(
         probeCtx,
         activeCell,
-        Math.max(1, frameRect.width || els.editorFrame.clientWidth || 1),
-        Math.max(1, frameRect.height || els.editorFrame.clientHeight || 1)
+        Math.max(1, frameSize.width),
+        Math.max(1, frameSize.height)
       )
       : null;
     if (textLayout?.hasOverflow) {
@@ -2685,14 +2708,19 @@ function setCellZoom(index, nextZoom) {
   renderExportPreview();
 }
 
-function handleEditorWheel(event) {
-  const cell = state.cells[state.selectedCell];
+function handlePreviewWheel(event, index) {
+  const cell = state.cells[index];
   if (!cell?.bitmap) return;
   event.preventDefault();
+  if (state.selectedCell !== index) {
+    state.selectedCell = index;
+    syncEditor();
+    renderPreview();
+  }
   const delta = -event.deltaY;
   const factor = 1 + delta * 0.0015;
   const nextZoom = clamp((cell.zoom || 1) * factor, ZOOM_MIN, ZOOM_MAX);
-  setCellZoom(state.selectedCell, nextZoom);
+  setCellZoom(index, nextZoom);
 }
 
 function distance(a, b) {
@@ -2701,30 +2729,35 @@ function distance(a, b) {
   return Math.sqrt(dx * dx + dy * dy);
 }
 
-function handleEditorPointerDown(event) {
+function handlePreviewPointerDown(event, index, node) {
+  if (state.selectedCell !== index) {
+    state.selectedCell = index;
+    syncEditor();
+    renderPreview();
+  }
   if (event.pointerType !== "touch") {
-    startDrag(event, state.selectedCell, els.editorFrame);
+    startDrag(event, index, node);
     return;
   }
   state.touchPoints.set(event.pointerId, { x: event.clientX, y: event.clientY });
   if (state.touchPoints.size === 1) {
-    startDrag(event, state.selectedCell, els.editorFrame);
+    startDrag(event, index, node);
     return;
   }
   if (state.touchPoints.size >= 2) {
     stopDrag();
     const points = Array.from(state.touchPoints.values());
-    const cell = state.cells[state.selectedCell];
+    const cell = state.cells[index];
     if (!cell?.bitmap) return;
     state.pinch = {
       startDistance: distance(points[0], points[1]),
       startZoom: cell.zoom || 1,
-      index: state.selectedCell,
+      index,
     };
   }
 }
 
-function handleEditorPointerMove(event) {
+function handlePreviewPointerMove(event) {
   if (event.pointerType !== "touch") return;
   if (!state.touchPoints.has(event.pointerId)) return;
   state.touchPoints.set(event.pointerId, { x: event.clientX, y: event.clientY });
@@ -2737,7 +2770,7 @@ function handleEditorPointerMove(event) {
   setCellZoom(state.pinch.index, state.pinch.startZoom * ratio);
 }
 
-function handleEditorPointerUp(event) {
+function handlePreviewPointerUp(event) {
   state.touchPoints.delete(event.pointerId);
   if (state.touchPoints.size < 2) {
     state.pinch = null;
@@ -2764,7 +2797,16 @@ function startDrag(event, index, targetNode) {
     startFocusY: cell.focusY,
     ...metrics,
   };
-  frame.setPointerCapture?.(event.pointerId);
+  const captureTarget = event.currentTarget instanceof Element
+    ? event.currentTarget
+    : (event.target instanceof Element ? event.target : frame);
+  if (captureTarget?.setPointerCapture) {
+    try {
+      captureTarget.setPointerCapture(event.pointerId);
+    } catch {
+      // Pointer capture can fail for non-active pointers or detached nodes.
+    }
+  }
   window.addEventListener("pointermove", onDragMove);
   window.addEventListener("pointerup", stopDrag, { once: true });
 }
@@ -2791,31 +2833,36 @@ function stopDrag() {
   state.dragging = null;
 }
 
-function startTextDrag(event) {
-  const cell = state.cells[state.selectedCell];
+function startTextDrag(event, index = state.selectedCell, frame = els.editorFrame, overlay = els.editorTextOverlay) {
+  const cell = state.cells[index];
   if (!cell) return;
   event.preventDefault();
   event.stopPropagation();
-  const frameRect = els.editorFrame.getBoundingClientRect();
+  const frameRect = frame.getBoundingClientRect();
   state.textDragging = {
     pointerId: event.pointerId,
+    index,
     startX: event.clientX,
     startY: event.clientY,
     startTextX: clamp(cell.textX ?? 0.5, 0, 1),
     startTextY: clamp(cell.textY ?? DEFAULT_TEXT_Y, 0, 1),
     frameWidth: Math.max(1, frameRect.width),
     frameHeight: Math.max(1, frameRect.height),
+    overlay,
   };
-  els.editorTextOverlay.classList.add("dragging");
-  els.editorTextOverlay.setPointerCapture?.(event.pointerId);
+  overlay?.classList.add("dragging");
+  overlay?.setPointerCapture?.(event.pointerId);
   window.addEventListener("pointermove", onTextDragMove);
   window.addEventListener("pointerup", stopTextDrag, { once: true });
 }
 
 function onTextDragMove(event) {
   if (!state.textDragging || event.pointerId !== state.textDragging.pointerId) return;
-  const cell = state.cells[state.selectedCell];
+  const cell = state.cells[state.textDragging.index];
   if (!cell) return;
+  if (state.selectedCell !== state.textDragging.index) {
+    state.selectedCell = state.textDragging.index;
+  }
   const deltaX = (event.clientX - state.textDragging.startX) / state.textDragging.frameWidth;
   const deltaY = (event.clientY - state.textDragging.startY) / state.textDragging.frameHeight;
   cell.textX = clamp(state.textDragging.startTextX + deltaX, 0, 1);
@@ -2827,8 +2874,8 @@ function onTextDragMove(event) {
 
 function stopTextDrag() {
   window.removeEventListener("pointermove", onTextDragMove);
+  state.textDragging?.overlay?.classList.remove("dragging");
   state.textDragging = null;
-  els.editorTextOverlay.classList.remove("dragging");
 }
 
 function buildTimestampFilename(extension, now = new Date()) {
@@ -2881,21 +2928,33 @@ function updateExportFormatUi() {
   state.exportFormat = String(els.exportFormatSelect.value || "png").toLowerCase();
   const preset = getExportPresetDefinition();
   const isGif = state.exportFormat === "gif";
-  const widthLocked = isGif || Boolean(preset.width);
+  const widthLocked = !isGif && Boolean(preset.width);
   if (!widthLocked && state.exportWidthLocked) {
     state.customExportWidth = getSuggestedFreeExportWidth();
   }
   if (isGif) {
-    state.exportWidth = GIF_EXPORT_WIDTH;
+    const nextGifWidth = clamp(
+      Number(els.exportWidthInput.value) || state.exportWidth || GIF_EXPORT_DEFAULT_WIDTH,
+      GIF_EXPORT_MIN_WIDTH,
+      GIF_EXPORT_MAX_WIDTH
+    );
+    state.exportWidth = nextGifWidth;
   } else if (preset.width) {
     state.exportWidth = preset.width;
   } else {
-    state.customExportWidth = clamp(Number(els.exportWidthInput.value) || state.customExportWidth, 600, 6000);
+    state.customExportWidth = clamp(
+      Number(els.exportWidthInput.value) || state.customExportWidth,
+      EXPORT_WIDTH_MIN,
+      EXPORT_WIDTH_MAX
+    );
     state.exportWidth = state.customExportWidth;
   }
   els.gifDelayField.hidden = !isGif;
   els.gifDelayField.style.display = isGif ? "" : "none";
   els.gifDelayInput.disabled = !isGif;
+  els.exportWidthInput.min = String(isGif ? GIF_EXPORT_MIN_WIDTH : EXPORT_WIDTH_MIN);
+  els.exportWidthInput.max = String(isGif ? GIF_EXPORT_MAX_WIDTH : EXPORT_WIDTH_MAX);
+  els.exportWidthInput.step = "10";
   els.exportWidthInput.disabled = widthLocked;
   els.exportWidthInput.value = String(state.exportWidth);
   els.exportWidthValue.textContent = String(state.exportWidth);
@@ -3165,6 +3224,7 @@ async function buildExportPayload() {
       gifCtx.clearRect(0, 0, gifCanvas.width, gifCanvas.height);
       gifCtx.fillStyle = state.background;
       gifCtx.fillRect(0, 0, gifCanvas.width, gifCanvas.height);
+      drawWatermark(gifCtx, gifCanvas.width, gifCanvas.height);
       const imageData = gifCtx.getImageData(0, 0, gifCanvas.width, gifCanvas.height);
       frames.push(imageDataToIndexed(imageData, palette));
     } else {
@@ -3176,6 +3236,7 @@ async function buildExportPayload() {
         gifCtx.fillStyle = state.background;
         gifCtx.fillRect(0, 0, gifCanvas.width, gifCanvas.height);
         drawBitmapCentered(gifCtx, imageCells[i].bitmap, gifCanvas.width, gifCanvas.height);
+        drawWatermark(gifCtx, gifCanvas.width, gifCanvas.height);
         const imageData = gifCtx.getImageData(0, 0, gifCanvas.width, gifCanvas.height);
         frames.push(imageDataToIndexed(imageData, palette));
       }
@@ -3384,18 +3445,15 @@ function wireControls() {
     cell.focusY = 0;
     renderAll();
   });
-  els.editorFrame.addEventListener("pointerdown", handleEditorPointerDown);
-  els.editorFrame.addEventListener("pointermove", handleEditorPointerMove);
-  els.editorFrame.addEventListener("pointerup", handleEditorPointerUp);
-  els.editorFrame.addEventListener("pointercancel", handleEditorPointerUp);
-  els.editorFrame.addEventListener("wheel", handleEditorWheel, { passive: false });
+  window.addEventListener("pointermove", handlePreviewPointerMove, { passive: false });
+  window.addEventListener("pointerup", handlePreviewPointerUp);
+  window.addEventListener("pointercancel", handlePreviewPointerUp);
   els.zoomInput.addEventListener("input", () => {
     setCellZoom(state.selectedCell, Number(els.zoomInput.value) || 1);
   });
   els.resetZoom.addEventListener("click", () => {
     setCellZoom(state.selectedCell, 1);
   });
-  els.editorTextOverlay.addEventListener("pointerdown", startTextDrag);
   els.textInput.addEventListener("input", () => {
     const cell = state.cells[state.selectedCell];
     if (!cell) return;
@@ -3468,7 +3526,12 @@ function wireControls() {
     els.replaceInput.value = "";
   });
   els.exportWidthInput.addEventListener("input", () => {
-    state.customExportWidth = clamp(Number(els.exportWidthInput.value) || state.customExportWidth, 600, 6000);
+    const nextRaw = Number(els.exportWidthInput.value) || state.exportWidth;
+    if (state.exportFormat === "gif") {
+      state.exportWidth = clamp(nextRaw, GIF_EXPORT_MIN_WIDTH, GIF_EXPORT_MAX_WIDTH);
+    } else {
+      state.customExportWidth = clamp(nextRaw, EXPORT_WIDTH_MIN, EXPORT_WIDTH_MAX);
+    }
     renderExportPreview();
   });
   els.exportFormatSelect.addEventListener("change", () => {

@@ -1,5 +1,5 @@
 {
-  "appVersion": "1.2.29",
-  "cacheVersion": "v51",
-  "label": "Button-Breite und Slider-Abstand in Schritt 3 angepasst"
+  "appVersion": "1.2.34",
+  "cacheVersion": "v56",
+  "label": "GIF-Exportbreite als Bereich 480 bis 800 Pixel"
 }
