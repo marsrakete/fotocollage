@@ -17,6 +17,19 @@ Die Fotos verlassen dein Geraet nicht.
 
 Repository: [https://github.com/marsrakete/fotocollage](https://github.com/marsrakete/fotocollage)
 
+## Schnellstart in 30 Sekunden
+
+### Fuer Anwender
+
+1. Oeffnen: [https://marsrakete.github.io/fotocollage/](https://marsrakete.github.io/fotocollage/)
+2. Vorlage waehlen -> Fotos laden -> Feinschliff -> Export
+3. Optional als PWA installieren (Browser-Menue: App installieren / Zum Home-Bildschirm)
+
+### Fuer lokale Entwicklung
+
+1. In PowerShell im Projektordner: `.\start-server.ps1`
+2. Im Browser oeffnen: `http://localhost:5000/`
+
 ## Installation (PWA)
 
 ### Fuer normale Anwender (empfohlen)
@@ -52,11 +65,10 @@ Optional anderer Port:
 
 - 4-Schritt-Workflow fuer schnelle Collage-Erstellung
 - Viele Presets inkl. asymmetrischer Layouts und freier Einheiten-Presets
-- Flexible Raster (Zeilen/Spalten frei konfigurierbar)
 - Drag-and-drop Laden
 - Lade-Limit passend zur Anzahl der benoetigten Felder
-- Feinschliff des Bildausschnitts pro Feld
-- Drag-and-drop Sortierung der Bildfelder
+- Feinschliff des Bildausschnitts pro Feld direkt in der Vorschau
+- Sortiermodus zum Umordnen der Bildfelder (Tap Quelle, Tap Ziel)
 - Feld-Textoverlay (Schriftart, Groesse, Fett/Kursiv, Farbe, Position)
 - Wasserzeichen (Text, Position, Schriftart, Groesse, Farbe, persistent speicherbar)
 - Export in PNG/JPEG/PDF/GIF inkl. Teilen-Funktion
@@ -65,6 +77,34 @@ Optional anderer Port:
 - Automatische Sprachwahl anhand der Browsersprache
 - Einstellungen-Dialog mit Update-Pruefung
 - PWA mit Service Worker und Offline-Cache
+
+## Schritt-fuer-Schritt (1 bis 4)
+
+### Schritt 1: Vorlage waehlen
+
+- Waehle ein Preset fuer die Collage (z. B. 2x2, 3x3, asymmetrische Vorlagen).
+- Stelle Abstand, Randabstand und Hintergrundfarbe ein.
+- Optional: Einstellungen zuruecksetzen.
+
+### Schritt 2: Fotos laden
+
+- Lade genau so viele Bilder, wie die gewaehlte Vorlage Felder hat.
+- Auf Desktop geht auch Drag-and-drop in die Ladeflaeche.
+- In der Slot-Uebersicht kannst du die Reihenfolge bereits anpassen.
+
+### Schritt 3: Feinschliff
+
+- Bearbeite direkt in der Vorschau:
+- Ziehen verschiebt den Bildausschnitt.
+- Mausrad (Desktop) oder Pinch (Mobil) aendert den Zoom.
+- Nutze den Button `Sortieren`, um Bilder umzutauschen (Quelle antippen, Ziel antippen).
+- Im Bereich `Aktives Feld` steuerst du Text/Formatierung sowie `Ausschnitt zuruecksetzen` und `Zoom zuruecksetzen`.
+
+### Schritt 4: Export
+
+- Waehle Export-Preset, Format (PNG/JPEG/PDF/GIF) und Breite.
+- GIF nutzt einen Breitenbereich von `480 bis 800 px` und bietet die Frame-Dauer in Sekunden.
+- Teile die Collage direkt oder speichere sie als Datei.
 
 ## Export-Formate
 

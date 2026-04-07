@@ -578,9 +578,9 @@ const SAFE_AREA_RATIOS_BY_PRESET = Object.freeze({
 });
 
 const DEFAULT_VERSION_INFO = Object.freeze({
-  appVersion: "1.2.36",
-  cacheVersion: "v58",
-  label: "Mobiler Sortiermodus per Tap-Tap statt Long-Press-Handle",
+  appVersion: "1.2.39",
+  cacheVersion: "v61",
+  label: "README um Schnellstart in 30 Sekunden ergaenzt",
 });
 
 const ZOOM_MIN = 0.35;
@@ -616,7 +616,7 @@ const I18N = {
     uploadTitleMobile: "Fotos ausw\u00e4hlen",
     uploadDescMobile: "Tippe auf das Feld oben und w\u00e4hle Bilder von deinem Ger\u00e4t aus. Die Reihenfolge kannst du danach per Drag und Drop \u00e4ndern.",
     step3Title: "Schritt 3: Feinschliff",
-    step3Desc: "Bearbeite direkt in der Vorschau: ziehen f\u00fcr den Ausschnitt, Mausrad/Pinch f\u00fcr Zoom. Zum Umordnen nutze auf Mobil den Button Sortieren, auf Desktop den Griff.",
+    step3Desc: "Bearbeite direkt in der Vorschau: ziehen f\u00fcr den Ausschnitt, Mausrad/Pinch f\u00fcr Zoom. Zum Umordnen nutze den Button Sortieren.",
     activeCellTitle: "Aktives Feld",
     dragHint: "Direkt in der Vorschau verschieben und zoomen",
     reorderModeEnable: "Sortieren",
@@ -696,7 +696,6 @@ const I18N = {
     fieldEmpty: "Feld ist leer",
     emptySlot: "Leer",
     slotStatusReady: "Bereit f\u00fcr den Feinschliff. Verschiebe Fotos mit Drag und Drop.",
-    reorderPhotosHint: "Reihenfolge \u00e4ndern (Drag und Drop)",
     slotStatusMissing: "{filled} von {total} Feldern belegt. Es fehlen noch Bilder.",
     uploadLimitExceeded: "Es k\u00f6nnen maximal {max} Bilder f\u00fcr diese Vorlage geladen werden.",
     versionPrefix: "Version",
@@ -729,7 +728,7 @@ const I18N = {
     uploadTitleMobile: "Choose photos",
     uploadDescMobile: "Tap the field above and pick images from your device. You can reorder them afterwards via drag and drop.",
     step3Title: "Step 3: Fine-tune",
-    step3Desc: "Edit directly in the preview: drag to pan, mouse wheel or pinch to zoom. Use Sort mode on mobile, and the handle on desktop, to reorder photos.",
+    step3Desc: "Edit directly in the preview: drag to pan, mouse wheel or pinch to zoom. Use Sort mode to reorder photos.",
     activeCellTitle: "Active slot",
     dragHint: "Move and zoom directly in the preview",
     reorderModeEnable: "Sort",
@@ -808,7 +807,6 @@ const I18N = {
     fieldEmpty: "slot is empty",
     emptySlot: "Empty",
     slotStatusReady: "Ready for fine-tuning. Reorder photos with drag and drop.",
-    reorderPhotosHint: "Change order (drag and drop)",
     slotStatusMissing: "{filled} of {total} slots filled. More photos are needed.",
     uploadLimitExceeded: "You can load a maximum of {max} images for this template.",
     versionPrefix: "Version",
@@ -841,7 +839,7 @@ const I18N = {
     uploadTitleMobile: "Choisir des photos",
     uploadDescMobile: "Touchez le champ ci-dessus et choisissez des images depuis votre appareil. Vous pourrez ensuite r\u00e9ordonner par glisser-d\u00e9poser.",
     step3Title: "\u00c9tape 3: Fignolage",
-    step3Desc: "Modifiez directement dans l'aper\u00e7u: glisser pour le cadrage, molette/pincement pour zoomer. Sur mobile utilisez le mode Trier, sur desktop la poign\u00e9e.",
+    step3Desc: "Modifiez directement dans l'aper\u00e7u: glisser pour le cadrage, molette/pincement pour zoomer. Utilisez le mode Trier pour r\u00e9ordonner les photos.",
     activeCellTitle: "Emplacement actif",
     dragHint: "Deplacez et zoomez directement dans l'aper\u00e7u",
     reorderModeEnable: "Trier",
@@ -921,7 +919,6 @@ const I18N = {
     fieldEmpty: "case vide",
     emptySlot: "Vide",
     slotStatusReady: "Pr\u00eat pour le fignolage. R\u00e9ordonnez les photos par glisser-d\u00e9poser.",
-    reorderPhotosHint: "Changer l'ordre (glisser-d\u00e9poser)",
     slotStatusMissing: "{filled} sur {total} cases remplies. Il manque encore des photos.",
     uploadLimitExceeded: "Vous pouvez charger au maximum {max} images pour ce mod\u00e8le.",
     versionPrefix: "Version",
@@ -946,7 +943,6 @@ const state = {
   dragging: null,
   textDragging: null,
   dragIndex: null,
-  previewReorder: null,
   reorderMode: false,
   reorderSourceIndex: null,
   pinch: null,
@@ -1442,6 +1438,7 @@ function updateReorderModeUi() {
   const enabled = Boolean(state.reorderMode);
   els.toggleReorderMode.textContent = enabled ? t("reorderModeDisable") : t("reorderModeEnable");
   els.toggleReorderMode.setAttribute("aria-pressed", String(enabled));
+  els.toggleReorderMode.classList.toggle("active", enabled);
 }
 
 async function loadReadmeContent() {
@@ -2026,20 +2023,6 @@ function handleReorderModeTap(index) {
   renderAll();
 }
 
-function clearPreviewDragClasses() {
-  els.collagePreview.querySelectorAll(".preview-cell.drag-source, .preview-cell.drag-over").forEach((node) => {
-    node.classList.remove("drag-source");
-    node.classList.remove("drag-over");
-  });
-}
-
-function getPreviewIndexFromPoint(clientX, clientY) {
-  const target = document.elementFromPoint(clientX, clientY)?.closest(".preview-cell");
-  if (!target) return -1;
-  const value = Number(target.dataset.index);
-  return Number.isNaN(value) ? -1 : value;
-}
-
 function getPreviewCellNode(index = state.selectedCell) {
   return els.collagePreview.querySelector(`.preview-cell[data-index="${index}"]`);
 }
@@ -2063,78 +2046,6 @@ function getCellFrameSize(index = state.selectedCell) {
   return { width: 1, height: 1 };
 }
 
-function startPreviewHandleTouchReorder(event, index, node) {
-  if (event.pointerType !== "touch") return;
-  if (isTouchLikeDevice()) return;
-  const cell = state.cells[index];
-  if (!cell?.bitmap) return;
-  event.preventDefault();
-  event.stopPropagation();
-
-  const session = {
-    pointerId: event.pointerId,
-    sourceIndex: index,
-    targetIndex: index,
-    startX: event.clientX,
-    startY: event.clientY,
-    armed: false,
-    timer: null,
-  };
-  state.previewReorder = session;
-
-  const cleanup = () => {
-    window.removeEventListener("pointermove", onMove);
-    window.removeEventListener("pointerup", onUp);
-    window.removeEventListener("pointercancel", onUp);
-    if (session.timer) {
-      clearTimeout(session.timer);
-      session.timer = null;
-    }
-    clearPreviewDragClasses();
-    state.dragIndex = null;
-    state.previewReorder = null;
-  };
-
-  const onMove = (moveEvent) => {
-    if (!state.previewReorder || moveEvent.pointerId !== session.pointerId) return;
-    const travel = Math.hypot(moveEvent.clientX - session.startX, moveEvent.clientY - session.startY);
-    if (!session.armed && travel > 12) {
-      cleanup();
-      return;
-    }
-    if (!session.armed) return;
-    moveEvent.preventDefault();
-    const targetIndex = getPreviewIndexFromPoint(moveEvent.clientX, moveEvent.clientY);
-    if (targetIndex < 0) return;
-    session.targetIndex = targetIndex;
-    clearPreviewDragClasses();
-    node.classList.add("drag-source");
-    const targetNode = els.collagePreview.querySelector(`.preview-cell[data-index="${targetIndex}"]`);
-    targetNode?.classList.add("drag-over");
-  };
-
-  const onUp = (upEvent) => {
-    if (!state.previewReorder || upEvent.pointerId !== session.pointerId) return;
-    const shouldMove = session.armed && session.targetIndex >= 0 && session.targetIndex !== session.sourceIndex;
-    cleanup();
-    if (shouldMove) {
-      moveCell(session.sourceIndex, session.targetIndex);
-    }
-  };
-
-  session.timer = setTimeout(() => {
-    if (!state.previewReorder || state.previewReorder.pointerId !== session.pointerId) return;
-    session.armed = true;
-    state.dragIndex = session.sourceIndex;
-    clearPreviewDragClasses();
-    node.classList.add("drag-source");
-  }, 260);
-
-  window.addEventListener("pointermove", onMove, { passive: false });
-  window.addEventListener("pointerup", onUp);
-  window.addEventListener("pointercancel", onUp);
-}
-
 function renderPreview() {
   const layout = getActiveLayoutDefinition();
   els.collagePreview.style.aspectRatio = `${layout.cols} / ${layout.rows}`;
@@ -2148,7 +2059,6 @@ function renderPreview() {
     const node = template.content.firstElementChild.cloneNode(true);
     const img = node.querySelector("img");
     const emptyNote = node.querySelector(".empty-note");
-    const reorderHandle = node.querySelector(".preview-reorder-handle");
     const textOverlay = document.createElement("div");
     textOverlay.className = "preview-text-overlay";
     textOverlay.hidden = true;
@@ -2166,7 +2076,6 @@ function renderPreview() {
         event.preventDefault();
       });
       if (emptyNote) emptyNote.hidden = true;
-      if (reorderHandle) reorderHandle.hidden = isTouchLikeDevice();
     } else {
       node.classList.add("empty");
       img.removeAttribute("src");
@@ -2175,37 +2084,6 @@ function renderPreview() {
         emptyNote.hidden = false;
         emptyNote.textContent = t("emptySlot");
       }
-      if (reorderHandle) reorderHandle.hidden = true;
-    }
-    if (reorderHandle) {
-      const reorderHint = t("reorderPhotosHint");
-      reorderHandle.setAttribute("aria-label", reorderHint);
-      reorderHandle.setAttribute("title", reorderHint);
-      reorderHandle.addEventListener("click", (event) => {
-        event.preventDefault();
-        event.stopPropagation();
-      });
-      reorderHandle.addEventListener("pointerdown", (event) => {
-        startPreviewHandleTouchReorder(event, index, node);
-        event.stopPropagation();
-      });
-      reorderHandle.addEventListener("dragstart", (event) => {
-        if (!cell.bitmap) {
-          event.preventDefault();
-          return;
-        }
-        event.stopPropagation();
-        state.dragIndex = index;
-        event.dataTransfer.effectAllowed = "move";
-        event.dataTransfer.setData("text/plain", String(index));
-        clearPreviewDragClasses();
-        node.classList.add("drag-source");
-      });
-      reorderHandle.addEventListener("dragend", (event) => {
-        event.stopPropagation();
-        state.dragIndex = null;
-        clearPreviewDragClasses();
-      });
     }
     node.addEventListener("pointerdown", (event) => handlePreviewPointerDown(event, index, node));
     node.addEventListener("wheel", (event) => handlePreviewWheel(event, index), { passive: false });
@@ -2228,24 +2106,6 @@ function renderPreview() {
       state.selectedCell = index;
       syncEditor();
       renderPreview();
-    });
-    node.addEventListener("dragover", (event) => {
-      if (state.dragIndex === null) return;
-      event.preventDefault();
-      node.classList.add("drag-over");
-    });
-    node.addEventListener("dragleave", () => {
-      node.classList.remove("drag-over");
-    });
-    node.addEventListener("drop", (event) => {
-      if (state.dragIndex === null) return;
-      event.preventDefault();
-      node.classList.remove("drag-over");
-      const from = Number(event.dataTransfer?.getData("text/plain") || state.dragIndex);
-      if (Number.isNaN(from)) return;
-      state.dragIndex = null;
-      clearPreviewDragClasses();
-      moveCell(from, index);
     });
     textOverlay.addEventListener("pointerdown", (event) => startTextDrag(event, index, node, textOverlay));
     els.collagePreview.appendChild(node);
