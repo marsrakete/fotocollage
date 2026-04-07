@@ -1,5 +1,5 @@
 {
-  "appVersion": "1.2.42",
-  "cacheVersion": "v64",
-  "label": "EXIF-Filter entfernt Emoji vor dem Schreiben"
+  "appVersion": "1.2.46",
+  "cacheVersion": "v68",
+  "label": "collage-preview auf eckige Ecken gesetzt, wrap-Aenderung rueckgaengig"
 }

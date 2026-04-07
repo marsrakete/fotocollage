@@ -578,9 +578,9 @@ const SAFE_AREA_RATIOS_BY_PRESET = Object.freeze({
 });
 
 const DEFAULT_VERSION_INFO = Object.freeze({
-  appVersion: "1.2.42",
-  cacheVersion: "v64",
-  label: "EXIF-Filter entfernt Emoji vor dem Schreiben",
+  appVersion: "1.2.46",
+  cacheVersion: "v68",
+  label: "collage-preview auf eckige Ecken gesetzt, wrap-Aenderung rueckgaengig",
 });
 
 const ZOOM_MIN = 0.35;
@@ -617,7 +617,7 @@ const I18N = {
     uploadTitleMobile: "Fotos ausw\u00e4hlen",
     uploadDescMobile: "Tippe auf das Feld oben und w\u00e4hle Bilder von deinem Ger\u00e4t aus. Die Reihenfolge kannst du danach per Drag und Drop \u00e4ndern.",
     step3Title: "Schritt 3: Feinschliff",
-    step3Desc: "Bearbeite direkt in der Vorschau: ziehen f\u00fcr den Ausschnitt, Mausrad/Pinch f\u00fcr Zoom. Zum Umordnen nutze den Button Sortieren.",
+    step3Desc: "Bearbeite direkt in der Vorschau: ziehen f\u00fcr den Ausschnitt, Mausrad/Pinch f\u00fcr Zoom. Text im Feld kannst du per Drag und Drop frei platzieren. Zum Umordnen nutze den Button Sortieren.",
     activeCellTitle: "Aktives Feld",
     dragHint: "Direkt in der Vorschau verschieben und zoomen",
     reorderModeEnable: "Sortieren",
@@ -737,7 +737,7 @@ const I18N = {
     uploadTitleMobile: "Choose photos",
     uploadDescMobile: "Tap the field above and pick images from your device. You can reorder them afterwards via drag and drop.",
     step3Title: "Step 3: Fine-tune",
-    step3Desc: "Edit directly in the preview: drag to pan, mouse wheel or pinch to zoom. Use Sort mode to reorder photos.",
+    step3Desc: "Edit directly in the preview: drag to pan, mouse wheel or pinch to zoom. You can freely position slot text via drag and drop. Use Sort mode to reorder photos.",
     activeCellTitle: "Active slot",
     dragHint: "Move and zoom directly in the preview",
     reorderModeEnable: "Sort",
@@ -856,7 +856,7 @@ const I18N = {
     uploadTitleMobile: "Choisir des photos",
     uploadDescMobile: "Touchez le champ ci-dessus et choisissez des images depuis votre appareil. Vous pourrez ensuite r\u00e9ordonner par glisser-d\u00e9poser.",
     step3Title: "\u00c9tape 3: Fignolage",
-    step3Desc: "Modifiez directement dans l'aper\u00e7u: glisser pour le cadrage, molette/pincement pour zoomer. Utilisez le mode Trier pour r\u00e9ordonner les photos.",
+    step3Desc: "Modifiez directement dans l'aper\u00e7u: glisser pour le cadrage, molette/pincement pour zoomer. Le texte peut etre place librement par glisser-deposer dans la case. Utilisez le mode Trier pour reordonner les photos.",
     activeCellTitle: "Emplacement actif",
     dragHint: "Deplacez et zoomez directement dans l'aper\u00e7u",
     reorderModeEnable: "Trier",
