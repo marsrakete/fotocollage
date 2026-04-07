@@ -578,9 +578,9 @@ const SAFE_AREA_RATIOS_BY_PRESET = Object.freeze({
 });
 
 const DEFAULT_VERSION_INFO = Object.freeze({
-  appVersion: "1.2.34",
-  cacheVersion: "v56",
-  label: "GIF-Exportbreite als Bereich 480 bis 800 Pixel",
+  appVersion: "1.2.36",
+  cacheVersion: "v58",
+  label: "Mobiler Sortiermodus per Tap-Tap statt Long-Press-Handle",
 });
 
 const ZOOM_MIN = 0.35;
@@ -616,9 +616,13 @@ const I18N = {
     uploadTitleMobile: "Fotos ausw\u00e4hlen",
     uploadDescMobile: "Tippe auf das Feld oben und w\u00e4hle Bilder von deinem Ger\u00e4t aus. Die Reihenfolge kannst du danach per Drag und Drop \u00e4ndern.",
     step3Title: "Schritt 3: Feinschliff",
-    step3Desc: "Bearbeite direkt in der Vorschau: ziehen f\u00fcr den Ausschnitt, Mausrad/Pinch f\u00fcr Zoom. \u00dcber den Griff kannst du Fotos per Drag und Drop neu anordnen.",
+    step3Desc: "Bearbeite direkt in der Vorschau: ziehen f\u00fcr den Ausschnitt, Mausrad/Pinch f\u00fcr Zoom. Zum Umordnen nutze auf Mobil den Button Sortieren, auf Desktop den Griff.",
     activeCellTitle: "Aktives Feld",
     dragHint: "Direkt in der Vorschau verschieben und zoomen",
+    reorderModeEnable: "Sortieren",
+    reorderModeDisable: "Sortieren beenden",
+    reorderModeHintIdle: "Sortiermodus: Tippe zuerst das Quellbild, dann das Zielfeld an.",
+    reorderModeHintSource: "Sortiermodus: Tippe ein Zielfeld an oder erneut auf die Quelle zum Abbrechen.",
     step4Title: "Schritt 4: Export",
     step4Desc: "Die Collage wird in hoher Aufl\u00f6sung gerendert und kann geteilt oder als PNG/JPEG/PDF/GIF gespeichert werden.",
     exportFormatLabel: "Exportformat",
@@ -725,9 +729,13 @@ const I18N = {
     uploadTitleMobile: "Choose photos",
     uploadDescMobile: "Tap the field above and pick images from your device. You can reorder them afterwards via drag and drop.",
     step3Title: "Step 3: Fine-tune",
-    step3Desc: "Edit directly in the preview: drag to pan, mouse wheel or pinch to zoom. Use the handle to reorder photos via drag and drop.",
+    step3Desc: "Edit directly in the preview: drag to pan, mouse wheel or pinch to zoom. Use Sort mode on mobile, and the handle on desktop, to reorder photos.",
     activeCellTitle: "Active slot",
     dragHint: "Move and zoom directly in the preview",
+    reorderModeEnable: "Sort",
+    reorderModeDisable: "Finish sorting",
+    reorderModeHintIdle: "Sort mode: tap the source image first, then tap the target slot.",
+    reorderModeHintSource: "Sort mode: tap a target slot, or tap source again to cancel.",
     step4Title: "Step 4: Export",
     step4Desc: "The collage is rendered in high resolution and can be shared or saved as PNG/JPEG/PDF/GIF.",
     exportFormatLabel: "Export format",
@@ -833,9 +841,13 @@ const I18N = {
     uploadTitleMobile: "Choisir des photos",
     uploadDescMobile: "Touchez le champ ci-dessus et choisissez des images depuis votre appareil. Vous pourrez ensuite r\u00e9ordonner par glisser-d\u00e9poser.",
     step3Title: "\u00c9tape 3: Fignolage",
-    step3Desc: "Modifiez directement dans l'aper\u00e7u: glisser pour le cadrage, molette/pincement pour zoomer. Utilisez la poign\u00e9e pour r\u00e9ordonner par glisser-d\u00e9poser.",
+    step3Desc: "Modifiez directement dans l'aper\u00e7u: glisser pour le cadrage, molette/pincement pour zoomer. Sur mobile utilisez le mode Trier, sur desktop la poign\u00e9e.",
     activeCellTitle: "Emplacement actif",
     dragHint: "Deplacez et zoomez directement dans l'aper\u00e7u",
+    reorderModeEnable: "Trier",
+    reorderModeDisable: "Terminer le tri",
+    reorderModeHintIdle: "Mode tri: touchez d'abord l'image source, puis la case cible.",
+    reorderModeHintSource: "Mode tri: touchez une case cible ou la source a nouveau pour annuler.",
     step4Title: "\u00c9tape 4: Export",
     step4Desc: "Le collage est rendu en haute r\u00e9solution et peut \u00eatre partag\u00e9 ou enregistr\u00e9 en PNG/JPEG/PDF/GIF.",
     exportFormatLabel: "Format d'export",
@@ -935,6 +947,8 @@ const state = {
   textDragging: null,
   dragIndex: null,
   previewReorder: null,
+  reorderMode: false,
+  reorderSourceIndex: null,
   pinch: null,
   touchPoints: new Map(),
   exportWidth: 3000,
@@ -992,6 +1006,7 @@ const els = {
   editorFrame: document.getElementById("editorFrame"),
   editorImage: document.getElementById("editorImage"),
   activeCellInfo: document.getElementById("activeCellInfo"),
+  toggleReorderMode: document.getElementById("toggleReorderMode"),
   prevCell: document.getElementById("prevCell"),
   nextCell: document.getElementById("nextCell"),
   replaceCell: document.getElementById("replaceCell"),
@@ -1353,6 +1368,7 @@ function translateStaticUi() {
   setText(els.prevCell, "prevCell");
   setText(els.nextCell, "nextCell");
   setText(els.replaceCell, "replaceCell");
+  updateReorderModeUi();
   setText(els.resetFocus, "resetFocus");
   setText(els.zoomLabel, "zoomLabel");
   setText(els.resetZoom, "resetZoom");
@@ -1419,6 +1435,13 @@ function renderVersionLabel() {
     parts.push(info.label);
   }
   els.versionLabel.textContent = parts.join(" \u00b7 ");
+}
+
+function updateReorderModeUi() {
+  if (!els.toggleReorderMode) return;
+  const enabled = Boolean(state.reorderMode);
+  els.toggleReorderMode.textContent = enabled ? t("reorderModeDisable") : t("reorderModeEnable");
+  els.toggleReorderMode.setAttribute("aria-pressed", String(enabled));
 }
 
 async function loadReadmeContent() {
@@ -1973,6 +1996,36 @@ function moveCell(from, to) {
   renderAll();
 }
 
+function swapCells(first, second) {
+  if (first === second || first < 0 || second < 0 || first >= state.cells.length || second >= state.cells.length) return;
+  const tmp = state.cells[first];
+  state.cells[first] = state.cells[second];
+  state.cells[second] = tmp;
+  state.selectedCell = second;
+}
+
+function handleReorderModeTap(index) {
+  const cell = state.cells[index];
+  if (!cell?.bitmap) {
+    return;
+  }
+  if (state.reorderSourceIndex === null) {
+    state.reorderSourceIndex = index;
+    state.selectedCell = index;
+    syncEditor();
+    renderPreview();
+    return;
+  }
+  if (state.reorderSourceIndex === index) {
+    state.reorderSourceIndex = null;
+    renderPreview();
+    return;
+  }
+  swapCells(state.reorderSourceIndex, index);
+  state.reorderSourceIndex = null;
+  renderAll();
+}
+
 function clearPreviewDragClasses() {
   els.collagePreview.querySelectorAll(".preview-cell.drag-source, .preview-cell.drag-over").forEach((node) => {
     node.classList.remove("drag-source");
@@ -2012,6 +2065,7 @@ function getCellFrameSize(index = state.selectedCell) {
 
 function startPreviewHandleTouchReorder(event, index, node) {
   if (event.pointerType !== "touch") return;
+  if (isTouchLikeDevice()) return;
   const cell = state.cells[index];
   if (!cell?.bitmap) return;
   event.preventDefault();
@@ -2102,12 +2156,17 @@ function renderPreview() {
     node.dataset.index = String(index);
     node.querySelector(".cell-index").textContent = `#${index + 1}`;
     node.classList.toggle("selected", index === state.selectedCell);
+    node.classList.toggle("reorder-source", state.reorderMode && state.reorderSourceIndex === index);
     if (cell.bitmap) {
       node.classList.remove("empty");
       img.src = cell.objectUrl;
       img.alt = cell.fileName;
+      img.setAttribute("draggable", "false");
+      img.addEventListener("contextmenu", (event) => {
+        event.preventDefault();
+      });
       if (emptyNote) emptyNote.hidden = true;
-      if (reorderHandle) reorderHandle.hidden = false;
+      if (reorderHandle) reorderHandle.hidden = isTouchLikeDevice();
     } else {
       node.classList.add("empty");
       img.removeAttribute("src");
@@ -2151,6 +2210,10 @@ function renderPreview() {
     node.addEventListener("pointerdown", (event) => handlePreviewPointerDown(event, index, node));
     node.addEventListener("wheel", (event) => handlePreviewWheel(event, index), { passive: false });
     node.addEventListener("click", () => {
+      if (state.reorderMode) {
+        handleReorderModeTap(index);
+        return;
+      }
       state.selectedCell = index;
       syncEditor();
       renderPreview();
@@ -2158,6 +2221,10 @@ function renderPreview() {
     node.addEventListener("keydown", (event) => {
       if (event.key !== "Enter" && event.key !== " ") return;
       event.preventDefault();
+      if (state.reorderMode) {
+        handleReorderModeTap(index);
+        return;
+      }
       state.selectedCell = index;
       syncEditor();
       renderPreview();
@@ -2209,9 +2276,13 @@ function syncEditor() {
   const cell = state.cells[state.selectedCell];
   if (!cell) return;
   els.editorFrame.style.background = state.background;
-  els.activeCellInfo.textContent = cell.bitmap
+  const baseInfo = cell.bitmap
     ? `${state.selectedCell + 1}. ${t("field")}: ${cell.fileName}`
     : `${state.selectedCell + 1}. ${t("fieldEmpty")}`;
+  const reorderHint = state.reorderMode
+    ? (state.reorderSourceIndex === null ? t("reorderModeHintIdle") : t("reorderModeHintSource"))
+    : "";
+  els.activeCellInfo.textContent = reorderHint ? `${baseInfo} • ${reorderHint}` : baseInfo;
   if (cell.bitmap) {
     els.zoomInput.value = String(cell.zoom || 1);
     els.zoomValue.textContent = String(Math.round((cell.zoom || 1) * 100));
@@ -2313,6 +2384,7 @@ function drawCollage(ctx, width, height, options = {}) {
 }
 
 function renderAll() {
+  updateReorderModeUi();
   updatePresetActive();
   renderSlots();
   renderStatus();
@@ -2709,6 +2781,7 @@ function setCellZoom(index, nextZoom) {
 }
 
 function handlePreviewWheel(event, index) {
+  if (state.reorderMode) return;
   const cell = state.cells[index];
   if (!cell?.bitmap) return;
   event.preventDefault();
@@ -2730,6 +2803,12 @@ function distance(a, b) {
 }
 
 function handlePreviewPointerDown(event, index, node) {
+  if (state.reorderMode) {
+    if (event.pointerType === "touch") {
+      event.preventDefault();
+    }
+    return;
+  }
   if (state.selectedCell !== index) {
     state.selectedCell = index;
     syncEditor();
@@ -2760,9 +2839,9 @@ function handlePreviewPointerDown(event, index, node) {
 function handlePreviewPointerMove(event) {
   if (event.pointerType !== "touch") return;
   if (!state.touchPoints.has(event.pointerId)) return;
+  event.preventDefault();
   state.touchPoints.set(event.pointerId, { x: event.clientX, y: event.clientY });
   if (!state.pinch || state.touchPoints.size < 2) return;
-  event.preventDefault();
   const points = Array.from(state.touchPoints.values());
   const nextDistance = distance(points[0], points[1]);
   if (state.pinch.startDistance <= 0) return;
@@ -2807,7 +2886,7 @@ function startDrag(event, index, targetNode) {
       // Pointer capture can fail for non-active pointers or detached nodes.
     }
   }
-  window.addEventListener("pointermove", onDragMove);
+  window.addEventListener("pointermove", onDragMove, { passive: false });
   window.addEventListener("pointerup", stopDrag, { once: true });
 }
 
@@ -2815,6 +2894,7 @@ function onDragMove(event) {
   if (!state.dragging || event.pointerId !== state.dragging.pointerId) return;
   const cell = state.cells[state.dragging.index];
   if (!cell?.bitmap) return;
+  event.preventDefault();
   if (state.dragging.panRangeX > 0.0001) {
     const deltaX = event.clientX - state.dragging.startX;
     cell.focusX = clamp(state.dragging.startFocusX - deltaX / (state.dragging.panRangeX / 2), -1, 1);
@@ -2852,7 +2932,7 @@ function startTextDrag(event, index = state.selectedCell, frame = els.editorFram
   };
   overlay?.classList.add("dragging");
   overlay?.setPointerCapture?.(event.pointerId);
-  window.addEventListener("pointermove", onTextDragMove);
+  window.addEventListener("pointermove", onTextDragMove, { passive: false });
   window.addEventListener("pointerup", stopTextDrag, { once: true });
 }
 
@@ -2860,6 +2940,7 @@ function onTextDragMove(event) {
   if (!state.textDragging || event.pointerId !== state.textDragging.pointerId) return;
   const cell = state.cells[state.textDragging.index];
   if (!cell) return;
+  event.preventDefault();
   if (state.selectedCell !== state.textDragging.index) {
     state.selectedCell = state.textDragging.index;
   }
@@ -3437,6 +3518,13 @@ function wireControls() {
   els.nextCell.addEventListener("click", () => {
     state.selectedCell = (state.selectedCell + 1) % state.cells.length;
     renderAll();
+  });
+  els.toggleReorderMode?.addEventListener("click", () => {
+    state.reorderMode = !state.reorderMode;
+    state.reorderSourceIndex = null;
+    updateReorderModeUi();
+    syncEditor();
+    renderPreview();
   });
   els.resetFocus.addEventListener("click", () => {
     const cell = state.cells[state.selectedCell];
