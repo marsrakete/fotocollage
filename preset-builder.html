@@ -1,0 +1,715 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Preset Builder</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        --bg: #08111f;
+        --panel: rgba(12, 19, 34, 0.92);
+        --text: #f5f7fb;
+        --muted: #a9b4c7;
+        --border: rgba(255, 255, 255, 0.12);
+        --brand: #74c0fc;
+      }
+      * { box-sizing: border-box; }
+      html, body {
+        margin: 0;
+        min-height: 100%;
+        background: linear-gradient(180deg, #08111f 0%, #0b1324 44%, #050913 100%);
+        color: var(--text);
+        font-family: "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+      }
+      .shell {
+        width: min(1520px, calc(100vw - 20px));
+        margin: 0 auto;
+        padding: 16px 0 30px;
+        display: grid;
+        gap: 12px;
+      }
+      .card {
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        padding: 14px;
+      }
+      h1, h2 { margin: 0 0 8px; }
+      p { margin: 0; color: var(--muted); }
+      .top-grid {
+        display: grid;
+        grid-template-columns: repeat(6, minmax(0, 1fr));
+        gap: 10px;
+        margin-top: 10px;
+      }
+      label {
+        display: grid;
+        gap: 6px;
+        font-size: 0.92rem;
+        color: var(--muted);
+      }
+      input, textarea, button {
+        font: inherit;
+      }
+      input, textarea {
+        width: 100%;
+        border-radius: 10px;
+        border: 1px solid var(--border);
+        background: rgba(5, 9, 19, 0.75);
+        color: var(--text);
+        padding: 8px 10px;
+      }
+      textarea {
+        min-height: 140px;
+        resize: vertical;
+      }
+      .actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+      button {
+        border: 1px solid var(--border);
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.06);
+        color: var(--text);
+        padding: 9px 14px;
+        cursor: pointer;
+      }
+      button.primary {
+        border-color: rgba(116, 192, 252, 0.7);
+        background: rgba(116, 192, 252, 0.2);
+      }
+      .main {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(420px, 560px);
+        gap: 12px;
+      }
+      .grid-wrap {
+        display: grid;
+        gap: 10px;
+      }
+      .grid-board {
+        position: relative;
+        width: 100%;
+        aspect-ratio: 1 / 1;
+        border: 1px solid var(--border);
+        background: rgba(255, 255, 255, 0.04);
+        overflow: hidden;
+        touch-action: none;
+      }
+      .cells {
+        position: absolute;
+        inset: 0;
+        display: grid;
+      }
+      .cell {
+        border: 1px solid rgba(255, 255, 255, 0.14);
+        background: rgba(255, 255, 255, 0.01);
+      }
+      .slot-overlay {
+        position: absolute;
+        border: 2px solid rgba(140, 233, 154, 0.95);
+        background: rgba(140, 233, 154, 0.18);
+        color: #e8ffe6;
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        pointer-events: none;
+      }
+      .slot-overlay.circle {
+        border-radius: 50%;
+      }
+      .slot-overlay.rounded-rect {
+        border-radius: 12px;
+      }
+      .slot-overlay.diamond {
+        clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
+      }
+      .slot-overlay.hexagon {
+        clip-path: polygon(20% 0%, 80% 0%, 100% 50%, 80% 100%, 20% 100%, 0% 50%);
+      }
+      .slot-overlay.draft {
+        border-style: dashed;
+        border-color: rgba(255, 210, 113, 0.95);
+        background: rgba(255, 210, 113, 0.18);
+        color: #fff2c9;
+      }
+      .slots-list {
+        display: grid;
+        gap: 8px;
+      }
+      .slot-row {
+        display: flex;
+        gap: 8px;
+        align-items: flex-start;
+        justify-content: space-between;
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 8px 10px;
+        background: rgba(255, 255, 255, 0.03);
+      }
+      .slot-row.selected {
+        border-color: rgba(116, 192, 252, 0.8);
+        background: rgba(116, 192, 252, 0.14);
+      }
+      .slot-main {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 8px;
+        min-width: 0;
+      }
+      .slot-no {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 34px;
+        height: 24px;
+        border-radius: 999px;
+        border: 1px solid rgba(255, 255, 255, 0.25);
+        background: rgba(5, 9, 19, 0.7);
+        color: var(--text);
+        font-weight: 700;
+        font-size: 0.8rem;
+      }
+      .slot-row code {
+        color: #b5e3ff;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .slot-shape-select {
+        width: 96px;
+        border-radius: 8px;
+        border: 1px solid var(--border);
+        background: rgba(5, 9, 19, 0.75);
+        color: var(--text);
+        padding: 5px 8px;
+      }
+      .out-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+      }
+      .out-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 6px;
+      }
+      .hint {
+        margin-top: 8px;
+        font-size: 0.9rem;
+      }
+      @media (max-width: 920px) {
+        .top-grid { grid-template-columns: 1fr 1fr; }
+        .main, .out-grid { grid-template-columns: 1fr; }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="shell">
+      <section class="card">
+        <h1>Preset Builder (visuell)</h1>
+        <p>Ziehe im Raster ein Rechteck, um einen Slot anzulegen. Keine Ueberlappungen erlaubt. Formen koennen pro Slot gesetzt werden.</p>
+        <div class="top-grid">
+          <label>Preset ID
+            <input id="presetId" value="my-preset" />
+          </label>
+          <label>Label (de)
+            <input id="labelDe" value="Mein Preset" />
+          </label>
+          <label>Label (en)
+            <input id="labelEn" value="My preset" />
+          </label>
+          <label>Label (fr)
+            <input id="labelFr" value="Mon preset" />
+          </label>
+          <label>Rows
+            <input id="rowsInput" type="number" min="1" max="12" value="3" />
+          </label>
+          <label>Cols
+            <input id="colsInput" type="number" min="1" max="12" value="3" />
+          </label>
+        </div>
+        <div class="actions" style="margin-top:10px;">
+          <button id="applyGrid" class="primary" type="button">Raster anwenden</button>
+          <button id="clearSlots" type="button">Alle Slots loeschen</button>
+          <button id="autoId" type="button">ID aus Label erzeugen</button>
+        </div>
+      </section>
+
+      <section class="main">
+        <section class="card grid-wrap">
+          <h2>Visuelles Raster</h2>
+          <div id="gridBoard" class="grid-board">
+            <div id="cellsLayer" class="cells"></div>
+            <div id="slotsLayer"></div>
+          </div>
+          <p class="hint" id="statusText">Bereit. Ziehe ein Rechteck im Raster.</p>
+        </section>
+
+        <aside class="card">
+          <h2>Slots</h2>
+          <div class="actions" style="margin-bottom:8px;">
+            <button id="mergeSlots" type="button">Auswahl verbinden</button>
+            <button id="clearSelection" type="button">Auswahl loeschen</button>
+          </div>
+          <p class="hint">Verbinden funktioniert nur bei exakt horizontal oder vertikal angrenzenden Slots.</p>
+          <div id="slotsList" class="slots-list"></div>
+        </aside>
+      </section>
+
+      <section class="card out-grid">
+        <div>
+          <div class="out-head">
+            <h2 style="margin:0;">PRESETS-Objekt</h2>
+            <button id="copyPreset" type="button">Kopieren</button>
+          </div>
+          <textarea id="presetOut" readonly></textarea>
+        </div>
+        <div>
+          <div class="out-head">
+            <h2 style="margin:0;">PRESET_LABELS-Eintrag</h2>
+            <button id="copyLabels" type="button">Kopieren</button>
+          </div>
+          <textarea id="labelsOut" readonly></textarea>
+        </div>
+      </section>
+    </main>
+
+    <script>
+      const state = {
+        rows: 3,
+        cols: 3,
+        slots: [],
+        selectedSlots: new Set(),
+        pointerDown: false,
+        startCell: null,
+        endCell: null,
+      };
+
+      const els = {
+        presetId: document.getElementById("presetId"),
+        labelDe: document.getElementById("labelDe"),
+        labelEn: document.getElementById("labelEn"),
+        labelFr: document.getElementById("labelFr"),
+        rowsInput: document.getElementById("rowsInput"),
+        colsInput: document.getElementById("colsInput"),
+        applyGrid: document.getElementById("applyGrid"),
+        clearSlots: document.getElementById("clearSlots"),
+        autoId: document.getElementById("autoId"),
+        gridBoard: document.getElementById("gridBoard"),
+        cellsLayer: document.getElementById("cellsLayer"),
+        slotsLayer: document.getElementById("slotsLayer"),
+        slotsList: document.getElementById("slotsList"),
+        mergeSlots: document.getElementById("mergeSlots"),
+        clearSelection: document.getElementById("clearSelection"),
+        statusText: document.getElementById("statusText"),
+        presetOut: document.getElementById("presetOut"),
+        labelsOut: document.getElementById("labelsOut"),
+        copyPreset: document.getElementById("copyPreset"),
+        copyLabels: document.getElementById("copyLabels"),
+      };
+
+      const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
+
+      function slugify(value) {
+        return String(value || "")
+          .toLowerCase()
+          .normalize("NFD")
+          .replace(/[\u0300-\u036f]/g, "")
+          .replace(/[^a-z0-9]+/g, "-")
+          .replace(/^-+|-+$/g, "")
+          .replace(/-{2,}/g, "-");
+      }
+
+      function parseGridSettings() {
+        state.rows = clamp(Number(els.rowsInput.value) || 3, 1, 12);
+        state.cols = clamp(Number(els.colsInput.value) || 3, 1, 12);
+        els.rowsInput.value = String(state.rows);
+        els.colsInput.value = String(state.cols);
+      }
+
+      function clearDraft() {
+        state.startCell = null;
+        state.endCell = null;
+      }
+
+      function buildCells() {
+        els.cellsLayer.innerHTML = "";
+        els.cellsLayer.style.gridTemplateColumns = `repeat(${state.cols}, 1fr)`;
+        els.cellsLayer.style.gridTemplateRows = `repeat(${state.rows}, 1fr)`;
+        for (let y = 0; y < state.rows; y += 1) {
+          for (let x = 0; x < state.cols; x += 1) {
+            const cell = document.createElement("div");
+            cell.className = "cell";
+            cell.dataset.x = String(x);
+            cell.dataset.y = String(y);
+            cell.addEventListener("pointerdown", onCellPointerDown);
+            cell.addEventListener("pointerenter", onCellPointerEnter);
+            els.cellsLayer.appendChild(cell);
+          }
+        }
+      }
+
+      function normalizeRect(a, b) {
+        const minX = Math.min(a.x, b.x);
+        const minY = Math.min(a.y, b.y);
+        const maxX = Math.max(a.x, b.x);
+        const maxY = Math.max(a.y, b.y);
+        return {
+          x: minX,
+          y: minY,
+          w: maxX - minX + 1,
+          h: maxY - minY + 1,
+        };
+      }
+
+      function intersects(a, b) {
+        return !(
+          a.x + a.w <= b.x ||
+          b.x + b.w <= a.x ||
+          a.y + a.h <= b.y ||
+          b.y + b.h <= a.y
+        );
+      }
+
+      function isSlotValid(slot) {
+        if (slot.x < 0 || slot.y < 0 || slot.w <= 0 || slot.h <= 0) return false;
+        if (slot.x + slot.w > state.cols || slot.y + slot.h > state.rows) return false;
+        return !state.slots.some((existing) => intersects(existing, slot));
+      }
+
+      function rectToStyle(rect) {
+        const left = (rect.x / state.cols) * 100;
+        const top = (rect.y / state.rows) * 100;
+        const width = (rect.w / state.cols) * 100;
+        const height = (rect.h / state.rows) * 100;
+        return { left, top, width, height };
+      }
+
+      function canUseCircleShape(slot) {
+        return Boolean(slot && slot.w === slot.h);
+      }
+
+      function getEffectiveShape(slot) {
+        if (!slot || typeof slot.shape !== "string") return "rect";
+        if (slot.shape === "circle" && !canUseCircleShape(slot)) return "rect";
+        if (slot.shape === "rounded-rect" || slot.shape === "diamond" || slot.shape === "hexagon" || slot.shape === "circle") {
+          return slot.shape;
+        }
+        return "rect";
+      }
+
+      function renderSlotsOverlay() {
+        els.slotsLayer.innerHTML = "";
+        for (let i = 0; i < state.slots.length; i += 1) {
+          const slot = state.slots[i];
+          const node = document.createElement("div");
+          node.className = "slot-overlay";
+          node.classList.add(getEffectiveShape(slot));
+          const style = rectToStyle(slot);
+          node.style.left = `${style.left}%`;
+          node.style.top = `${style.top}%`;
+          node.style.width = `${style.width}%`;
+          node.style.height = `${style.height}%`;
+          node.textContent = `#${i + 1}`;
+          els.slotsLayer.appendChild(node);
+        }
+
+        if (state.startCell && state.endCell) {
+          const draftRect = normalizeRect(state.startCell, state.endCell);
+          const draftNode = document.createElement("div");
+          draftNode.className = "slot-overlay draft";
+          const style = rectToStyle(draftRect);
+          draftNode.style.left = `${style.left}%`;
+          draftNode.style.top = `${style.top}%`;
+          draftNode.style.width = `${style.width}%`;
+          draftNode.style.height = `${style.height}%`;
+          draftNode.textContent = `${draftRect.w}x${draftRect.h}`;
+          els.slotsLayer.appendChild(draftNode);
+        }
+      }
+
+      function renderSlotsList() {
+        els.slotsList.innerHTML = "";
+        state.selectedSlots.forEach((index) => {
+          if (index < 0 || index >= state.slots.length) {
+            state.selectedSlots.delete(index);
+          }
+        });
+        if (!state.slots.length) {
+          const empty = document.createElement("p");
+          empty.className = "hint";
+          empty.textContent = "Noch keine Slots.";
+          els.slotsList.appendChild(empty);
+          return;
+        }
+        for (let i = 0; i < state.slots.length; i += 1) {
+          const slot = state.slots[i];
+          const row = document.createElement("div");
+          row.className = "slot-row";
+          row.classList.toggle("selected", state.selectedSlots.has(i));
+          const main = document.createElement("div");
+          main.className = "slot-main";
+          const check = document.createElement("input");
+          check.type = "checkbox";
+          check.checked = state.selectedSlots.has(i);
+          check.setAttribute("aria-label", `Slot ${i + 1} auswaehlen`);
+          check.addEventListener("change", () => {
+            if (check.checked) {
+              if (state.selectedSlots.size >= 2) {
+                const first = state.selectedSlots.values().next().value;
+                state.selectedSlots.delete(first);
+              }
+              state.selectedSlots.add(i);
+            } else {
+              state.selectedSlots.delete(i);
+            }
+            renderSlotsList();
+          });
+          const slotNo = document.createElement("span");
+          slotNo.className = "slot-no";
+          slotNo.textContent = `#${i + 1}`;
+          const code = document.createElement("code");
+          const normalizedShape = getEffectiveShape(slot);
+          const shapeSnippet = normalizedShape !== "rect" ? `, shape: "${normalizedShape}"` : "";
+          code.textContent = `{ x: ${slot.x}, y: ${slot.y}, w: ${slot.w}, h: ${slot.h}${shapeSnippet} }`;
+          const shape = document.createElement("select");
+          shape.className = "slot-shape-select";
+          shape.setAttribute("aria-label", `Form von Slot ${i + 1}`);
+          const optionRect = document.createElement("option");
+          optionRect.value = "rect";
+          optionRect.textContent = "Quadrat";
+          const optionRoundedRect = document.createElement("option");
+          optionRoundedRect.value = "rounded-rect";
+          optionRoundedRect.textContent = "Abgerundet";
+          const optionCircle = document.createElement("option");
+          optionCircle.value = "circle";
+          optionCircle.textContent = "Kreis";
+          const optionDiamond = document.createElement("option");
+          optionDiamond.value = "diamond";
+          optionDiamond.textContent = "Raute";
+          const optionHexagon = document.createElement("option");
+          optionHexagon.value = "hexagon";
+          optionHexagon.textContent = "Sechseck";
+          shape.appendChild(optionRect);
+          shape.appendChild(optionRoundedRect);
+          shape.appendChild(optionCircle);
+          shape.appendChild(optionDiamond);
+          shape.appendChild(optionHexagon);
+          const circleEnabled = canUseCircleShape(slot);
+          if (!circleEnabled && getEffectiveShape(slot) === "circle") {
+            slot.shape = "rect";
+          }
+          if (shape.options[2]) {
+            shape.options[2].disabled = !circleEnabled;
+          }
+          shape.value = getEffectiveShape(slot);
+          shape.addEventListener("change", () => {
+            if (shape.value === "circle" && !canUseCircleShape(slot)) {
+              slot.shape = "rect";
+            } else {
+              slot.shape = shape.value;
+            }
+            renderAll();
+          });
+          main.appendChild(check);
+          main.appendChild(slotNo);
+          main.appendChild(code);
+          main.appendChild(shape);
+          const remove = document.createElement("button");
+          remove.type = "button";
+          remove.textContent = "Entfernen";
+          remove.addEventListener("click", () => {
+            state.slots.splice(i, 1);
+            state.selectedSlots = new Set(
+              Array.from(state.selectedSlots)
+                .filter((index) => index !== i)
+                .map((index) => (index > i ? index - 1 : index))
+            );
+            renderAll();
+          });
+          row.appendChild(main);
+          row.appendChild(remove);
+          els.slotsList.appendChild(row);
+        }
+      }
+
+      function buildPresetCode() {
+        const id = (els.presetId.value || "my-preset").trim();
+        const label = (els.labelDe.value || "Mein Preset").trim();
+        const slotLines = state.slots.map((slot) => {
+          const shape = getEffectiveShape(slot);
+          const shapeSnippet = shape !== "rect" ? `, shape: "${shape}"` : "";
+          return `    { x: ${slot.x}, y: ${slot.y}, w: ${slot.w}, h: ${slot.h}${shapeSnippet} },`;
+        });
+        return `{
+  id: "${id}",
+  label: "${label}",
+  rows: ${state.rows},
+  cols: ${state.cols},
+  slots: [
+${slotLines.join("\n")}
+  ],
+},`;
+      }
+
+      function buildLabelsCode() {
+        const id = (els.presetId.value || "my-preset").trim();
+        const de = (els.labelDe.value || "").trim();
+        const en = (els.labelEn.value || "").trim();
+        const fr = (els.labelFr.value || "").trim();
+        return `"${id}": {
+  de: "${de}",
+  en: "${en}",
+  fr: "${fr}",
+},`;
+      }
+
+      function renderCodeOutput() {
+        els.presetOut.value = buildPresetCode();
+        els.labelsOut.value = buildLabelsCode();
+      }
+
+      function renderAll() {
+        renderSlotsOverlay();
+        renderSlotsList();
+        renderCodeOutput();
+      }
+
+      function addDraftAsSlot() {
+        if (!state.startCell || !state.endCell) return;
+        const slot = normalizeRect(state.startCell, state.endCell);
+        if (!isSlotValid(slot)) {
+          els.statusText.textContent = "Slot ungueltig oder ueberlappt mit einem vorhandenen Slot.";
+          return;
+        }
+        state.slots.push(slot);
+        state.selectedSlots.clear();
+        els.statusText.textContent = `Slot hinzugefuegt: x=${slot.x}, y=${slot.y}, w=${slot.w}, h=${slot.h}`;
+      }
+
+      function canMergeSlots(a, b) {
+        const horizontal = a.y === b.y && a.h === b.h && (a.x + a.w === b.x || b.x + b.w === a.x);
+        const vertical = a.x === b.x && a.w === b.w && (a.y + a.h === b.y || b.y + b.h === a.y);
+        return horizontal || vertical;
+      }
+
+      function mergedRect(a, b) {
+        const x = Math.min(a.x, b.x);
+        const y = Math.min(a.y, b.y);
+        const right = Math.max(a.x + a.w, b.x + b.w);
+        const bottom = Math.max(a.y + a.h, b.y + b.h);
+        return { x, y, w: right - x, h: bottom - y };
+      }
+
+      function mergeSelectedSlots() {
+        const selected = Array.from(state.selectedSlots).sort((a, b) => a - b);
+        if (selected.length !== 2) {
+          els.statusText.textContent = "Bitte genau 2 Slots auswaehlen.";
+          return;
+        }
+        const firstIndex = selected[0];
+        const secondIndex = selected[1];
+        const first = state.slots[firstIndex];
+        const second = state.slots[secondIndex];
+        if (!first || !second) {
+          els.statusText.textContent = "Auswahl ungueltig.";
+          return;
+        }
+        if (!canMergeSlots(first, second)) {
+          els.statusText.textContent = "Diese Slots koennen nicht verbunden werden. Nur exakt horizontal/vertikal angrenzend mit gleicher Hoehe/Breite.";
+          return;
+        }
+        const merged = mergedRect(first, second);
+        const remaining = state.slots.filter((_, idx) => idx !== firstIndex && idx !== secondIndex);
+        const collides = remaining.some((existing) => intersects(existing, merged));
+        if (collides) {
+          els.statusText.textContent = "Verbindung ungueltig: der neue Slot wuerde ueberlappen.";
+          return;
+        }
+        state.slots = [...remaining, merged];
+        state.selectedSlots.clear();
+        els.statusText.textContent = `Slots verbunden: x=${merged.x}, y=${merged.y}, w=${merged.w}, h=${merged.h}`;
+        renderAll();
+      }
+
+      function onCellPointerDown(event) {
+        if (event.button !== 0) return;
+        event.preventDefault();
+        const target = event.currentTarget;
+        state.pointerDown = true;
+        state.startCell = { x: Number(target.dataset.x), y: Number(target.dataset.y) };
+        state.endCell = { ...state.startCell };
+        target.setPointerCapture?.(event.pointerId);
+        renderSlotsOverlay();
+      }
+
+      function onCellPointerEnter(event) {
+        if (!state.pointerDown || !state.startCell) return;
+        const target = event.currentTarget;
+        state.endCell = { x: Number(target.dataset.x), y: Number(target.dataset.y) };
+        renderSlotsOverlay();
+      }
+
+      function stopSelection() {
+        if (!state.pointerDown) return;
+        state.pointerDown = false;
+        addDraftAsSlot();
+        clearDraft();
+        renderAll();
+      }
+
+      function copyText(value, statusText) {
+        navigator.clipboard.writeText(value).then(() => {
+          els.statusText.textContent = statusText;
+        }).catch(() => {
+          els.statusText.textContent = "Kopieren fehlgeschlagen.";
+        });
+      }
+
+      els.applyGrid.addEventListener("click", () => {
+        parseGridSettings();
+        state.slots = state.slots.filter((slot) => slot.x + slot.w <= state.cols && slot.y + slot.h <= state.rows);
+        buildCells();
+        renderAll();
+      });
+
+      els.clearSlots.addEventListener("click", () => {
+        state.slots = [];
+        state.selectedSlots.clear();
+        renderAll();
+      });
+      els.mergeSlots.addEventListener("click", mergeSelectedSlots);
+      els.clearSelection.addEventListener("click", () => {
+        state.selectedSlots.clear();
+        renderSlotsList();
+      });
+
+      els.autoId.addEventListener("click", () => {
+        const fallback = slugify(els.labelDe.value) || "my-preset";
+        els.presetId.value = fallback;
+        renderCodeOutput();
+      });
+
+      [els.presetId, els.labelDe, els.labelEn, els.labelFr].forEach((input) => {
+        input.addEventListener("input", renderCodeOutput);
+      });
+
+      window.addEventListener("pointerup", stopSelection);
+      window.addEventListener("pointercancel", stopSelection);
+
+      els.copyPreset.addEventListener("click", () => copyText(els.presetOut.value, "PRESETS-Objekt kopiert."));
+      els.copyLabels.addEventListener("click", () => copyText(els.labelsOut.value, "PRESET_LABELS-Eintrag kopiert."));
+
+      parseGridSettings();
+      buildCells();
+      renderAll();
+    </script>
+  </body>
+</html>

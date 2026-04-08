@@ -162,6 +162,83 @@ const PRESETS = [
     ],
   },
   {
+    id: "grid-4x4-center-circle",
+    label: "4x4 mit Kreis Mitte",
+    rows: 4,
+    cols: 4,
+    slots: [
+      { x: 0, y: 0, w: 1, h: 1 },
+      { x: 1, y: 0, w: 1, h: 1 },
+      { x: 2, y: 0, w: 1, h: 1 },
+      { x: 3, y: 0, w: 1, h: 1 },
+      { x: 0, y: 1, w: 1, h: 1 },
+      { x: 1, y: 1, w: 2, h: 2, shape: "circle" },
+      { x: 3, y: 1, w: 1, h: 1 },
+      { x: 0, y: 2, w: 1, h: 1 },
+      { x: 3, y: 2, w: 1, h: 1 },
+      { x: 0, y: 3, w: 1, h: 1 },
+      { x: 1, y: 3, w: 1, h: 1 },
+      { x: 2, y: 3, w: 1, h: 1 },
+      { x: 3, y: 3, w: 1, h: 1 },
+    ],
+  },
+  {
+    id: "hex-3",
+    label: "Hex 3",
+    rows: 2,
+    cols: 2,
+    slots: [
+      { x: 0, y: 0, w: 1, h: 1, shape: "hexagon" },
+      { x: 1, y: 0, w: 1, h: 1, shape: "hexagon" },
+      { x: 0, y: 1, w: 1, h: 1, shape: "hexagon" },
+    ],
+  },
+  {
+    id: "hex-5",
+    label: "Hex 5",
+    rows: 2,
+    cols: 3,
+    slots: [
+      { x: 0, y: 0, w: 1, h: 1, shape: "hexagon" },
+      { x: 1, y: 0, w: 1, h: 1, shape: "hexagon" },
+      { x: 2, y: 0, w: 1, h: 1, shape: "hexagon" },
+      { x: 0, y: 1, w: 1, h: 1, shape: "hexagon" },
+      { x: 1, y: 1, w: 1, h: 1, shape: "hexagon" },
+    ],
+  },
+  {
+    id: "hex-7-honeycomb",
+    label: "Hex 7 Wabe",
+    rows: 3,
+    cols: 3,
+    slots: [
+      { x: 1, y: 0, w: 1, h: 1, shape: "hexagon" },
+      { x: 0, y: 1, w: 1, h: 1, shape: "hexagon" },
+      { x: 1, y: 1, w: 1, h: 1, shape: "hexagon" },
+      { x: 2, y: 1, w: 1, h: 1, shape: "hexagon" },
+      { x: 0, y: 2, w: 1, h: 1, shape: "hexagon" },
+      { x: 1, y: 2, w: 1, h: 1, shape: "hexagon" },
+      { x: 2, y: 2, w: 1, h: 1, shape: "hexagon" },
+    ],
+  },
+  {
+    id: "hex-9-honeycomb",
+    label: "Hex 9 Wabe",
+    rows: 3,
+    cols: 3,
+    slots: [
+      { x: 0, y: 0, w: 1, h: 1, shape: "hexagon" },
+      { x: 1, y: 0, w: 1, h: 1, shape: "hexagon" },
+      { x: 2, y: 0, w: 1, h: 1, shape: "hexagon" },
+      { x: 0, y: 1, w: 1, h: 1, shape: "hexagon" },
+      { x: 1, y: 1, w: 1, h: 1, shape: "hexagon" },
+      { x: 2, y: 1, w: 1, h: 1, shape: "hexagon" },
+      { x: 0, y: 2, w: 1, h: 1, shape: "hexagon" },
+      { x: 1, y: 2, w: 1, h: 1, shape: "hexagon" },
+      { x: 2, y: 2, w: 1, h: 1, shape: "hexagon" },
+    ],
+  },
+  {
     id: "corner-2x2-top-left",
     label: "3x3 Ecke: 2x2 oben links",
     rows: 3,
@@ -330,6 +407,44 @@ const PRESETS = [
     cols: 1,
     slots: createGridSlots(3, 1),
   },
+  {
+  id: "treppe-2x3",
+  label: "Treppe 2x3",
+  rows: 3,
+  cols: 4,
+  slots: [
+    { x: 0, y: 0, w: 2, h: 1 },
+    { x: 1, y: 1, w: 2, h: 1 },
+    { x: 2, y: 2, w: 2, h: 1 },
+  ],
+},
+{
+  id: "kreis-hero-3x3",
+  label: "Kreis-Hero 3x3",
+  rows: 3,
+  cols: 3,
+  slots: [
+    { x: 0, y: 0, w: 2, h: 2, shape: "circle" },
+    { x: 2, y: 0, w: 1, h: 1 },
+    { x: 2, y: 1, w: 1, h: 1 },
+    { x: 2, y: 2, w: 1, h: 1 },
+    { x: 1, y: 2, w: 1, h: 1 },
+    { x: 0, y: 2, w: 1, h: 1 },
+  ],
+},
+{
+  id: "hexagon-madness",
+  label: "Hexagon Madness",
+  rows: 3,
+  cols: 3,
+  slots: [
+    { x: 0, y: 0, w: 1, h: 1, shape: "hexagon" },
+    { x: 1, y: 1, w: 1, h: 1, shape: "hexagon" },
+    { x: 2, y: 2, w: 1, h: 1, shape: "hexagon" },
+    { x: 2, y: 0, w: 1, h: 1, shape: "hexagon" },
+    { x: 0, y: 2, w: 1, h: 1, shape: "hexagon" },
+  ],
+},
 ];
 
 const PRESET_LABELS = Object.freeze({
@@ -397,6 +512,31 @@ const PRESET_LABELS = Object.freeze({
     de: "Social Cover Split",
     en: "Social Cover Split",
     fr: "Social Cover Split",
+  },
+  "grid-4x4-center-circle": {
+    de: "4x4 mit Kreis Mitte",
+    en: "4x4 with center circle",
+    fr: "4x4 avec cercle central",
+  },
+  "hex-3": {
+    de: "Hex 3",
+    en: "Hex 3",
+    fr: "Hexa 3",
+  },
+  "hex-5": {
+    de: "Hex 5",
+    en: "Hex 5",
+    fr: "Hexa 5",
+  },
+  "hex-7-honeycomb": {
+    de: "Hex 7 Wabe",
+    en: "Hex 7 honeycomb",
+    fr: "Hexa 7 ruche",
+  },
+  "hex-9-honeycomb": {
+    de: "Hex 9 Wabe",
+    en: "Hex 9 honeycomb",
+    fr: "Hexa 9 ruche",
   },
   "corner-2x2-top-left": {
     de: "3x3 Ecke: 2x2 oben links",
@@ -512,7 +652,21 @@ const PRESET_LABELS = Object.freeze({
     de: "Triptychon horizontal",
     en: "Triptych horizontal",
     fr: "Triptyque horizontal",
-  },
+  },"treppe-2x3": {
+  de: "Treppe 2x3",
+  en: "Stairs 2x3",
+  fr: "Escalier 2x3",
+},
+"kreis-hero-3x3": {
+  de: "Kreis-Hero 3x3",
+  en: "Circle Hero 3x3",
+  fr: "Circle Hero 3x3",
+},
+"hexagon-madness": {
+  de: "Hexagon Madness",
+  en: "Hexagon Madness",
+  fr: "Hexagon Madness",
+},
 });
 
 const EXPORT_WIDTH_MIN = 600;
@@ -638,7 +792,7 @@ const EXPORT_PRESET_LABELS = Object.freeze({
     de: { title: "Pinterest Pin", subtitle: "2:3 · 1000 px" },
     en: { title: "Pinterest Pin", subtitle: "2:3 · 1000 px" },
     fr: { title: "Pinterest Pin", subtitle: "2:3 · 1000 px" },
-  },
+  }
 });
 
 const DEFAULT_SOCIAL_SAFE_AREA = Object.freeze({ top: 0.05, right: 0.05, bottom: 0.05, left: 0.05 });
@@ -647,15 +801,17 @@ const SAFE_AREA_RATIOS_BY_PRESET = Object.freeze({
 });
 
 const DEFAULT_VERSION_INFO = Object.freeze({
-  appVersion: "1.2.48",
-  cacheVersion: "v70",
-  label: "Vier neue Vorlagen hinzugefuegt (Hero+4, Panorama+3, Mosaik5, Cover Split)",
+  appVersion: "1.2.64",
+  cacheVersion: "v86",
+  label: "Export: Leere Slots nutzen nun die eingestellte Hintergrundfarbe",
 });
 
 const ZOOM_MIN = 0.35;
 const ZOOM_MAX = 4;
 const TEXT_INSET_PX = 6;
 const DEFAULT_TEXT_Y = 0.9;
+const SLOT_SHAPES = Object.freeze(["rect", "rounded-rect", "circle", "diamond", "hexagon"]);
+const HEX_PACK_STEP_X_RATIO = 0.86;
 
 const STORAGE_KEYS = {
   language: "fotocollage-language",
@@ -727,6 +883,11 @@ const I18N = {
     gifRendering: "GIF wird erzeugt …",
     gifRenderingFrame: "GIF wird erzeugt … Frame {current} von {total}",
     exportFailed: "Export fehlgeschlagen.",
+    layoutModeLabel: "Anordnung",
+    layoutModeGrid: "Raster (Standard)",
+    layoutModeHexPack: "Hex-Pack (kompakt)",
+    layoutModeSuggestionText: "Hexagon erkannt. Hex-Pack reduziert Leerr\u00e4ume.",
+    layoutModeSuggestionApply: "Hex-Pack nutzen",
     exportWidthLabel: "Exportbreite",
     gapLabel: "Abstand",
     outerGapLabel: "Randabstand",
@@ -753,9 +914,16 @@ const I18N = {
     prevCell: "Vorheriges Feld",
     nextCell: "N\u00e4chstes Feld",
     replaceCell: "Bild ersetzen",
+    deleteCell: "Bild l\u00f6schen",
     resetFocus: "Ausschnitt zur\u00fccksetzen",
     zoomLabel: "Zoom",
     resetZoom: "Zoom zur\u00fccksetzen",
+    slotShapeLabel: "Feldform",
+    slotShapeRect: "Quadrat",
+    slotShapeRoundedRect: "Abgerundet",
+    slotShapeCircle: "Kreis",
+    slotShapeDiamond: "Raute",
+    slotShapeHexagon: "Sechseck",
     textEditorTitle: "Text im Feld",
     textLabel: "Text",
     textPlaceholder: "Text im Feld platzieren",
@@ -847,6 +1015,11 @@ const I18N = {
     gifRendering: "Rendering GIF …",
     gifRenderingFrame: "Rendering GIF … frame {current} of {total}",
     exportFailed: "Export failed.",
+    layoutModeLabel: "Arrangement",
+    layoutModeGrid: "Grid (default)",
+    layoutModeHexPack: "Hex pack (compact)",
+    layoutModeSuggestionText: "Hexagon detected. Hex pack reduces empty space.",
+    layoutModeSuggestionApply: "Use hex pack",
     exportWidthLabel: "Export width",
     gapLabel: "Spacing",
     outerGapLabel: "Outer gap",
@@ -872,9 +1045,16 @@ const I18N = {
     prevCell: "Previous slot",
     nextCell: "Next slot",
     replaceCell: "Replace image",
+    deleteCell: "Remove image",
     resetFocus: "Reset crop",
     zoomLabel: "Zoom",
     resetZoom: "Reset zoom",
+    slotShapeLabel: "Slot shape",
+    slotShapeRect: "Square",
+    slotShapeRoundedRect: "Rounded",
+    slotShapeCircle: "Circle",
+    slotShapeDiamond: "Diamond",
+    slotShapeHexagon: "Hexagon",
     textEditorTitle: "Slot text",
     textLabel: "Text",
     textPlaceholder: "Place text inside this slot",
@@ -966,6 +1146,11 @@ const I18N = {
     gifRendering: "Création du GIF …",
     gifRenderingFrame: "Création du GIF … image {current} sur {total}",
     exportFailed: "Échec de l'export.",
+    layoutModeLabel: "Disposition",
+    layoutModeGrid: "Grille (standard)",
+    layoutModeHexPack: "Hex-pack (compact)",
+    layoutModeSuggestionText: "Hexagone d\u00e9tect\u00e9. Hex-pack r\u00e9duit les espaces vides.",
+    layoutModeSuggestionApply: "Utiliser hex-pack",
     exportWidthLabel: "Largeur d'export",
     gapLabel: "Espacement",
     outerGapLabel: "Marge ext\u00e9rieure",
@@ -992,9 +1177,16 @@ const I18N = {
     prevCell: "Emplacement pr\u00e9c\u00e9dent",
     nextCell: "Emplacement suivant",
     replaceCell: "Remplacer l'image",
+    deleteCell: "Supprimer l'image",
     resetFocus: "R\u00e9initialiser le cadrage",
     zoomLabel: "Zoom",
     resetZoom: "R\u00e9initialiser le zoom",
+    slotShapeLabel: "Forme du cadre",
+    slotShapeRect: "Carr\u00e9",
+    slotShapeRoundedRect: "Arrondi",
+    slotShapeCircle: "Cercle",
+    slotShapeDiamond: "Losange",
+    slotShapeHexagon: "Hexagone",
     textEditorTitle: "Texte du cadre",
     textLabel: "Texte",
     textPlaceholder: "Placer du texte dans cette case",
@@ -1028,11 +1220,13 @@ const I18N = {
 
 const state = {
   activePresetId: "grid-2x2",
+  layoutMode: "grid",
   gap: 12,
   outerGap: 12,
   background: "#101828",
   activeStep: 1,
   cells: [],
+  slotShapeOverrides: [],
   selectedCell: 0,
   dragging: null,
   textDragging: null,
@@ -1084,6 +1278,11 @@ const els = {
   filledSummary: document.getElementById("filledSummary"),
   stepSummary: document.getElementById("stepSummary"),
   presetGrid: document.getElementById("presetGrid"),
+  layoutModeLabel: document.getElementById("layoutModeLabel"),
+  layoutModeSelect: document.getElementById("layoutModeSelect"),
+  layoutModeSuggestion: document.getElementById("layoutModeSuggestion"),
+  layoutModeSuggestionText: document.getElementById("layoutModeSuggestionText"),
+  layoutModeSuggestionApply: document.getElementById("layoutModeSuggestionApply"),
   gapLabel: document.getElementById("gapLabel"),
   gapInput: document.getElementById("gapInput"),
   gapValue: document.getElementById("gapValue"),
@@ -1107,12 +1306,16 @@ const els = {
   prevCell: document.getElementById("prevCell"),
   nextCell: document.getElementById("nextCell"),
   replaceCell: document.getElementById("replaceCell"),
+  deleteCell: document.getElementById("deleteCell"),
   replaceInput: document.getElementById("replaceInput"),
   resetFocus: document.getElementById("resetFocus"),
   zoomInput: document.getElementById("zoomInput"),
   zoomValue: document.getElementById("zoomValue"),
   zoomLabel: document.getElementById("zoomLabel"),
   resetZoom: document.getElementById("resetZoom"),
+  slotShapeField: document.getElementById("slotShapeField"),
+  slotShapeLabel: document.getElementById("slotShapeLabel"),
+  slotShapeSelect: document.getElementById("slotShapeSelect"),
   editorTextOverlay: document.getElementById("editorTextOverlay"),
   textEditorTitle: document.getElementById("textEditorTitle"),
   textLabel: document.getElementById("textLabel"),
@@ -1313,6 +1516,7 @@ function getSuggestedFreeExportWidth() {
 
 function getDefaultLayoutSettings() {
   return {
+    layoutMode: "grid",
     gap: 12,
     outerGap: 12,
     background: "#101828",
@@ -1320,15 +1524,20 @@ function getDefaultLayoutSettings() {
   };
 }
 
+function normalizeLayoutMode(value) {
+  return value === "hex-pack" ? "hex-pack" : "grid";
+}
+
 function normalizeLayoutSettings(raw) {
   const defaults = getDefaultLayoutSettings();
+  const layoutMode = normalizeLayoutMode(raw?.layoutMode);
   const gap = clamp(Number(raw?.gap) || defaults.gap, 0, 60);
   const outerGap = clamp(Number(raw?.outerGap) || defaults.outerGap, 0, 80);
   const background = /^#[0-9a-f]{6}$/i.test(String(raw?.background || ""))
     ? String(raw.background)
     : defaults.background;
   const presetId = typeof raw?.presetId === "string" ? raw.presetId : "";
-  return { gap, outerGap, background, presetId };
+  return { layoutMode, gap, outerGap, background, presetId };
 }
 
 function saveLayoutSettings(layout) {
@@ -1510,6 +1719,15 @@ function translateStaticUi() {
   setText(els.dragHint, "dragHint");
   setText(els.step4Title, "step4Title");
   setText(els.step4Desc, "step4Desc");
+  setText(els.layoutModeLabel, "layoutModeLabel");
+  if (els.layoutModeSelect?.options?.[0]) {
+    els.layoutModeSelect.options[0].textContent = t("layoutModeGrid");
+  }
+  if (els.layoutModeSelect?.options?.[1]) {
+    els.layoutModeSelect.options[1].textContent = t("layoutModeHexPack");
+  }
+  setText(els.layoutModeSuggestionText, "layoutModeSuggestionText");
+  setText(els.layoutModeSuggestionApply, "layoutModeSuggestionApply");
   setText(els.exportPresetLabel, "exportPresetLabel");
   setText(els.gapLabel, "gapLabel");
   setText(els.outerGapLabel, "outerGapLabel");
@@ -1533,10 +1751,27 @@ function translateStaticUi() {
   setText(els.prevCell, "prevCell");
   setText(els.nextCell, "nextCell");
   setText(els.replaceCell, "replaceCell");
+  setText(els.deleteCell, "deleteCell");
   updateReorderModeUi();
   setText(els.resetFocus, "resetFocus");
   setText(els.zoomLabel, "zoomLabel");
   setText(els.resetZoom, "resetZoom");
+  setText(els.slotShapeLabel, "slotShapeLabel");
+  if (els.slotShapeSelect?.options?.[0]) {
+    els.slotShapeSelect.options[0].textContent = t("slotShapeRect");
+  }
+  if (els.slotShapeSelect?.options?.[1]) {
+    els.slotShapeSelect.options[1].textContent = t("slotShapeRoundedRect");
+  }
+  if (els.slotShapeSelect?.options?.[2]) {
+    els.slotShapeSelect.options[2].textContent = t("slotShapeCircle");
+  }
+  if (els.slotShapeSelect?.options?.[3]) {
+    els.slotShapeSelect.options[3].textContent = t("slotShapeDiamond");
+  }
+  if (els.slotShapeSelect?.options?.[4]) {
+    els.slotShapeSelect.options[4].textContent = t("slotShapeHexagon");
+  }
   setText(els.textEditorTitle, "textEditorTitle");
   setText(els.textLabel, "textLabel");
   setText(els.textSizeLabel, "textSizeLabel");
@@ -1857,6 +2092,55 @@ function getExportPresetCopy(preset, language = state.language) {
   return labels?.[language] || labels?.de || labels?.en || { title: preset.id, subtitle: "" };
 }
 
+function getLayoutUnitCells(layout) {
+  const cells = [];
+  for (const slot of layout.slots) {
+    for (let y = slot.y; y < slot.y + slot.h; y += 1) {
+      for (let x = slot.x; x < slot.x + slot.w; x += 1) {
+        cells.push({ x, y });
+      }
+    }
+  }
+  return cells;
+}
+
+function getHexPackBounds(layout, unitWidth, unitHeight, gap) {
+  const cells = getLayoutUnitCells(layout);
+  if (!cells.length) {
+    return { minX: 0, minY: 0, maxX: unitWidth, maxY: unitHeight, width: unitWidth, height: unitHeight };
+  }
+  const stepX = unitWidth * HEX_PACK_STEP_X_RATIO + gap;
+  const stepY = unitHeight + gap;
+  let minX = Number.POSITIVE_INFINITY;
+  let minY = Number.POSITIVE_INFINITY;
+  let maxX = Number.NEGATIVE_INFINITY;
+  let maxY = Number.NEGATIVE_INFINITY;
+  for (const cell of cells) {
+    const x = cell.x * stepX;
+    const y = cell.y * stepY + (cell.x % 2 === 1 ? unitHeight * 0.5 : 0);
+    minX = Math.min(minX, x);
+    minY = Math.min(minY, y);
+    maxX = Math.max(maxX, x + unitWidth);
+    maxY = Math.max(maxY, y + unitHeight);
+  }
+  return {
+    minX,
+    minY,
+    maxX,
+    maxY,
+    width: Math.max(1, maxX - minX),
+    height: Math.max(1, maxY - minY),
+  };
+}
+
+function getLayoutAspectRatio(layout = getActiveLayoutDefinition()) {
+  if (state.layoutMode === "hex-pack") {
+    const probeBounds = getHexPackBounds(layout, 100, 100, state.gap);
+    return probeBounds.height / Math.max(1, probeBounds.width);
+  }
+  return layout.rows / layout.cols;
+}
+
 function renderExportPresets() {
   els.exportPresetGrid.innerHTML = "";
   els.exportPresetSelect.innerHTML = "";
@@ -1920,7 +2204,7 @@ function getExportTargetSize() {
 
 function getCollageContentRect(canvasWidth, canvasHeight) {
   const layout = getActiveLayoutDefinition();
-  const collageRatio = layout.rows / layout.cols;
+  const collageRatio = getLayoutAspectRatio(layout);
   let width = canvasWidth;
   let height = Math.round(width * collageRatio);
   if (height > canvasHeight) {
@@ -1950,7 +2234,61 @@ function buildAxis(totalSize, count, innerGap, outerGap) {
   return axis;
 }
 
+function buildLayoutRectsHexPack(width, height, layout) {
+  const outerGap = Math.max(0, Number(state.outerGap) || 0);
+  const innerGap = Math.max(0, Number(state.gap) || 0);
+  const availWidth = Math.max(1, width - outerGap * 2);
+  const availHeight = Math.max(1, height - outerGap * 2);
+
+  const widthAt0 = getHexPackBounds(layout, 0, 100, innerGap).width;
+  const widthAt1 = getHexPackBounds(layout, 1, 100, innerGap).width;
+  const widthFactor = Math.max(0.0001, widthAt1 - widthAt0);
+  const unitWidth = Math.max(1, (availWidth - widthAt0) / widthFactor);
+
+  const heightAt0 = getHexPackBounds(layout, 100, 0, innerGap).height;
+  const heightAt1 = getHexPackBounds(layout, 100, 1, innerGap).height;
+  const heightFactor = Math.max(0.0001, heightAt1 - heightAt0);
+  const unitHeight = Math.max(1, (availHeight - heightAt0) / heightFactor);
+
+  const bounds = getHexPackBounds(layout, unitWidth, unitHeight, innerGap);
+  const startX = outerGap + (availWidth - bounds.width) / 2;
+  const startY = outerGap + (availHeight - bounds.height) / 2;
+  const stepX = unitWidth * HEX_PACK_STEP_X_RATIO + innerGap;
+  const stepY = unitHeight + innerGap;
+
+  const unitRect = (x, y) => {
+    const rectX = startX + x * stepX - bounds.minX;
+    const rectY = startY + y * stepY + (x % 2 === 1 ? unitHeight * 0.5 : 0) - bounds.minY;
+    return { x: rectX, y: rectY, width: unitWidth, height: unitHeight };
+  };
+
+  return layout.slots.map((slot) => {
+    let minX = Number.POSITIVE_INFINITY;
+    let minY = Number.POSITIVE_INFINITY;
+    let maxX = Number.NEGATIVE_INFINITY;
+    let maxY = Number.NEGATIVE_INFINITY;
+    for (let yy = slot.y; yy < slot.y + slot.h; yy += 1) {
+      for (let xx = slot.x; xx < slot.x + slot.w; xx += 1) {
+        const rect = unitRect(xx, yy);
+        minX = Math.min(minX, rect.x);
+        minY = Math.min(minY, rect.y);
+        maxX = Math.max(maxX, rect.x + rect.width);
+        maxY = Math.max(maxY, rect.y + rect.height);
+      }
+    }
+    return {
+      x: Math.floor(minX),
+      y: Math.floor(minY),
+      width: Math.max(1, Math.ceil(maxX - minX)),
+      height: Math.max(1, Math.ceil(maxY - minY)),
+    };
+  });
+}
+
 function buildLayoutRects(width, height, layout) {
+  if (state.layoutMode === "hex-pack") {
+    return buildLayoutRectsHexPack(width, height, layout);
+  }
   const innerGap = state.gap;
   const outerGap = state.outerGap;
   const colAxis = buildAxis(width, layout.cols, innerGap, outerGap);
@@ -1967,9 +2305,126 @@ function buildLayoutRects(width, height, layout) {
   });
 }
 
+function getPresetSlotBaseShape(layout, index) {
+  const slot = layout?.slots?.[index];
+  const shape = typeof slot?.shape === "string" ? slot.shape : "rect";
+  return SLOT_SHAPES.includes(shape) ? shape : "rect";
+}
+
+function isSquareSlot(layout, index) {
+  const slot = layout?.slots?.[index];
+  return Boolean(slot && slot.w === slot.h);
+}
+
+function canUseCircleShape(layout, index) {
+  return isSquareSlot(layout, index);
+}
+
+function getSlotShape(layout, index) {
+  const baseShape = getPresetSlotBaseShape(layout, index);
+  const override = state.slotShapeOverrides[index];
+  const shape = SLOT_SHAPES.includes(override) ? override : baseShape;
+  if (shape === "circle" && !canUseCircleShape(layout, index)) {
+    return "rect";
+  }
+  return shape;
+}
+
+function hasHexagonSlots(layout = getActiveLayoutDefinition()) {
+  for (let i = 0; i < layout.slots.length; i += 1) {
+    if (getSlotShape(layout, i) === "hexagon") {
+      return true;
+    }
+  }
+  return false;
+}
+
+function updateLayoutModeSuggestion() {
+  if (!els.layoutModeSuggestion) return;
+  const showSuggestion = state.layoutMode === "grid" && hasHexagonSlots(getActiveLayoutDefinition());
+  if (els.layoutModeSuggestionText && !showSuggestion) {
+    els.layoutModeSuggestionText.textContent = "";
+  }
+  els.layoutModeSuggestion.hidden = !showSuggestion;
+  if (showSuggestion) {
+    setText(els.layoutModeSuggestionText, "layoutModeSuggestionText");
+    setText(els.layoutModeSuggestionApply, "layoutModeSuggestionApply");
+  }
+}
+
+function ensureSlotShapeOverrides(count) {
+  while (state.slotShapeOverrides.length < count) state.slotShapeOverrides.push(null);
+  while (state.slotShapeOverrides.length > count) state.slotShapeOverrides.pop();
+}
+
+function resetSlotShapeOverrides(layout = getActiveLayoutDefinition()) {
+  state.slotShapeOverrides = layout.slots.map(() => null);
+}
+
+function setSelectedSlotShape(nextShape) {
+  if (!SLOT_SHAPES.includes(nextShape)) return;
+  const layout = getActiveLayoutDefinition();
+  const index = state.selectedCell;
+  if (nextShape === "circle" && !canUseCircleShape(layout, index)) return;
+  const baseShape = getPresetSlotBaseShape(layout, index);
+  state.slotShapeOverrides[index] = nextShape === baseShape ? null : nextShape;
+}
+
+function applyCanvasSlotPath(ctx, shape, x, y, width, height) {
+  if (shape === "circle") {
+    ctx.ellipse(
+      x + width / 2,
+      y + height / 2,
+      Math.max(1, width / 2),
+      Math.max(1, height / 2),
+      0,
+      0,
+      Math.PI * 2
+    );
+    return;
+  }
+  if (shape === "rounded-rect") {
+    const radius = Math.max(1, Math.min(width, height) * 0.12);
+    const right = x + width;
+    const bottom = y + height;
+    ctx.moveTo(x + radius, y);
+    ctx.lineTo(right - radius, y);
+    ctx.arcTo(right, y, right, y + radius, radius);
+    ctx.lineTo(right, bottom - radius);
+    ctx.arcTo(right, bottom, right - radius, bottom, radius);
+    ctx.lineTo(x + radius, bottom);
+    ctx.arcTo(x, bottom, x, bottom - radius, radius);
+    ctx.lineTo(x, y + radius);
+    ctx.arcTo(x, y, x + radius, y, radius);
+    ctx.closePath();
+    return;
+  }
+  if (shape === "diamond") {
+    ctx.moveTo(x + width / 2, y);
+    ctx.lineTo(x + width, y + height / 2);
+    ctx.lineTo(x + width / 2, y + height);
+    ctx.lineTo(x, y + height / 2);
+    ctx.closePath();
+    return;
+  }
+  if (shape === "hexagon") {
+    const inset = Math.max(1, width * 0.2);
+    ctx.moveTo(x + inset, y);
+    ctx.lineTo(x + width - inset, y);
+    ctx.lineTo(x + width, y + height / 2);
+    ctx.lineTo(x + width - inset, y + height);
+    ctx.lineTo(x + inset, y + height);
+    ctx.lineTo(x, y + height / 2);
+    ctx.closePath();
+    return;
+  }
+  ctx.rect(x, y, width, height);
+}
+
 function resizeCells(count) {
   while (state.cells.length < count) state.cells.push(createEmptyCell());
   while (state.cells.length > count) disposeCell(state.cells.pop());
+  ensureSlotShapeOverrides(count);
   if (state.selectedCell >= state.cells.length) {
     state.selectedCell = Math.max(0, state.cells.length - 1);
   }
@@ -2001,6 +2456,10 @@ function setStep(step) {
 
 function applyGrid(options = {}) {
   const { persist = true } = options;
+  state.layoutMode = normalizeLayoutMode(els.layoutModeSelect?.value || state.layoutMode);
+  if (els.layoutModeSelect) {
+    els.layoutModeSelect.value = state.layoutMode;
+  }
   state.gap = clamp(Number(els.gapInput.value) || 0, 0, 60);
   state.outerGap = clamp(Number(els.outerGapInput.value) || 0, 0, 80);
   state.background = els.backgroundInput.value;
@@ -2012,6 +2471,7 @@ function applyGrid(options = {}) {
   const layout = getActiveLayoutDefinition();
   if (persist) {
     saveLayoutSettings({
+      layoutMode: state.layoutMode,
       gap: state.gap,
       outerGap: state.outerGap,
       background: state.background,
@@ -2041,8 +2501,10 @@ function renderPresets() {
     const mini = btn.querySelector(".grid-mini");
     const miniCellSize = 14;
     const miniGap = 4;
+    const hasHexagon = preset.slots.some((slot) => slot?.shape === "hexagon");
+    const hexYOffset = hasHexagon ? (miniCellSize + miniGap) * 0.5 : 0;
     const miniWidth = preset.cols * miniCellSize + Math.max(0, preset.cols - 1) * miniGap;
-    const miniHeight = preset.rows * miniCellSize + Math.max(0, preset.rows - 1) * miniGap;
+    const miniHeight = preset.rows * miniCellSize + Math.max(0, preset.rows - 1) * miniGap + hexYOffset;
     mini.style.gridTemplateColumns = `repeat(${preset.cols}, 1fr)`;
     mini.style.gridTemplateRows = `repeat(${preset.rows}, 1fr)`;
     mini.style.width = `${miniWidth}px`;
@@ -2052,11 +2514,28 @@ function renderPresets() {
       const span = document.createElement("span");
       span.style.gridColumn = `${slot.x + 1} / span ${slot.w}`;
       span.style.gridRow = `${slot.y + 1} / span ${slot.h}`;
+      const shape = SLOT_SHAPES.includes(slot?.shape) ? slot.shape : "rect";
+      if (shape === "circle") {
+        span.style.borderRadius = "50%";
+      } else if (shape === "rounded-rect") {
+        span.style.borderRadius = "6px";
+      } else if (shape === "diamond") {
+        span.style.borderRadius = "0";
+        span.style.clipPath = "polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)";
+      } else if (shape === "hexagon") {
+        span.style.borderRadius = "0";
+        span.style.clipPath = "polygon(20% 0%, 80% 0%, 100% 50%, 80% 100%, 20% 100%, 0% 50%)";
+        span.style.transform = `translateY(${slot.x % 2 === 1 ? hexYOffset : 0}px)`;
+      } else {
+        span.style.borderRadius = "5px";
+      }
       mini.appendChild(span);
     });
     btn.addEventListener("click", () => {
       state.activePresetId = preset.id;
+      resetSlotShapeOverrides(preset);
       applyGrid();
+      updateLayoutModeSuggestion();
     });
     els.presetGrid.appendChild(btn);
   }
@@ -2081,8 +2560,8 @@ function renderStatus() {
   els.slotStatus.textContent = complete
     ? t("slotStatusReady")
     : format(t("slotStatusMissing"), { filled, total });
-  els.toStep3.disabled = !complete;
-  els.toStep4.disabled = !complete;
+  els.toStep3.disabled = false;
+  els.toStep4.disabled = false;
   updateUploadConstraints();
 }
 
@@ -2225,7 +2704,9 @@ function getCellFrameSize(index = state.selectedCell) {
 
 function renderPreview() {
   const layout = getActiveLayoutDefinition();
-  els.collagePreview.style.aspectRatio = `${layout.cols} / ${layout.rows}`;
+  const ratio = getLayoutAspectRatio(layout);
+  const safeRatio = Number.isFinite(ratio) && ratio > 0 ? ratio : (layout.rows / layout.cols);
+  els.collagePreview.style.aspectRatio = `${1 / safeRatio}`;
   els.collagePreview.style.setProperty("--grid-gap", `${state.gap}px`);
   els.collagePreview.style.setProperty("--outer-gap", `${state.outerGap}px`);
   els.collagePreview.style.background = state.background;
@@ -2296,6 +2777,9 @@ function renderPreview() {
     const rect = rects[index];
     if (!rect) return;
     const { node, img, cell, textOverlay } = entry;
+    const slotShape = getSlotShape(layout, index);
+    node.classList.remove("shape-rect", "shape-rounded-rect", "shape-circle", "shape-diamond", "shape-hexagon");
+    node.classList.add(`shape-${slotShape}`);
     node.style.left = `${rect.x}px`;
     node.style.top = `${rect.y}px`;
     node.style.width = `${rect.width}px`;
@@ -2312,6 +2796,8 @@ function renderPreview() {
 function syncEditor() {
   const cell = state.cells[state.selectedCell];
   if (!cell) return;
+  const layout = getActiveLayoutDefinition();
+  const circleAllowed = canUseCircleShape(layout, state.selectedCell);
   els.editorFrame.style.background = state.background;
   const baseInfo = cell.bitmap
     ? `${state.selectedCell + 1}. ${t("field")}: ${cell.fileName}`
@@ -2326,6 +2812,22 @@ function syncEditor() {
   } else {
     els.zoomInput.value = "1";
     els.zoomValue.textContent = "100";
+  }
+  if (els.deleteCell) {
+    els.deleteCell.disabled = !cell.bitmap;
+  }
+  if (els.slotShapeField && els.slotShapeSelect) {
+    els.slotShapeField.hidden = false;
+    if (els.slotShapeSelect.options[2]) {
+      els.slotShapeSelect.options[2].disabled = !circleAllowed;
+    }
+    const selectedShape = getSlotShape(layout, state.selectedCell);
+    if (!circleAllowed && selectedShape === "circle") {
+      setSelectedSlotShape("rect");
+      els.slotShapeSelect.value = "rect";
+    } else {
+      els.slotShapeSelect.value = selectedShape;
+    }
   }
   els.textInput.value = cell.text || "";
   els.textSizeInput.value = String(clamp(Number(cell.fontSize) || 48, 12, 160));
@@ -2370,12 +2872,18 @@ function drawCollage(ctx, width, height, options = {}) {
     const cell = state.cells[i];
     const rect = rects[i];
     if (!rect) continue;
+    const slotShape = getSlotShape(layout, i);
     const x = rect.x;
     const y = rect.y;
     const cellWidth = rect.width;
     const cellHeight = rect.height;
+    ctx.save();
+    ctx.beginPath();
+    applyCanvasSlotPath(ctx, slotShape, x, y, cellWidth, cellHeight);
+    ctx.clip();
     ctx.fillStyle = "rgba(255,255,255,0.04)";
     ctx.fillRect(x, y, cellWidth, cellHeight);
+    ctx.restore();
     if (cell?.bitmap && i < visibleCount) {
       const scale = Math.max(cellWidth / cell.width, cellHeight / cell.height);
       const zoom = clamp(cell.zoom || 1, ZOOM_MIN, ZOOM_MAX);
@@ -2390,17 +2898,20 @@ function drawCollage(ctx, width, height, options = {}) {
 
       ctx.save();
       ctx.beginPath();
-      ctx.rect(x, y, cellWidth, cellHeight);
+      applyCanvasSlotPath(ctx, slotShape, x, y, cellWidth, cellHeight);
       ctx.clip();
       ctx.drawImage(cell.bitmap, drawX, drawY, drawWidth, drawHeight);
       ctx.restore();
     } else {
-      ctx.fillStyle = "rgba(245,247,251,0.72)";
-      ctx.font = `${Math.max(18, Math.min(cellWidth, cellHeight) * 0.09)}px Segoe UI, sans-serif`;
-      ctx.textBaseline = "top";
-      ctx.fillText(`${t("field")} ${i + 1}`, x + 14, y + 34);
+      ctx.save();
+      ctx.beginPath();
+      applyCanvasSlotPath(ctx, slotShape, x, y, cellWidth, cellHeight);
+      ctx.clip();
+      ctx.fillStyle = state.background;
+      ctx.fillRect(x, y, cellWidth, cellHeight);
+      ctx.restore();
     }
-    drawCellText(ctx, cell, x, y, cellWidth, cellHeight);
+    drawCellText(ctx, cell, x, y, cellWidth, cellHeight, slotShape);
   }
 
   ctx.save();
@@ -2409,11 +2920,14 @@ function drawCollage(ctx, width, height, options = {}) {
   for (let i = 0; i < state.cells.length; i += 1) {
     const rect = rects[i];
     if (!rect) continue;
+    const slotShape = getSlotShape(layout, i);
     const x = rect.x + 0.5;
     const y = rect.y + 0.5;
     const cellWidth = Math.max(1, rect.width - 1);
     const cellHeight = Math.max(1, rect.height - 1);
-    ctx.strokeRect(x, y, cellWidth, cellHeight);
+    ctx.beginPath();
+    applyCanvasSlotPath(ctx, slotShape, x, y, cellWidth, cellHeight);
+    ctx.stroke();
   }
   ctx.restore();
   ctx.restore();
@@ -2421,6 +2935,7 @@ function drawCollage(ctx, width, height, options = {}) {
 }
 
 function renderAll() {
+  updateLayoutModeSuggestion();
   updateReorderModeUi();
   updatePresetActive();
   renderSlots();
@@ -2446,13 +2961,29 @@ async function setCellImage(index, file) {
   cell.zoom = 1;
 }
 
+function clearCellImage(index) {
+  const cell = state.cells[index];
+  if (!cell) return;
+  if (cell.objectUrl) {
+    URL.revokeObjectURL(cell.objectUrl);
+  }
+  if (cell.bitmap && "close" in cell.bitmap) {
+    cell.bitmap.close();
+  }
+  cell.fileName = "";
+  cell.objectUrl = "";
+  cell.bitmap = null;
+  cell.width = 0;
+  cell.height = 0;
+  cell.focusX = 0;
+  cell.focusY = 0;
+  cell.zoom = 1;
+}
+
 async function loadFiles(fileList) {
   const remaining = getRemainingUploadSlots();
   if (remaining <= 0) return;
   const imageFiles = Array.from(fileList).filter((file) => file.type.startsWith("image/"));
-  if (imageFiles.length > remaining) {
-    window.alert(format(t("uploadLimitExceeded"), { max: remaining }));
-  }
   const files = imageFiles.slice(0, remaining);
   if (files.length === 0) return;
   let insertIndex = state.cells.findIndex((cell) => !cell.bitmap);
@@ -2734,7 +3265,7 @@ function applyTextOverlayStyle(element, cell, frameWidth, frameHeight) {
   element.style.color = cell.color || "#ffffff";
 }
 
-function drawCellText(ctx, cell, x, y, width, height) {
+function drawCellText(ctx, cell, x, y, width, height, slotShape = "rect") {
   if (!hasCellText(cell)) {
     return;
   }
@@ -2742,7 +3273,7 @@ function drawCellText(ctx, cell, x, y, width, height) {
 
   ctx.save();
   ctx.beginPath();
-  ctx.rect(x, y, width, height);
+  applyCanvasSlotPath(ctx, slotShape, x, y, width, height);
   ctx.clip();
   ctx.font = getCellFontDeclaration(cell, layout.fontSize);
   ctx.fillStyle = cell.color || "#ffffff";
@@ -3746,6 +4277,14 @@ function renderSlotsStatusControls() {
 }
 
 function wireControls() {
+  els.layoutModeSuggestionApply?.addEventListener("click", () => {
+    if (!els.layoutModeSelect) return;
+    els.layoutModeSelect.value = "hex-pack";
+    applyGrid();
+  });
+  els.layoutModeSelect?.addEventListener("change", () => {
+    applyGrid();
+  });
   els.gapInput.addEventListener("input", () => {
     applyGrid();
   });
@@ -3762,6 +4301,11 @@ function wireControls() {
     const defaults = getDefaultLayoutSettings();
     safeStorageRemove(STORAGE_KEYS.layout);
     state.activePresetId = defaults.presetId;
+    state.layoutMode = defaults.layoutMode;
+    if (els.layoutModeSelect) {
+      els.layoutModeSelect.value = defaults.layoutMode;
+    }
+    resetSlotShapeOverrides(getActiveLayoutDefinition());
     els.gapInput.value = String(defaults.gap);
     els.outerGapInput.value = String(defaults.outerGap);
     els.backgroundInput.value = defaults.background;
@@ -3806,6 +4350,13 @@ function wireControls() {
   });
   els.resetZoom.addEventListener("click", () => {
     setCellZoom(state.selectedCell, 1);
+  });
+  els.slotShapeSelect?.addEventListener("change", () => {
+    setSelectedSlotShape(String(els.slotShapeSelect.value || "rect"));
+    updateLayoutModeSuggestion();
+    syncEditor();
+    renderPreview();
+    renderExportPreview();
   });
   els.textInput.addEventListener("input", () => {
     const cell = state.cells[state.selectedCell];
@@ -3869,6 +4420,10 @@ function wireControls() {
   });
   els.replaceCell.addEventListener("click", () => {
     els.replaceInput.click();
+  });
+  els.deleteCell?.addEventListener("click", () => {
+    clearCellImage(state.selectedCell);
+    renderAll();
   });
   els.replaceInput.addEventListener("change", () => {
     const file = els.replaceInput.files?.[0];
@@ -3972,6 +4527,7 @@ function wireControls() {
 }
 
 function renderAllWithoutExport() {
+  updateLayoutModeSuggestion();
   updatePresetActive();
   renderSlots();
   renderStatus();
@@ -4004,6 +4560,11 @@ function loadInitialLayoutSettings() {
   }
   const presetMatch = PRESETS.find((preset) => preset.id === layout.presetId);
   state.activePresetId = presetMatch ? presetMatch.id : defaults.presetId;
+  state.layoutMode = normalizeLayoutMode(layout.layoutMode);
+  if (els.layoutModeSelect) {
+    els.layoutModeSelect.value = state.layoutMode;
+  }
+  resetSlotShapeOverrides(getActiveLayoutDefinition());
   if (els.gapInput) {
     els.gapInput.value = String(layout.gap);
   }
@@ -4023,6 +4584,7 @@ function init() {
   updateUploadUiForDevice();
   translateStaticUi();
   renderPresets();
+  resetSlotShapeOverrides(getActiveLayoutDefinition());
   resizeCells(getActiveLayoutDefinition().slots.length);
   renderSlotsStatusControls();
   wireControls();

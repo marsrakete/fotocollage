@@ -90,6 +90,17 @@
 
             <div class="form-grid">
               <label class="field">
+                <span id="layoutModeLabel">Anordnung</span>
+                <select id="layoutModeSelect">
+                  <option value="grid">Raster (Standard)</option>
+                  <option value="hex-pack">Hex-Pack (kompakt)</option>
+                </select>
+                <div id="layoutModeSuggestion" class="layout-mode-suggestion" hidden>
+                  <span id="layoutModeSuggestionText">Hexagon erkannt. Hex-Pack reduziert Leerräume.</span>
+                  <button id="layoutModeSuggestionApply" class="secondary" type="button">Hex-Pack nutzen</button>
+                </div>
+              </label>
+              <label class="field">
                 <span id="gapLabel">Abstand</span>
                 <input id="gapInput" type="range" min="0" max="40" value="12" />
                 <strong><span id="gapValue">12</span> px</strong>
@@ -163,14 +174,25 @@
                   <button class="secondary" id="nextCell">Nächstes Feld</button>
                   <button class="secondary" id="toggleReorderMode" type="button">Sortieren</button>
                   <button class="secondary" id="replaceCell">Bild ersetzen</button>
-                  <button class="secondary" id="resetFocus">Ausschnitt zurücksetzen</button>
+                  <button class="secondary" id="deleteCell">Bild löschen</button>
+                  <button class="secondary control-wide" id="resetFocus">Ausschnitt zurücksetzen</button>
                 </div>
                 <label class="field zoom-field">
                   <span id="zoomLabel">Zoom</span>
                   <input id="zoomInput" type="range" min="0.35" max="4" step="0.05" value="1" />
                   <strong><span id="zoomValue">100</span> %</strong>
                 </label>
-                <button class="secondary" id="resetZoom" type="button">Zoom zurücksetzen</button>
+                <button class="secondary control-wide" id="resetZoom" type="button">Zoom zurücksetzen</button>
+                <label class="field" id="slotShapeField" hidden>
+                  <span id="slotShapeLabel">Form</span>
+                  <select id="slotShapeSelect">
+                    <option value="rect">Quadrat</option>
+                    <option value="rounded-rect">Abgerundet</option>
+                    <option value="circle">Kreis</option>
+                    <option value="diamond">Raute</option>
+                    <option value="hexagon">Sechseck</option>
+                  </select>
+                </label>
                 <div class="field text-editor-field">
                   <strong id="textEditorTitle">Text</strong>
                   <label>

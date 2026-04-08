@@ -1,5 +1,5 @@
 {
-  "appVersion": "1.2.48",
-  "cacheVersion": "v70",
-  "label": "Vier neue Vorlagen hinzugefuegt (Hero+4, Panorama+3, Mosaik5, Cover Split)"
+  "appVersion": "1.2.64",
+  "cacheVersion": "v86",
+  "label": "Export: Leere Slots nutzen nun die eingestellte Hintergrundfarbe"
 }

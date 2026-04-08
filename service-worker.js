@@ -1,5 +1,5 @@
 const CACHE_PREFIX = "fotocollage-cache";
-const CACHE_VERSION = "v70";
+const CACHE_VERSION = "v86";
 const CACHE_NAME = `${CACHE_PREFIX}-${CACHE_VERSION}`;
 const ASSETS = [
   "./",
@@ -9,6 +9,7 @@ const ASSETS = [
   "./manifest.json",
   "./version.json",
   "./README.md",
+  "./preset-builder.html",
   "./icon.svg",
   "./icon-192.png",
   "./icon-512.png",
