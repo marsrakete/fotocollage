@@ -4,7 +4,7 @@
 
 Eine Progressive Web App zum Erstellen von Foto-Collagen direkt im Browser:
 
-- Vorlage waehlen (z. B. 2x2, 3x3, flexibel konfigurierbar)
+- Vorlage waehlen (z. B. 2x2, 3x3, Hero-Layouts, Hex-Layouts)
 - Fotos laden
 - Bildausschnitte pro Feld anpassen
 - Reihenfolge der Bilder per Drag-and-drop aendern
@@ -62,10 +62,16 @@ Optional anderer Port:
 .\start-server.ps1 -Port 5050
 ```
 
+Optional fuer Nerds:
+
+- Preset-Builder (visuell): `http://localhost:5000/preset-builder.html`
+
 ## Features
 
 - 4-Schritt-Workflow fuer schnelle Collage-Erstellung
 - Viele Presets inkl. asymmetrischer Layouts und freier Einheiten-Presets
+- Layout-Modi: `Raster` und `Hex-Pack` (kompakter Hex-Raster)
+- Slot-Formen pro Feld: `rect`, `rounded-rect`, `circle`, `diamond`, `hexagon`
 - Drag-and-drop Laden
 - Lade-Limit passend zur Anzahl der benoetigten Felder
 - Feinschliff des Bildausschnitts pro Feld direkt in der Vorschau
@@ -84,7 +90,8 @@ Optional anderer Port:
 
 ### Schritt 1: Vorlage waehlen
 
-- Waehle ein Preset fuer die Collage (z. B. 2x2, 3x3, asymmetrische Vorlagen).
+- Waehle ein Preset fuer die Collage (z. B. 2x2, 3x3, asymmetrische Vorlagen, Hex-Vorlagen).
+- Waehle den Layout-Modus: `Raster` oder `Hex-Pack`.
 - Stelle Abstand, Randabstand und Hintergrundfarbe ein.
 - Optional: Einstellungen zuruecksetzen.
 
@@ -102,6 +109,7 @@ Optional anderer Port:
 - Text im Feld kann per Drag-and-drop frei positioniert werden.
 - Nutze den Button `Sortieren`, um Bilder umzutauschen (Quelle antippen, Ziel antippen).
 - Im Bereich `Aktives Feld` steuerst du Text/Formatierung sowie `Ausschnitt zuruecksetzen` und `Zoom zuruecksetzen`.
+- Bei `Hex-Pack` stehen zusaetzlich 4 Slider (X/Y-Abstand und X/Y-Feldgroesse) sowie `Hex-Layout zuruecksetzen` bereit.
 
 ### Schritt 4: Export
 
@@ -140,6 +148,12 @@ Hinweis zu `og:image` / `twitter:image`:
 
 - Dafuer gibt es ein eigenes Export-Preset `Open Graph / Twitter` mit `1200 x 630`.
 - Das ist ein Seitenverhaeltnis von `1.91:1`, optimiert fuer Link-Vorschauen.
+
+## Layout- und Slot-Formate
+
+- `Raster`: klassische rechteckige Platzierung.
+- `Hex-Pack`: kompakter Hex-Raster mit reduzierten Leerraeumen.
+- Slot-Formen je Feld: `rect`, `rounded-rect`, `circle`, `diamond`, `hexagon`.
 
 ## Export-Presets
 
@@ -216,10 +230,10 @@ Regeln fuer `Auswahl verbinden`:
 
 Einbau in die App:
 
-1. Preset-Objekt in `const PRESETS = [...]` in `app.js` einfuegen.
-2. Sprachtexte in `const PRESET_LABELS = { ... }` mit derselben `id` ergaenzen (`de`, `en`, `fr`).
+1. Preset-Objekt in `PRESETS` in `config/templates.config.js` einfuegen.
+2. Sprachtexte in `PRESET_LABELS` in `config/templates.config.js` mit derselben `id` ergaenzen (`de`, `en`, `fr`).
 
-Die Vorlagen sind in `app.js` in `const PRESETS = [...]` definiert.
+Die Vorlagen sind in `config/templates.config.js` in `PRESETS` definiert.
 
 Jedes Preset hat:
 
@@ -281,7 +295,7 @@ Das ist praktisch fuer klassische `2x2`, `3x3`, `2x3` usw., ohne die Slots einze
 
 ### Preset-Lokalisierung
 
-Die sichtbaren Preset-Texte werden ueber `const PRESET_LABELS = { ... }` in `app.js` lokalisiert.
+Die sichtbaren Preset-Texte werden ueber `PRESET_LABELS` in `config/templates.config.js` lokalisiert.
 
 Beispiel:
 
@@ -301,7 +315,7 @@ Fuer neue Presets:
 
 Wenn ein Sprachwert fehlt, faellt die App auf `de` und danach auf `label` zurueck.
 
-Export-Presets sind separat in `const EXPORT_PRESET_LABELS = { ... }` lokalisiert (ebenfalls `de/en/fr`).
+Export-Presets sind separat in `config/export.config.js` ueber `EXPORT_PRESET_LABELS` lokalisiert (ebenfalls `de/en/fr`).
 
 ### Neue freie Einheiten-Presets
 

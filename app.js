@@ -28,9 +28,9 @@ const SAFE_AREA_RATIOS_BY_PRESET = exportConfig.SAFE_AREA_RATIOS_BY_PRESET || {}
 const I18N = i18nConfig.I18N;
 
 const DEFAULT_VERSION_INFO = Object.freeze({
-  appVersion: "1.3.7",
-  cacheVersion: "v94",
-  label: "Hex-Slider nur im Hex-Modus + Button zum Zuruecksetzen",
+  appVersion: "1.3.8",
+  cacheVersion: "v95",
+  label: "README: Hex-Raster, Slot-Formate und Nerd-Builder aktualisiert",
 });
 
 const ZOOM_MIN = 0.35;
