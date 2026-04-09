@@ -28,9 +28,9 @@ const SAFE_AREA_RATIOS_BY_PRESET = exportConfig.SAFE_AREA_RATIOS_BY_PRESET || {}
 const I18N = i18nConfig.I18N;
 
 const DEFAULT_VERSION_INFO = Object.freeze({
-  appVersion: "1.3.8",
-  cacheVersion: "v95",
-  label: "README: Hex-Raster, Slot-Formate und Nerd-Builder aktualisiert",
+  appVersion: "1.3.10",
+  cacheVersion: "v97",
+  label: "Neustart behaelt Abstand, Randabstand und Hintergrund bei",
 });
 
 const ZOOM_MIN = 0.35;
@@ -142,6 +142,7 @@ const els = {
   outerGapValue: document.getElementById("outerGapValue"),
   backgroundInput: document.getElementById("backgroundInput"),
   resetSettingsButton: document.getElementById("resetSettingsButton"),
+  restartButton: document.getElementById("restartButton"),
   toStep2: document.getElementById("toStep2"),
   toStep3: document.getElementById("toStep3"),
   toStep4: document.getElementById("toStep4"),
@@ -608,6 +609,7 @@ function translateStaticUi() {
   setText(els.checkForUpdatesButton, "checkForUpdates");
   setText(els.reloadAppButton, "reload");
   setText(els.toStep2, "toPhotos");
+  setText(els.restartButton, "restart");
   setText(els.toStep3, "toFineTune");
   setText(els.toStep4, "toExport");
   setText(els.shareButton, "share");
@@ -1365,6 +1367,61 @@ function resizeCells(count) {
   if (state.selectedCell >= state.cells.length) {
     state.selectedCell = Math.max(0, state.cells.length - 1);
   }
+}
+
+function restartWorkflow() {
+  if (!window.confirm(t("restartConfirm"))) {
+    return;
+  }
+  const keepGap = state.gap;
+  const keepOuterGap = state.outerGap;
+  const keepBackground = state.background;
+  const defaults = getDefaultLayoutSettings();
+  safeStorageRemove(STORAGE_KEYS.layout);
+  state.activePresetId = defaults.presetId;
+  state.layoutMode = defaults.layoutMode;
+  if (els.layoutModeSelect) {
+    els.layoutModeSelect.value = defaults.layoutMode;
+  }
+  if (els.gapInput) {
+    els.gapInput.value = String(keepGap);
+  }
+  if (els.outerGapInput) {
+    els.outerGapInput.value = String(keepOuterGap);
+  }
+  if (els.backgroundInput) {
+    els.backgroundInput.value = keepBackground;
+  }
+  state.gap = keepGap;
+  state.outerGap = keepOuterGap;
+  state.background = keepBackground;
+  state.hexStepXRatio = defaults.hexStepXRatio;
+  state.hexStepYRatio = defaults.hexStepYRatio;
+  state.hexUnitScaleX = defaults.hexUnitScaleX;
+  state.hexUnitScaleY = defaults.hexUnitScaleY;
+  state.selectedCell = 0;
+  state.dragging = null;
+  state.textDragging = null;
+  state.dragIndex = null;
+  state.reorderMode = false;
+  state.reorderSourceIndex = null;
+  state.pinch = null;
+  state.touchPoints.clear();
+  state.hasOpenedExportStep = false;
+  if (els.fileInput) {
+    els.fileInput.value = "";
+  }
+  if (els.replaceInput) {
+    els.replaceInput.value = "";
+  }
+  resetSlotShapeOverrides(getActiveLayoutDefinition());
+  applyGrid();
+  for (let i = 0; i < state.cells.length; i += 1) {
+    disposeCell(state.cells[i]);
+    state.cells[i] = createEmptyCell();
+  }
+  setStep(1);
+  renderAll();
 }
 
 function setStep(step) {
@@ -3284,6 +3341,9 @@ function wireControls() {
     state.hexUnitScaleY = defaults.hexUnitScaleY;
     updateHexTuningUi();
     applyGrid();
+  });
+  els.restartButton?.addEventListener("click", () => {
+    restartWorkflow();
   });
   els.toStep2.addEventListener("click", () => setStep(2));
   els.toStep3.addEventListener("click", () => setStep(3));
