@@ -1,11 +1,14 @@
 const CACHE_PREFIX = "fotocollage-cache";
-const CACHE_VERSION = "v86";
+const CACHE_VERSION = "v94";
 const CACHE_NAME = `${CACHE_PREFIX}-${CACHE_VERSION}`;
 const ASSETS = [
   "./",
   "./index.html",
   "./styles.css",
   "./app.js",
+  "./config/templates.config.js",
+  "./config/export.config.js",
+  "./config/i18n.config.js",
   "./manifest.json",
   "./version.json",
   "./README.md",

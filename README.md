@@ -29,6 +29,7 @@ Repository: [https://github.com/marsrakete/fotocollage](https://github.com/marsr
 
 1. In PowerShell im Projektordner: `.\start-server.ps1`
 2. Im Browser oeffnen: `http://localhost:5000/`
+3. Preset-Builder (visuell): `http://localhost:5000/preset-builder.html`
 
 ## Installation (PWA)
 
@@ -183,6 +184,40 @@ Empfohlene Vorlagen je Export-Preset:
 - `start-server.ps1` - Lokaler statischer Server (Port 5000)
 
 ## Hinweise fuer Programmierer: Presets konfigurieren
+
+Fuer schnelles Erstellen neuer Vorlagen gibt es einen visuellen Builder:
+
+- Lokal: `http://localhost:5000/preset-builder.html`
+- Erzeugt Copy-Paste-Code fuer `PRESETS` und `PRESET_LABELS`
+
+### Preset-Builder (visuell)
+
+Die Seite `preset-builder.html` ist ein separates Hilfstool (ohne PWA-Flow), um neue Vorlagen schnell zu bauen.
+
+So funktioniert der Builder:
+
+1. `rows` und `cols` einstellen und `Raster anwenden` klicken.
+2. Im Raster per Drag ein Rechteck ziehen, um einen Slot zu erzeugen.
+3. Im Bereich `Slots`:
+   - Slot-Nummern einsehen (`#1`, `#2`, ...)
+   - einzelne Slots entfernen
+   - zwei Slots auswaehlen und mit `Auswahl verbinden` zusammenfuehren
+4. Unten die erzeugten Codebloecke kopieren:
+   - `PRESETS-Objekt`
+   - `PRESET_LABELS-Eintrag`
+
+Regeln fuer `Auswahl verbinden`:
+
+- Es muessen genau 2 Slots ausgewaehlt sein.
+- Verbinden geht nur, wenn Slots exakt angrenzen:
+  - horizontal: gleiche `y` und `h`
+  - vertikal: gleiche `x` und `w`
+- Ueberlappungen mit anderen Slots sind nicht erlaubt.
+
+Einbau in die App:
+
+1. Preset-Objekt in `const PRESETS = [...]` in `app.js` einfuegen.
+2. Sprachtexte in `const PRESET_LABELS = { ... }` mit derselben `id` ergaenzen (`de`, `en`, `fr`).
 
 Die Vorlagen sind in `app.js` in `const PRESETS = [...]` definiert.
 

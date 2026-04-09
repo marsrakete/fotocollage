@@ -156,6 +156,33 @@
               </p>
             </div>
 
+            <div class="hex-tuning" id="hexTuningPanel" hidden>
+              <strong id="hexTuningTitle">Hex-Layout Feinabstand</strong>
+              <div class="hex-tuning-grid">
+                <label class="field">
+                  <span id="hexStepXLabel">Hex X-Abstand</span>
+                  <input id="hexStepXInput" type="range" min="0.60" max="1.20" step="0.01" value="0.86" />
+                  <strong><span id="hexStepXValue">0.86</span></strong>
+                </label>
+                <label class="field">
+                  <span id="hexStepYLabel">Hex Y-Abstand</span>
+                  <input id="hexStepYInput" type="range" min="0.60" max="1.40" step="0.01" value="1.00" />
+                  <strong><span id="hexStepYValue">1.00</span></strong>
+                </label>
+                <label class="field">
+                  <span id="hexScaleXLabel">Hex Feldgröße X</span>
+                  <input id="hexScaleXInput" type="range" min="0.60" max="1.20" step="0.01" value="1.00" />
+                  <strong><span id="hexScaleXValue">1.00</span></strong>
+                </label>
+                <label class="field">
+                  <span id="hexScaleYLabel">Hex Feldgröße Y</span>
+                  <input id="hexScaleYInput" type="range" min="0.60" max="1.20" step="0.01" value="1.00" />
+                  <strong><span id="hexScaleYValue">1.00</span></strong>
+                </label>
+              </div>
+              <button class="secondary" id="resetHexLayoutButton" type="button">Hex-Layout zurücksetzen</button>
+            </div>
+
             <div class="editor-layout">
               <div class="collage-preview-wrap">
                 <div class="collage-preview" id="collagePreview"></div>
@@ -421,6 +448,9 @@
       </form>
     </dialog>
 
+    <script src="./config/templates.config.js"></script>
+    <script src="./config/export.config.js"></script>
+    <script src="./config/i18n.config.js"></script>
     <script type="module" src="./app.js"></script>
   </body>
 </html>

@@ -52,7 +52,7 @@
       input, textarea, button {
         font: inherit;
       }
-      input, textarea {
+      input, textarea, select {
         width: 100%;
         border-radius: 10px;
         border: 1px solid var(--border);
@@ -204,6 +204,40 @@
         margin-top: 8px;
         font-size: 0.9rem;
       }
+      .existing-grid {
+        margin-top: 10px;
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(132px, 1fr));
+        gap: 8px;
+      }
+      .existing-item {
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        background: rgba(255, 255, 255, 0.04);
+        padding: 8px;
+        text-align: left;
+        display: grid;
+        gap: 6px;
+      }
+      .existing-item strong {
+        font-size: 0.85rem;
+        line-height: 1.25;
+      }
+      .mini-grid {
+        position: relative;
+        width: 74px;
+        height: 74px;
+        justify-self: center;
+      }
+      .mini-slot {
+        position: absolute;
+        background: rgba(255, 255, 255, 0.25);
+        border-radius: 4px;
+      }
+      .mini-slot.circle { border-radius: 50%; }
+      .mini-slot.rounded-rect { border-radius: 8px; }
+      .mini-slot.diamond { clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%); }
+      .mini-slot.hexagon { clip-path: polygon(20% 0%, 80% 0%, 100% 50%, 80% 100%, 20% 100%, 0% 50%); }
       @media (max-width: 920px) {
         .top-grid { grid-template-columns: 1fr 1fr; }
         .main, .out-grid { grid-template-columns: 1fr; }
@@ -234,12 +268,20 @@
           <label>Cols
             <input id="colsInput" type="number" min="1" max="12" value="3" />
           </label>
+          <label>Darstellung
+            <select id="displayModeSelect">
+              <option value="grid">Raster</option>
+              <option value="hex">Hex</option>
+            </select>
+          </label>
         </div>
         <div class="actions" style="margin-top:10px;">
           <button id="applyGrid" class="primary" type="button">Raster anwenden</button>
           <button id="clearSlots" type="button">Alle Slots loeschen</button>
           <button id="autoId" type="button">ID aus Label erzeugen</button>
         </div>
+        <p class="hint">Bestehende Vorlagen (aus externer Konfigurationsdatei):</p>
+        <div id="existingPresetsGrid" class="existing-grid"></div>
       </section>
 
       <section class="main">
@@ -281,15 +323,19 @@
       </section>
     </main>
 
+    <script src="./config/templates.config.js"></script>
     <script>
       const state = {
         rows: 3,
         cols: 3,
         slots: [],
+        externalPresets: [],
+        externalLabels: {},
         selectedSlots: new Set(),
         pointerDown: false,
         startCell: null,
         endCell: null,
+        displayMode: "grid",
       };
 
       const els = {
@@ -299,6 +345,7 @@
         labelFr: document.getElementById("labelFr"),
         rowsInput: document.getElementById("rowsInput"),
         colsInput: document.getElementById("colsInput"),
+        displayModeSelect: document.getElementById("displayModeSelect"),
         applyGrid: document.getElementById("applyGrid"),
         clearSlots: document.getElementById("clearSlots"),
         autoId: document.getElementById("autoId"),
@@ -313,9 +360,18 @@
         labelsOut: document.getElementById("labelsOut"),
         copyPreset: document.getElementById("copyPreset"),
         copyLabels: document.getElementById("copyLabels"),
+        existingPresetsGrid: document.getElementById("existingPresetsGrid"),
       };
 
       const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
+
+      function getExternalTemplateConfig() {
+        const cfg = window.FOTOCOLLAGE_TEMPLATE_CONFIG;
+        if (!cfg || !Array.isArray(cfg.PRESETS) || typeof cfg.PRESET_LABELS !== "object") {
+          return { presets: [], labels: {} };
+        }
+        return { presets: cfg.PRESETS, labels: cfg.PRESET_LABELS };
+      }
 
       function slugify(value) {
         return String(value || "")
@@ -385,11 +441,69 @@
       }
 
       function rectToStyle(rect) {
+        if (state.displayMode === "hex") {
+          return rectToHexStyle(rect);
+        }
         const left = (rect.x / state.cols) * 100;
         const top = (rect.y / state.rows) * 100;
         const width = (rect.w / state.cols) * 100;
         const height = (rect.h / state.rows) * 100;
         return { left, top, width, height };
+      }
+
+      function getHexBoardContext() {
+        const stepX = 0.86;
+        const stepY = 1;
+        const unitWidth = 1;
+        const unitHeight = 1;
+        let minX = Number.POSITIVE_INFINITY;
+        let minY = Number.POSITIVE_INFINITY;
+        let maxX = Number.NEGATIVE_INFINITY;
+        let maxY = Number.NEGATIVE_INFINITY;
+        for (let y = 0; y < state.rows; y += 1) {
+          for (let x = 0; x < state.cols; x += 1) {
+            const px = x * stepX;
+            const py = y * stepY + (x % 2 === 1 ? unitHeight * 0.5 : 0);
+            minX = Math.min(minX, px);
+            minY = Math.min(minY, py);
+            maxX = Math.max(maxX, px + unitWidth);
+            maxY = Math.max(maxY, py + unitHeight);
+          }
+        }
+        return {
+          stepX,
+          stepY,
+          unitWidth,
+          unitHeight,
+          minX,
+          minY,
+          width: Math.max(0.0001, maxX - minX),
+          height: Math.max(0.0001, maxY - minY),
+        };
+      }
+
+      function rectToHexStyle(rect) {
+        const ctx = getHexBoardContext();
+        let minX = Number.POSITIVE_INFINITY;
+        let minY = Number.POSITIVE_INFINITY;
+        let maxX = Number.NEGATIVE_INFINITY;
+        let maxY = Number.NEGATIVE_INFINITY;
+        for (let y = rect.y; y < rect.y + rect.h; y += 1) {
+          for (let x = rect.x; x < rect.x + rect.w; x += 1) {
+            const px = x * ctx.stepX;
+            const py = y * ctx.stepY + (x % 2 === 1 ? ctx.unitHeight * 0.5 : 0);
+            minX = Math.min(minX, px);
+            minY = Math.min(minY, py);
+            maxX = Math.max(maxX, px + ctx.unitWidth);
+            maxY = Math.max(maxY, py + ctx.unitHeight);
+          }
+        }
+        return {
+          left: ((minX - ctx.minX) / ctx.width) * 100,
+          top: ((minY - ctx.minY) / ctx.height) * 100,
+          width: ((maxX - minX) / ctx.width) * 100,
+          height: ((maxY - minY) / ctx.height) * 100,
+        };
       }
 
       function canUseCircleShape(slot) {
@@ -576,6 +690,114 @@ ${slotLines.join("\n")}
         els.labelsOut.value = buildLabelsCode();
       }
 
+      function getPresetLabel(preset) {
+        const labels = state.externalLabels?.[preset.id];
+        return labels?.de || preset.label || preset.id;
+      }
+
+      function presetIsNormalGrid(preset) {
+        if (!preset || !Array.isArray(preset.slots)) return false;
+        if (preset.slots.length !== preset.rows * preset.cols) return false;
+        for (const slot of preset.slots) {
+          if ((slot.w || 1) !== 1 || (slot.h || 1) !== 1) return false;
+          if (slot.shape && slot.shape !== "rect") return false;
+        }
+        return true;
+      }
+
+      function presetIsHex(preset) {
+        if (!preset || !Array.isArray(preset.slots) || preset.slots.length === 0) return false;
+        return preset.slots.every((slot) => slot?.shape === "hexagon");
+      }
+
+      function getPresetSortGroup(preset) {
+        if (presetIsNormalGrid(preset)) return 0;
+        if (presetIsHex(preset)) return 2;
+        return 1;
+      }
+
+      function getSortedPresets(presets) {
+        return [...presets].sort((a, b) => {
+          const groupDiff = getPresetSortGroup(a) - getPresetSortGroup(b);
+          if (groupDiff !== 0) return groupDiff;
+          const countDiff = (a?.slots?.length || 0) - (b?.slots?.length || 0);
+          if (countDiff !== 0) return countDiff;
+          return getPresetLabel(a).localeCompare(getPresetLabel(b), "de");
+        });
+      }
+
+      function applyPresetToBuilder(preset) {
+        if (!preset) return;
+        state.rows = clamp(Number(preset.rows) || 1, 1, 12);
+        state.cols = clamp(Number(preset.cols) || 1, 1, 12);
+        state.slots = (preset.slots || []).map((slot) => ({ ...slot }));
+        state.selectedSlots.clear();
+        els.rowsInput.value = String(state.rows);
+        els.colsInput.value = String(state.cols);
+        els.presetId.value = preset.id || "my-preset";
+        const labels = state.externalLabels?.[preset.id] || {};
+        els.labelDe.value = labels.de || preset.label || "";
+        els.labelEn.value = labels.en || preset.label || "";
+        els.labelFr.value = labels.fr || preset.label || "";
+        buildCells();
+        renderAll();
+        els.statusText.textContent = `Vorlage geladen: ${getPresetLabel(preset)}`;
+      }
+
+      function renderPresetMiniPreview(container, preset) {
+        container.innerHTML = "";
+        const cellSize = 18;
+        const gap = 3;
+        const hasHex = (preset.slots || []).some((slot) => slot?.shape === "hexagon");
+        const yOffset = hasHex ? (cellSize + gap) * 0.5 : 0;
+        const miniWidth = preset.cols * cellSize + Math.max(0, preset.cols - 1) * gap;
+        const miniHeight = preset.rows * cellSize + Math.max(0, preset.rows - 1) * gap + yOffset;
+        const scale = Math.min(1, 74 / Math.max(miniWidth, miniHeight, 1));
+        const offsetX = (74 - miniWidth * scale) / 2;
+        const offsetY = (74 - miniHeight * scale) / 2;
+        for (const slot of preset.slots || []) {
+          const node = document.createElement("span");
+          const shape = getEffectiveShape(slot);
+          node.className = `mini-slot ${shape}`;
+          const x = slot.x * (cellSize + gap);
+          const y = slot.y * (cellSize + gap) + (shape === "hexagon" && slot.x % 2 === 1 ? yOffset : 0);
+          const w = slot.w * cellSize + Math.max(0, slot.w - 1) * gap;
+          const h = slot.h * cellSize + Math.max(0, slot.h - 1) * gap;
+          node.style.left = `${offsetX + x * scale}px`;
+          node.style.top = `${offsetY + y * scale}px`;
+          node.style.width = `${w * scale}px`;
+          node.style.height = `${h * scale}px`;
+          container.appendChild(node);
+        }
+      }
+
+      function renderExistingPresets() {
+        if (!els.existingPresetsGrid) return;
+        els.existingPresetsGrid.innerHTML = "";
+        if (!state.externalPresets.length) {
+          const empty = document.createElement("p");
+          empty.className = "hint";
+          empty.textContent = "Keine externen Vorlagen gefunden.";
+          els.existingPresetsGrid.appendChild(empty);
+          return;
+        }
+        const sortedPresets = getSortedPresets(state.externalPresets);
+        for (const preset of sortedPresets) {
+          const button = document.createElement("button");
+          button.type = "button";
+          button.className = "existing-item";
+          const title = document.createElement("strong");
+          title.textContent = getPresetLabel(preset);
+          const mini = document.createElement("div");
+          mini.className = "mini-grid";
+          renderPresetMiniPreview(mini, preset);
+          button.appendChild(mini);
+          button.appendChild(title);
+          button.addEventListener("click", () => applyPresetToBuilder(preset));
+          els.existingPresetsGrid.appendChild(button);
+        }
+      }
+
       function renderAll() {
         renderSlotsOverlay();
         renderSlotsList();
@@ -700,6 +922,10 @@ ${slotLines.join("\n")}
       [els.presetId, els.labelDe, els.labelEn, els.labelFr].forEach((input) => {
         input.addEventListener("input", renderCodeOutput);
       });
+      els.displayModeSelect.addEventListener("change", () => {
+        state.displayMode = els.displayModeSelect.value === "hex" ? "hex" : "grid";
+        renderSlotsOverlay();
+      });
 
       window.addEventListener("pointerup", stopSelection);
       window.addEventListener("pointercancel", stopSelection);
@@ -708,8 +934,16 @@ ${slotLines.join("\n")}
       els.copyLabels.addEventListener("click", () => copyText(els.labelsOut.value, "PRESET_LABELS-Eintrag kopiert."));
 
       parseGridSettings();
+      state.displayMode = "grid";
+      els.displayModeSelect.value = "grid";
+      {
+        const external = getExternalTemplateConfig();
+        state.externalPresets = external.presets.map((preset) => ({ ...preset, slots: (preset.slots || []).map((slot) => ({ ...slot })) }));
+        state.externalLabels = external.labels || {};
+      }
       buildCells();
       renderAll();
+      renderExistingPresets();
     </script>
   </body>
 </html>
