@@ -93,7 +93,6 @@ Optional fuer Nerds:
 - Waehle ein Preset fuer die Collage (z. B. 2x2, 3x3, asymmetrische Vorlagen, Hex-Vorlagen).
 - Waehle den Layout-Modus: `Raster` oder `Hex-Pack`.
 - Stelle Abstand, Randabstand und Hintergrundfarbe ein.
-- Optional: Einstellungen zuruecksetzen.
 
 ### Schritt 2: Fotos laden
 

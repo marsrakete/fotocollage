@@ -115,7 +115,6 @@
                 <input id="backgroundInput" type="color" value="#101828" />
               </label>
             </div>
-            <button class="secondary" id="resetSettingsButton" type="button">Einstellungen zurücksetzen</button>
             <button class="secondary" id="restartButton" type="button">Neustart</button>
 
             <div class="step-actions">
@@ -365,6 +364,13 @@
           </div>
         </section>
         <section class="updates-block">
+          <h3 id="tipsTitle">Tipps</h3>
+          <div class="settings-stack">
+            <button id="tipsResetButton" class="secondary" type="button">Tipps wieder anzeigen</button>
+            <p id="tipsStatus" class="settings-status" hidden></p>
+          </div>
+        </section>
+        <section class="updates-block">
           <h3 id="watermarkTitle">Wasserzeichen</h3>
           <label class="field">
             <span id="watermarkTextLabel">Text</span>
@@ -449,9 +455,28 @@
       </form>
     </dialog>
 
+    <dialog id="tipDialog" class="settings-dialog">
+      <form id="tipForm" method="dialog" class="settings-panel">
+        <div class="dialog-head">
+          <h2 id="tipDialogTitle">Tipp des Tages</h2>
+          <button class="secondary icon-only" value="cancel" aria-label="Schließen" type="submit">✕</button>
+        </div>
+        <p id="tipDialogText" class="dialog-copy"></p>
+        <label class="watermark-toggle">
+          <input id="tipDisableInput" type="checkbox" />
+          <span id="tipDisableLabel">Nicht mehr anzeigen</span>
+        </label>
+        <div class="settings-stack">
+          <button id="nextTipButton" class="secondary" type="button">Noch ein Tipp</button>
+          <button class="primary" type="submit">Schließen</button>
+        </div>
+      </form>
+    </dialog>
+
     <script src="./config/templates.config.js"></script>
     <script src="./config/export.config.js"></script>
     <script src="./config/i18n.config.js"></script>
+    <script src="./config/tips.config.js"></script>
     <script type="module" src="./app.js"></script>
   </body>
 </html>

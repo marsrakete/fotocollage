@@ -1,6 +1,7 @@
 const templateConfig = window.FOTOCOLLAGE_TEMPLATE_CONFIG;
 const exportConfig = window.FOTOCOLLAGE_EXPORT_CONFIG;
 const i18nConfig = window.FOTOCOLLAGE_I18N_CONFIG;
+const tipsConfig = window.FOTOCOLLAGE_TIPS_CONFIG;
 
 if (!templateConfig || !Array.isArray(templateConfig.PRESETS) || typeof templateConfig.PRESET_LABELS !== "object") {
   throw new Error("Missing or invalid templates config (window.FOTOCOLLAGE_TEMPLATE_CONFIG).");
@@ -10,6 +11,9 @@ if (!exportConfig || !Array.isArray(exportConfig.EXPORT_PRESETS) || typeof expor
 }
 if (!i18nConfig || typeof i18nConfig.I18N !== "object") {
   throw new Error("Missing or invalid i18n config (window.FOTOCOLLAGE_I18N_CONFIG).");
+}
+if (!tipsConfig || typeof tipsConfig.DAILY_TIPS !== "object") {
+  throw new Error("Missing or invalid tips config (window.FOTOCOLLAGE_TIPS_CONFIG).");
 }
 
 const PRESETS = templateConfig.PRESETS;
@@ -26,11 +30,12 @@ const DEFAULT_SOCIAL_SAFE_AREA = exportConfig.DEFAULT_SOCIAL_SAFE_AREA;
 const SAFE_AREA_RATIOS_BY_PRESET = exportConfig.SAFE_AREA_RATIOS_BY_PRESET || {};
 
 const I18N = i18nConfig.I18N;
+const DAILY_TIPS = tipsConfig.DAILY_TIPS;
 
 const DEFAULT_VERSION_INFO = Object.freeze({
-  appVersion: "1.3.10",
-  cacheVersion: "v97",
-  label: "Neustart behaelt Abstand, Randabstand und Hintergrund bei",
+  appVersion: "1.3.17",
+  cacheVersion: "v104",
+  label: "Update-Check bei Start mit Bestaetigungs-Popup vereinheitlicht",
 });
 
 const ZOOM_MIN = 0.35;
@@ -49,6 +54,7 @@ const STORAGE_KEYS = {
   layout: "fotocollage-layout",
   watermark: "fotocollage-watermark",
   exif: "fotocollage-exif",
+  tipsEnabled: "fotocollage-tips-enabled",
 };
 const state = {
   activePresetId: "grid-2x2",
@@ -96,6 +102,7 @@ const state = {
   languagePreference: "auto",
   language: "de",
   readmeText: "",
+  tipAutoShowEnabled: true,
   versionInfo: { ...DEFAULT_VERSION_INFO },
   serviceWorkerRegistration: null,
   updateInProgress: false,
@@ -141,7 +148,6 @@ const els = {
   outerGapInput: document.getElementById("outerGapInput"),
   outerGapValue: document.getElementById("outerGapValue"),
   backgroundInput: document.getElementById("backgroundInput"),
-  resetSettingsButton: document.getElementById("resetSettingsButton"),
   restartButton: document.getElementById("restartButton"),
   toStep2: document.getElementById("toStep2"),
   toStep3: document.getElementById("toStep3"),
@@ -234,6 +240,16 @@ const els = {
   helpTitle: document.getElementById("helpTitle"),
   readmeStatus: document.getElementById("readmeStatus"),
   readmeContent: document.getElementById("readmeContent"),
+  tipDialog: document.getElementById("tipDialog"),
+  tipForm: document.getElementById("tipForm"),
+  tipDialogTitle: document.getElementById("tipDialogTitle"),
+  tipDialogText: document.getElementById("tipDialogText"),
+  tipDisableInput: document.getElementById("tipDisableInput"),
+  tipDisableLabel: document.getElementById("tipDisableLabel"),
+  nextTipButton: document.getElementById("nextTipButton"),
+  tipsTitle: document.getElementById("tipsTitle"),
+  tipsResetButton: document.getElementById("tipsResetButton"),
+  tipsStatus: document.getElementById("tipsStatus"),
   settingsTitle: document.getElementById("settingsTitle"),
   settingsIntro: document.getElementById("settingsIntro"),
   updatesTitle: document.getElementById("updatesTitle"),
@@ -290,6 +306,40 @@ function t(key) {
   return I18N[state.language]?.[key] ?? I18N.de[key] ?? key;
 }
 
+function getTipsForLanguage(language = state.language) {
+  return DAILY_TIPS[language] || DAILY_TIPS.de || [];
+}
+
+function getDailyTipStartIndex(tips) {
+  if (!Array.isArray(tips) || tips.length === 0) return 0;
+  const now = new Date();
+  const key = Number(
+    `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, "0")}${String(now.getDate()).padStart(2, "0")}`
+  );
+  return key % tips.length;
+}
+
+function renderTipOfDay(index) {
+  const tips = getTipsForLanguage();
+  if (!tips.length || !els.tipDialogText || !els.tipDialog) return;
+  const safeIndex = ((index % tips.length) + tips.length) % tips.length;
+  els.tipDialogText.textContent = tips[safeIndex];
+  els.tipDialog.dataset.tipIndex = String(safeIndex);
+}
+
+function showTipOfDayDialog(options = {}) {
+  const { force = false } = options;
+  if (!els.tipDialog || typeof els.tipDialog.showModal !== "function") return;
+  if (!force && !state.tipAutoShowEnabled) return;
+  const tips = getTipsForLanguage();
+  if (!tips.length) return;
+  if (els.tipDisableInput) {
+    els.tipDisableInput.checked = false;
+  }
+  renderTipOfDay(getDailyTipStartIndex(tips));
+  els.tipDialog.showModal();
+}
+
 function setText(el, key) {
   if (el) el.textContent = t(key);
 }
@@ -339,6 +389,29 @@ function safeStorageRemove(key) {
   } catch {
     // Ignore storage errors.
   }
+}
+
+function loadTipPreference() {
+  const stored = safeStorageGet(STORAGE_KEYS.tipsEnabled);
+  state.tipAutoShowEnabled = stored !== "0";
+  updateTipsControls();
+}
+
+function saveTipPreference(enabled) {
+  state.tipAutoShowEnabled = Boolean(enabled);
+  safeStorageSet(STORAGE_KEYS.tipsEnabled, state.tipAutoShowEnabled ? "1" : "0");
+  updateTipsControls();
+}
+
+function setTipsStatus(message) {
+  if (!els.tipsStatus) return;
+  els.tipsStatus.textContent = message || "";
+  els.tipsStatus.hidden = !message;
+}
+
+function updateTipsControls() {
+  if (!els.tipsResetButton) return;
+  els.tipsResetButton.disabled = state.tipAutoShowEnabled;
 }
 
 function getSuggestedFreeExportWidth() {
@@ -603,6 +676,12 @@ function translateStaticUi() {
   setText(els.exportHelp, "exportHelp");
   setText(els.settingsTitle, "settingsTitle");
   setText(els.settingsIntro, "settingsIntro");
+  setText(els.tipDialogTitle, "tipDialogTitle");
+  setText(els.tipDisableLabel, "tipDisableLabel");
+  setText(els.nextTipButton, "nextTipButton");
+  setText(els.tipsTitle, "tipsTitle");
+  setText(els.tipsResetButton, "tipsResetButton");
+  updateTipsControls();
   setText(els.helpTitle, "helpTitle");
   setText(els.updatesTitle, "updatesTitle");
   setText(els.languageLabel, "languageLabel");
@@ -614,7 +693,6 @@ function translateStaticUi() {
   setText(els.toStep4, "toExport");
   setText(els.shareButton, "share");
   setText(els.downloadButton, "savePng");
-  setText(els.resetSettingsButton, "resetSettings");
   setText(els.prevCell, "prevCell");
   setText(els.nextCell, "nextCell");
   setText(els.replaceCell, "replaceCell");
@@ -3176,6 +3254,11 @@ function setUpdateStatus(message, showReload = false) {
   els.reloadAppButton.hidden = !showReload;
 }
 
+async function performAppReload() {
+  await state.serviceWorkerRegistration?.update().catch(() => {});
+  window.location.reload();
+}
+
 async function fetchVersionInfo() {
   const response = await fetch("./version.json", { cache: "no-cache" });
   if (!response.ok) {
@@ -3194,6 +3277,7 @@ async function checkForUpdates(options = {}) {
     showChecking = true,
     silentNoChange = false,
     silentError = false,
+    promptOnAvailable = true,
   } = options;
   if (state.updateInProgress) return;
   state.updateInProgress = true;
@@ -3217,10 +3301,20 @@ async function checkForUpdates(options = {}) {
       return;
     }
     const remoteLabel = remoteVersion.label ? ` \u00b7 ${remoteVersion.label}` : "";
-    setUpdateStatus(
-      `${t("updateAvailablePrefix")}: ${remoteVersion.appVersion} \u00b7 ${remoteVersion.cacheVersion}${remoteLabel}. ${t("updateAvailableAction")}`,
-      true
+    const updateMessage = `${t("updateAvailablePrefix")}: ${remoteVersion.appVersion} \u00b7 ${remoteVersion.cacheVersion}${remoteLabel}.`;
+    if (!promptOnAvailable) {
+      setUpdateStatus(`${updateMessage} ${t("updateAvailableAction")}`, true);
+      return;
+    }
+    const shouldUpdateNow = window.confirm(
+      `${updateMessage}\n\n${t("updatePromptQuestion")}`
     );
+    if (shouldUpdateNow) {
+      setUpdateStatus(t("updateApplying"), false);
+      await performAppReload();
+      return;
+    }
+    setUpdateStatus(t("updateDeferred"), false);
   } catch {
     if (!silentError) {
       setUpdateStatus(t("updateFailed"), false);
@@ -3318,28 +3412,6 @@ function wireControls() {
     applyGrid();
   });
   els.backgroundInput.addEventListener("input", () => {
-    applyGrid();
-  });
-  els.resetSettingsButton.addEventListener("click", () => {
-    if (!window.confirm(t("resetSettingsConfirm"))) {
-      return;
-    }
-    const defaults = getDefaultLayoutSettings();
-    safeStorageRemove(STORAGE_KEYS.layout);
-    state.activePresetId = defaults.presetId;
-    state.layoutMode = defaults.layoutMode;
-    if (els.layoutModeSelect) {
-      els.layoutModeSelect.value = defaults.layoutMode;
-    }
-    resetSlotShapeOverrides(getActiveLayoutDefinition());
-    els.gapInput.value = String(defaults.gap);
-    els.outerGapInput.value = String(defaults.outerGap);
-    els.backgroundInput.value = defaults.background;
-    state.hexStepXRatio = defaults.hexStepXRatio;
-    state.hexStepYRatio = defaults.hexStepYRatio;
-    state.hexUnitScaleX = defaults.hexUnitScaleX;
-    state.hexUnitScaleY = defaults.hexUnitScaleY;
-    updateHexTuningUi();
     applyGrid();
   });
   els.restartButton?.addEventListener("click", () => {
@@ -3529,6 +3601,8 @@ function wireControls() {
   });
   els.settingsButton.addEventListener("click", () => {
     setUpdateStatus("", false);
+    setTipsStatus("");
+    updateTipsControls();
     els.settingsDialog.showModal();
   });
   els.helpButton.addEventListener("click", () => {
@@ -3538,10 +3612,16 @@ function wireControls() {
   els.languageSelect.addEventListener("change", () => {
     applyLanguagePreference(els.languageSelect.value);
   });
-  els.checkForUpdatesButton.addEventListener("click", checkForUpdates);
-  els.reloadAppButton.addEventListener("click", async () => {
-    await state.serviceWorkerRegistration?.update().catch(() => {});
-    window.location.reload();
+  els.checkForUpdatesButton.addEventListener("click", () => {
+    void checkForUpdates({
+      showChecking: true,
+      silentNoChange: false,
+      silentError: false,
+      promptOnAvailable: true,
+    });
+  });
+  els.reloadAppButton.addEventListener("click", () => {
+    void performAppReload();
   });
   els.settingsForm.addEventListener("submit", (event) => {
     event.preventDefault();
@@ -3550,6 +3630,25 @@ function wireControls() {
   els.helpForm.addEventListener("submit", (event) => {
     event.preventDefault();
     els.helpDialog.close();
+  });
+  els.tipForm?.addEventListener("submit", (event) => {
+    event.preventDefault();
+    if (els.tipDisableInput?.checked) {
+      saveTipPreference(false);
+      setTipsStatus(t("tipsDisabledInfo"));
+    }
+    els.tipDialog.close();
+  });
+  els.nextTipButton?.addEventListener("click", () => {
+    const tips = getTipsForLanguage();
+    if (!tips.length) return;
+    const current = Number(els.tipDialog?.dataset.tipIndex || "0");
+    renderTipOfDay(current + 1);
+  });
+  els.tipsResetButton?.addEventListener("click", () => {
+    saveTipPreference(true);
+    setTipsStatus(t("tipsReenabled"));
+    showTipOfDayDialog({ force: true });
   });
   window.addEventListener("resize", () => {
     updateUploadUiForDevice();
@@ -3618,6 +3717,7 @@ function loadInitialLayoutSettings() {
 
 function init() {
   loadInitialPreferences();
+  loadTipPreference();
   loadInitialLayoutSettings();
   loadWatermarkSettings();
   loadExifSettings();
@@ -3630,7 +3730,7 @@ function init() {
   wireControls();
   void loadVersionInfo().then(() => {
     renderVersionLabel();
-    void checkForUpdates({ showChecking: false, silentNoChange: true, silentError: true });
+    void checkForUpdates({ showChecking: false, silentNoChange: true, silentError: true, promptOnAvailable: true });
   });
   registerServiceWorker();
   updateExportActionButtons();
@@ -3659,6 +3759,9 @@ function init() {
     els.outerGapValue.textContent = String(state.outerGap);
   }
   renderVersionLabel();
+  setTimeout(() => {
+    showTipOfDayDialog();
+  }, 120);
 }
 
 init();

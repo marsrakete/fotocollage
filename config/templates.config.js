@@ -474,6 +474,116 @@ const PRESETS = [
     { x: 2, y: 1, w: 1, h: 1, shape: "diamond" },
   ],
 },
+{
+  id: "focus-circle",
+  label: "Focus Circle",
+  rows: 3,
+  cols: 3,
+  slots: [
+    { x: 1, y: 1, w: 1, h: 1, shape: "circle" },
+    { x: 1, y: 0, w: 1, h: 1 },
+    { x: 0, y: 1, w: 1, h: 1 },
+    { x: 2, y: 1, w: 1, h: 1 },
+    { x: 1, y: 2, w: 1, h: 1 },
+  ],
+},
+{
+  id: "diamond-cross-9",
+  label: "Diamond Cross 9",
+  rows: 3,
+  cols: 3,
+  slots: [
+    { x: 1, y: 1, w: 1, h: 1, shape: "diamond" },
+    { x: 1, y: 0, w: 1, h: 1, shape: "diamond" },
+    { x: 0, y: 1, w: 1, h: 1, shape: "diamond" },
+    { x: 2, y: 1, w: 1, h: 1, shape: "diamond" },
+    { x: 1, y: 2, w: 1, h: 1, shape: "diamond" },
+    { x: 0, y: 0, w: 1, h: 1 },
+    { x: 2, y: 0, w: 1, h: 1 },
+    { x: 0, y: 2, w: 1, h: 1 },
+    { x: 2, y: 2, w: 1, h: 1 },
+  ],
+},
+{
+  id: "hex-flower-7",
+  label: "Hex Flower 7",
+  rows: 3,
+  cols: 3,
+  slots: [
+    { x: 1, y: 1, w: 1, h: 1, shape: "hexagon" },
+    { x: 1, y: 0, w: 1, h: 1, shape: "hexagon" },
+    { x: 0, y: 1, w: 1, h: 1, shape: "hexagon" },
+    { x: 2, y: 1, w: 1, h: 1, shape: "hexagon" },
+    { x: 1, y: 2, w: 1, h: 1, shape: "hexagon" },
+    { x: 0, y: 2, w: 1, h: 1, shape: "hexagon" },
+    { x: 2, y: 2, w: 1, h: 1, shape: "hexagon" },
+  ],
+},
+{
+  id: "story-badge",
+  label: "Story Badge",
+  rows: 4,
+  cols: 3,
+  slots: [
+    { x: 0, y: 0, w: 3, h: 3 },
+    { x: 0, y: 3, w: 1, h: 1, shape: "circle" },
+    { x: 2, y: 3, w: 1, h: 1, shape: "circle" },
+  ],
+},
+{
+  id: "rounded-magazine",
+  label: "Rounded Magazine",
+  rows: 3,
+  cols: 3,
+  slots: [
+    { x: 0, y: 0, w: 3, h: 2, shape: "rounded-rect" },
+    { x: 0, y: 2, w: 1, h: 1, shape: "rounded-rect" },
+    { x: 1, y: 2, w: 1, h: 1, shape: "rounded-rect" },
+    { x: 2, y: 2, w: 1, h: 1, shape: "rounded-rect" },
+  ],
+},
+{
+  id: "mosaic-mix-6",
+  label: "Mosaic Mix 6",
+  rows: 2,
+  cols: 4,
+  slots: [
+    { x: 0, y: 0, w: 1, h: 2 },
+    { x: 1, y: 0, w: 1, h: 2 },
+    { x: 2, y: 0, w: 1, h: 1, shape: "circle" },
+    { x: 3, y: 0, w: 1, h: 1, shape: "diamond" },
+    { x: 2, y: 1, w: 1, h: 1, shape: "diamond" },
+    { x: 3, y: 1, w: 1, h: 1, shape: "circle" },
+  ],
+},
+{
+  id: "honeycomb-7-classic",
+  label: "Honeycomb 7",
+  rows: 3,
+  cols: 4,
+  slots: [
+    { x: 1, y: 0, w: 1, h: 1, shape: "hexagon" },
+    { x: 2, y: 0, w: 1, h: 1, shape: "hexagon" },
+    { x: 0, y: 1, w: 1, h: 1, shape: "hexagon" },
+    { x: 1, y: 1, w: 1, h: 1, shape: "hexagon" },
+    { x: 2, y: 1, w: 1, h: 1, shape: "hexagon" },
+    { x: 1, y: 2, w: 1, h: 1, shape: "hexagon" },
+    { x: 2, y: 2, w: 1, h: 1, shape: "hexagon" },
+  ],
+},
+{
+  id: "poster-frame",
+  label: "Poster Frame",
+  rows: 4,
+  cols: 4,
+  slots: [
+    { x: 1, y: 1, w: 2, h: 2 },
+    { x: 0, y: 0, w: 1, h: 1, shape: "circle" },
+    { x: 3, y: 0, w: 1, h: 1, shape: "circle" },
+    { x: 0, y: 3, w: 1, h: 1, shape: "circle" },
+    { x: 3, y: 3, w: 1, h: 1, shape: "circle" },
+  ],
+},
 ];
 
 const PRESET_LABELS = Object.freeze({
@@ -552,10 +662,10 @@ const PRESET_LABELS = Object.freeze({
     en: "Hex 3",
     fr: "Hexa 3",
   },
-  "hex-5": {
-    de: "Hex 5",
-    en: "Hex 5",
-    fr: "Hexa 5",
+  "hex-6": {
+    de: "Hex 6",
+    en: "Hex 6",
+    fr: "Hexa 6",
   },
   "hex-7-honeycomb": {
     de: "Hex 7 Wabe",
@@ -705,6 +815,46 @@ const PRESET_LABELS = Object.freeze({
   de: "Raute 6",
   en: "diamond 6",
   fr: "losange 6",
+},
+"focus-circle": {
+  de: "Fokus-Kreis",
+  en: "Focus circle",
+  fr: "Cercle focus",
+},
+"diamond-cross-9": {
+  de: "Rauten-Kreuz 9",
+  en: "Diamond cross 9",
+  fr: "Croix losange 9",
+},
+"hex-flower-7": {
+  de: "Hex-Blume 7",
+  en: "Hex flower 7",
+  fr: "Fleur hex 7",
+},
+"story-badge": {
+  de: "Story-Badge",
+  en: "Story badge",
+  fr: "Badge story",
+},
+"rounded-magazine": {
+  de: "Rounded Magazine",
+  en: "Rounded magazine",
+  fr: "Magazine arrondi",
+},
+"mosaic-mix-6": {
+  de: "Mosaik-Mix 6",
+  en: "Mosaic mix 6",
+  fr: "Mosaique mix 6",
+},
+"honeycomb-7-classic": {
+  de: "Wabe 7",
+  en: "Honeycomb 7",
+  fr: "Ruche 7",
+},
+"poster-frame": {
+  de: "Poster-Rahmen",
+  en: "Poster frame",
+  fr: "Cadre poster",
 },
 });
 

@@ -1,5 +1,5 @@
 const CACHE_PREFIX = "fotocollage-cache";
-const CACHE_VERSION = "v97";
+const CACHE_VERSION = "v104";
 const CACHE_NAME = `${CACHE_PREFIX}-${CACHE_VERSION}`;
 const ASSETS = [
   "./",
@@ -9,6 +9,7 @@ const ASSETS = [
   "./config/templates.config.js",
   "./config/export.config.js",
   "./config/i18n.config.js",
+  "./config/tips.config.js",
   "./manifest.json",
   "./version.json",
   "./README.md",

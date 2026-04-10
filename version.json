@@ -1,5 +1,5 @@
 {
-  "appVersion": "1.3.10",
-  "cacheVersion": "v97",
-  "label": "Neustart behaelt Abstand, Randabstand und Hintergrund bei"
+  "appVersion": "1.3.17",
+  "cacheVersion": "v104",
+  "label": "Update-Check bei Start mit Bestaetigungs-Popup vereinheitlicht"
 }
