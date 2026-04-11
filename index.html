@@ -73,6 +73,10 @@
 
       <main class="workspace">
         <section class="wizard">
+          <div class="assistant-launch">
+            <button class="primary" id="assistantStartButton" type="button">Assistent starten</button>
+            <p id="assistantLaunchHint">Lade mehrere Fotos und erhalte passende Vorlagenvorschläge.</p>
+          </div>
           <div class="progress">
             <button class="step-chip active" data-step-target="1" id="stepChip1">1. Vorlage</button>
             <button class="step-chip" data-step-target="2" id="stepChip2">2. Fotos</button>
@@ -134,8 +138,8 @@
             <div class="upload-zone" id="dropZone">
               <input id="fileInput" type="file" accept="image/*" multiple />
               <div>
-                <strong id="uploadTitle">Fotos ziehen oder auswählen</strong>
-                <p id="uploadDesc">Alle Bilder werden der Reihe nach in die freien Felder gesetzt. Reihenfolge per Drag und Drop möglich.</p>
+                <strong id="uploadTitle">Fotos auswählen</strong>
+                <p id="uploadDesc">Alle Bilder werden der Reihe nach in die freien Felder gesetzt.</p>
               </div>
             </div>
 
@@ -199,6 +203,9 @@
                 <div class="editor-controls">
                   <button class="secondary" id="prevCell">Vorheriges Feld</button>
                   <button class="secondary" id="nextCell">Nächstes Feld</button>
+                  <button class="secondary" id="flipHorizontalButton">Horizontal spiegeln</button>
+                  <button class="secondary" id="flipVerticalButton">Vertikal spiegeln</button>
+                  <button class="secondary" id="rotateLeftButton">90° nach links drehen</button>
                   <button class="secondary" id="toggleReorderMode" type="button">Sortieren</button>
                   <button class="secondary" id="replaceCell">Bild ersetzen</button>
                   <button class="secondary" id="deleteCell">Bild löschen</button>
@@ -323,11 +330,11 @@
     </div>
 
     <template id="slotTemplate">
-      <button class="slot" type="button">
+      <div class="slot" role="button" tabindex="0">
         <span class="slot-index"></span>
         <img alt="" />
         <span class="slot-label">Leer</span>
-      </button>
+      </div>
     </template>
 
     <template id="previewCellTemplate">
@@ -469,6 +476,27 @@
         <div class="settings-stack">
           <button id="nextTipButton" class="secondary" type="button">Noch ein Tipp</button>
           <button class="primary" type="submit">Schließen</button>
+        </div>
+      </form>
+    </dialog>
+
+    <dialog id="assistantDialog" class="settings-dialog assistant-dialog">
+      <form id="assistantForm" method="dialog" class="settings-panel assistant-panel">
+        <div class="dialog-head">
+          <h2 id="assistantTitle">Batch-Assistent</h2>
+          <button class="secondary icon-only" value="cancel" aria-label="Schließen" type="submit">✕</button>
+        </div>
+        <p id="assistantIntro" class="dialog-copy">
+          Fotos laden, Vorlagenvorschläge ansehen und direkt mit dem Feinschliff starten.
+        </p>
+        <label class="field">
+          <span id="assistantFilesLabel">Fotos laden</span>
+          <input id="assistantFileInput" type="file" accept="image/*" multiple />
+        </label>
+        <p id="assistantStatus" class="settings-status"></p>
+        <div id="assistantSuggestions" class="assistant-suggestions"></div>
+        <div class="settings-footer">
+          <button class="secondary" value="cancel" type="submit">Schließen</button>
         </div>
       </form>
     </dialog>

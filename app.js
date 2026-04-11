@@ -33,9 +33,9 @@ const I18N = i18nConfig.I18N;
 const DAILY_TIPS = tipsConfig.DAILY_TIPS;
 
 const DEFAULT_VERSION_INFO = Object.freeze({
-  appVersion: "1.3.17",
-  cacheVersion: "v104",
-  label: "Update-Check bei Start mit Bestaetigungs-Popup vereinheitlicht",
+  appVersion: "1.3.25",
+  cacheVersion: "v112",
+  label: "Transform-Buttons von Schritt 2 nach Schritt 3 verschoben",
 });
 
 const ZOOM_MIN = 0.35;
@@ -106,6 +106,9 @@ const state = {
   versionInfo: { ...DEFAULT_VERSION_INFO },
   serviceWorkerRegistration: null,
   updateInProgress: false,
+  assistantFiles: [],
+  assistantSuggestions: [],
+  assistantRequestToken: 0,
 };
 
 const els = {
@@ -116,6 +119,8 @@ const els = {
   settingsButtonLabel: document.getElementById("settingsButtonLabel"),
   helpButton: document.getElementById("helpButton"),
   helpButtonLabel: document.getElementById("helpButtonLabel"),
+  assistantStartButton: document.getElementById("assistantStartButton"),
+  assistantLaunchHint: document.getElementById("assistantLaunchHint"),
   versionLabel: document.getElementById("versionLabel"),
   gridSummary: document.getElementById("gridSummary"),
   filledSummary: document.getElementById("filledSummary"),
@@ -163,6 +168,9 @@ const els = {
   toggleReorderMode: document.getElementById("toggleReorderMode"),
   prevCell: document.getElementById("prevCell"),
   nextCell: document.getElementById("nextCell"),
+  flipHorizontalButton: document.getElementById("flipHorizontalButton"),
+  flipVerticalButton: document.getElementById("flipVerticalButton"),
+  rotateLeftButton: document.getElementById("rotateLeftButton"),
   replaceCell: document.getElementById("replaceCell"),
   deleteCell: document.getElementById("deleteCell"),
   replaceInput: document.getElementById("replaceInput"),
@@ -250,6 +258,14 @@ const els = {
   tipsTitle: document.getElementById("tipsTitle"),
   tipsResetButton: document.getElementById("tipsResetButton"),
   tipsStatus: document.getElementById("tipsStatus"),
+  assistantDialog: document.getElementById("assistantDialog"),
+  assistantForm: document.getElementById("assistantForm"),
+  assistantTitle: document.getElementById("assistantTitle"),
+  assistantIntro: document.getElementById("assistantIntro"),
+  assistantFilesLabel: document.getElementById("assistantFilesLabel"),
+  assistantFileInput: document.getElementById("assistantFileInput"),
+  assistantStatus: document.getElementById("assistantStatus"),
+  assistantSuggestions: document.getElementById("assistantSuggestions"),
   settingsTitle: document.getElementById("settingsTitle"),
   settingsIntro: document.getElementById("settingsIntro"),
   updatesTitle: document.getElementById("updatesTitle"),
@@ -602,6 +618,9 @@ function createEmptyCell() {
     focusX: 0,
     focusY: 0,
     zoom: 1,
+    flipX: false,
+    flipY: false,
+    rotation: 0,
     text: "",
     textX: 0.5,
     textY: DEFAULT_TEXT_Y,
@@ -639,6 +658,8 @@ function translateStaticUi() {
   setText(els.heroLede, "heroLede");
   setText(els.settingsButtonLabel, "settingsButtonLabel");
   setText(els.helpButtonLabel, "helpButtonLabel");
+  setText(els.assistantStartButton, "assistantStartButton");
+  setText(els.assistantLaunchHint, "assistantLaunchHint");
   els.settingsButton.setAttribute("aria-label", t("settingsAria"));
   els.helpButton.setAttribute("aria-label", t("helpAria"));
   setText(els.step1Title, "step1Title");
@@ -679,6 +700,9 @@ function translateStaticUi() {
   setText(els.tipDialogTitle, "tipDialogTitle");
   setText(els.tipDisableLabel, "tipDisableLabel");
   setText(els.nextTipButton, "nextTipButton");
+  setText(els.assistantTitle, "assistantTitle");
+  setText(els.assistantIntro, "assistantIntro");
+  setText(els.assistantFilesLabel, "assistantFilesLabel");
   setText(els.tipsTitle, "tipsTitle");
   setText(els.tipsResetButton, "tipsResetButton");
   updateTipsControls();
@@ -695,6 +719,9 @@ function translateStaticUi() {
   setText(els.downloadButton, "savePng");
   setText(els.prevCell, "prevCell");
   setText(els.nextCell, "nextCell");
+  setText(els.flipHorizontalButton, "flipHorizontal");
+  setText(els.flipVerticalButton, "flipVertical");
+  setText(els.rotateLeftButton, "rotateLeft90");
   setText(els.replaceCell, "replaceCell");
   setText(els.deleteCell, "deleteCell");
   updateReorderModeUi();
@@ -776,6 +803,7 @@ function translateStaticUi() {
   if (els.helpDialog.open && !state.readmeText) {
     els.readmeStatus.textContent = t("helpLoading");
   }
+  renderAssistantSuggestions();
   renderExportPresets();
 }
 
@@ -1131,6 +1159,384 @@ function getLayoutAspectRatio(layout = getActiveLayoutDefinition()) {
     return probeBounds.height / Math.max(1, probeBounds.width);
   }
   return layout.rows / layout.cols;
+}
+
+function renderPresetMiniGrid(mini, preset, options = {}) {
+  if (!mini || !preset) return;
+  const cellSize = Number(options.cellSize) || 14;
+  const miniGap = Number(options.gap) || 4;
+  const hasHexagon = preset.slots.some((slot) => slot?.shape === "hexagon");
+  const hexYOffset = hasHexagon ? (cellSize + miniGap) * 0.5 : 0;
+  const miniWidth = preset.cols * cellSize + Math.max(0, preset.cols - 1) * miniGap;
+  const miniHeight = preset.rows * cellSize + Math.max(0, preset.rows - 1) * miniGap + hexYOffset;
+  mini.style.gridTemplateColumns = `repeat(${preset.cols}, 1fr)`;
+  mini.style.gridTemplateRows = `repeat(${preset.rows}, 1fr)`;
+  mini.style.width = `${miniWidth}px`;
+  mini.style.height = `${miniHeight}px`;
+  mini.innerHTML = "";
+  preset.slots.forEach((slot) => {
+    const span = document.createElement("span");
+    span.style.gridColumn = `${slot.x + 1} / span ${slot.w}`;
+    span.style.gridRow = `${slot.y + 1} / span ${slot.h}`;
+    const shape = SLOT_SHAPES.includes(slot?.shape) ? slot.shape : "rect";
+    if (shape === "circle") {
+      span.style.borderRadius = "50%";
+    } else if (shape === "rounded-rect") {
+      span.style.borderRadius = "6px";
+    } else if (shape === "diamond") {
+      span.style.borderRadius = "0";
+      span.style.clipPath = "polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)";
+    } else if (shape === "hexagon") {
+      span.style.borderRadius = "0";
+      span.style.clipPath = "polygon(20% 0%, 80% 0%, 100% 50%, 80% 100%, 20% 100%, 0% 50%)";
+      span.style.transform = `translateY(${slot.x % 2 === 1 ? hexYOffset : 0}px)`;
+    } else {
+      span.style.borderRadius = "5px";
+    }
+    mini.appendChild(span);
+  });
+}
+
+function getPresetUnitBounds(preset) {
+  if (!preset?.slots?.length) {
+    return { width: Math.max(1, preset?.cols || 1), height: Math.max(1, preset?.rows || 1) };
+  }
+  let minX = Number.POSITIVE_INFINITY;
+  let minY = Number.POSITIVE_INFINITY;
+  let maxX = Number.NEGATIVE_INFINITY;
+  let maxY = Number.NEGATIVE_INFINITY;
+  for (const slot of preset.slots) {
+    if (!slot) continue;
+    minX = Math.min(minX, slot.x);
+    minY = Math.min(minY, slot.y);
+    maxX = Math.max(maxX, slot.x + slot.w);
+    maxY = Math.max(maxY, slot.y + slot.h);
+  }
+  return {
+    width: Math.max(1, maxX - minX),
+    height: Math.max(1, maxY - minY),
+  };
+}
+
+function getPresetAspectRatioForSuggestion(preset) {
+  const bounds = getPresetUnitBounds(preset);
+  return bounds.width / Math.max(1, bounds.height);
+}
+
+function getOrientationBucket(ratio) {
+  const safeRatio = Number.isFinite(ratio) && ratio > 0 ? ratio : 1;
+  if (safeRatio >= 1.15) return "landscape";
+  if (safeRatio <= 0.87) return "portrait";
+  return "square";
+}
+
+function buildOrientationProfile(ratios) {
+  const profile = { portrait: 0, landscape: 0, square: 0 };
+  for (const ratio of ratios) {
+    const bucket = getOrientationBucket(ratio);
+    profile[bucket] += 1;
+  }
+  return profile;
+}
+
+function getPresetSlotOrientationProfile(preset) {
+  if (!preset?.slots?.length) {
+    return { portrait: 0, landscape: 0, square: 1 };
+  }
+  const ratios = preset.slots.map((slot) => {
+    const w = Number(slot?.w) || 1;
+    const h = Number(slot?.h) || 1;
+    return w / Math.max(1, h);
+  });
+  return buildOrientationProfile(ratios);
+}
+
+function getSlotAspectRatio(slot) {
+  const w = Number(slot?.w) || 1;
+  const h = Number(slot?.h) || 1;
+  return w / Math.max(1, h);
+}
+
+async function assignAssistantFilesToSlots(files, preset) {
+  const slotCount = Math.max(0, Number(preset?.slots?.length) || 0);
+  const useCount = Math.min(slotCount, files.length);
+  if (!useCount) return [];
+
+  const scopedFiles = files.slice(0, useCount);
+  const ratios = await Promise.all(scopedFiles.map((file) => getFileAspectRatio(file)));
+  const filePool = scopedFiles.map((file, index) => ({
+    file,
+    ratio: ratios[index],
+    bucket: getOrientationBucket(ratios[index]),
+  }));
+
+  const slots = preset.slots.slice(0, useCount).map((slot, index) => {
+    const ratio = getSlotAspectRatio(slot);
+    return {
+      index,
+      ratio,
+      bucket: getOrientationBucket(ratio),
+    };
+  });
+
+  const assignments = new Array(useCount).fill(null);
+  const remainingFiles = [...filePool];
+
+  // Phase 1: orientation match first, then closest ratio.
+  for (const slot of slots) {
+    const sameBucketCandidates = remainingFiles.filter((item) => item.bucket === slot.bucket);
+    if (!sameBucketCandidates.length) continue;
+    sameBucketCandidates.sort((a, b) => Math.abs(a.ratio - slot.ratio) - Math.abs(b.ratio - slot.ratio));
+    const winner = sameBucketCandidates[0];
+    assignments[slot.index] = winner.file;
+    const winnerIndex = remainingFiles.indexOf(winner);
+    if (winnerIndex >= 0) remainingFiles.splice(winnerIndex, 1);
+  }
+
+  // Phase 2: fill gaps with nearest ratio from remaining files.
+  for (const slot of slots) {
+    if (assignments[slot.index]) continue;
+    if (!remainingFiles.length) break;
+    remainingFiles.sort((a, b) => Math.abs(a.ratio - slot.ratio) - Math.abs(b.ratio - slot.ratio));
+    const winner = remainingFiles.shift();
+    assignments[slot.index] = winner?.file || null;
+  }
+
+  return assignments;
+}
+
+function calculateOrientationMismatchPenalty(imageProfile, presetProfile, limit) {
+  const total = Math.max(1, Number(limit) || 1);
+  const imagePortrait = imageProfile.portrait / total;
+  const imageLandscape = imageProfile.landscape / total;
+  const imageSquare = imageProfile.square / total;
+  const slotPortrait = presetProfile.portrait / total;
+  const slotLandscape = presetProfile.landscape / total;
+  const slotSquare = presetProfile.square / total;
+  const diff =
+    Math.abs(imagePortrait - slotPortrait) +
+    Math.abs(imageLandscape - slotLandscape) +
+    Math.abs(imageSquare - slotSquare);
+  return diff * 1.6;
+}
+
+function getDominantOrientationBucket(profile) {
+  const entries = [
+    ["portrait", Number(profile?.portrait) || 0],
+    ["landscape", Number(profile?.landscape) || 0],
+    ["square", Number(profile?.square) || 0],
+  ].sort((a, b) => b[1] - a[1]);
+  const [topBucket, topValue] = entries[0];
+  const secondValue = entries[1]?.[1] || 0;
+  if (topValue <= 0) return null;
+  if (topValue === secondValue) return null;
+  return topBucket;
+}
+
+function getAssistantOrientationHintText(suggestion) {
+  const imageDominant = getDominantOrientationBucket(suggestion?.imageOrientationProfile);
+  const slotDominant = getDominantOrientationBucket(suggestion?.slotOrientationProfile);
+  if (!imageDominant || !slotDominant) {
+    return t("assistantOrientationHintMixed");
+  }
+  if (imageDominant !== slotDominant) {
+    return t("assistantOrientationHintMixed");
+  }
+  if (imageDominant === "portrait") return t("assistantOrientationHintPortrait");
+  if (imageDominant === "landscape") return t("assistantOrientationHintLandscape");
+  return t("assistantOrientationHintSquare");
+}
+
+function getAssistantReasonText(suggestion) {
+  const { fileCount, slotCount } = suggestion;
+  if (slotCount === fileCount) {
+    return format(t("assistantReasonExact"), { count: fileCount });
+  }
+  if (slotCount > fileCount) {
+    return format(t("assistantReasonExtra"), {
+      count: fileCount,
+      slots: slotCount,
+      extra: slotCount - fileCount,
+    });
+  }
+  return format(t("assistantReasonMissing"), {
+    count: fileCount,
+    slots: slotCount,
+    missing: fileCount - slotCount,
+  });
+}
+
+function renderAssistantSuggestions() {
+  if (!els.assistantSuggestions) return;
+  els.assistantSuggestions.innerHTML = "";
+  const suggestions = Array.isArray(state.assistantSuggestions) ? state.assistantSuggestions : [];
+  if (!suggestions.length) {
+    const empty = document.createElement("p");
+    empty.className = "settings-status";
+    empty.textContent = t("assistantNoSuggestions");
+    els.assistantSuggestions.appendChild(empty);
+    return;
+  }
+  const heading = document.createElement("strong");
+  heading.className = "assistant-suggestions-title";
+  heading.textContent = t("assistantSuggestionsTitle");
+  els.assistantSuggestions.appendChild(heading);
+  suggestions.forEach((suggestion) => {
+    const { preset } = suggestion;
+    if (!preset) return;
+    const card = document.createElement("article");
+    card.className = "assistant-suggestion-card";
+    const tooltip = `${getPresetLabel(preset)} (${preset.slots.length} ${t("cells")})`;
+    const thumb = document.createElement("span");
+    thumb.className = "grid-mini";
+    thumb.setAttribute("aria-hidden", "true");
+    renderPresetMiniGrid(thumb, preset, { cellSize: 12, gap: 3 });
+    const title = document.createElement("strong");
+    title.textContent = getPresetLabel(preset);
+    const reason = document.createElement("p");
+    reason.className = "settings-status";
+    reason.textContent = getAssistantReasonText(suggestion);
+    const orientationHint = document.createElement("p");
+    orientationHint.className = "assistant-orientation-hint";
+    orientationHint.textContent = getAssistantOrientationHintText(suggestion);
+    const applyButton = document.createElement("button");
+    applyButton.type = "button";
+    applyButton.className = "primary";
+    applyButton.textContent = t("assistantUseTemplate");
+    applyButton.title = tooltip;
+    applyButton.addEventListener("click", () => {
+      void applyAssistantSelection(preset.id);
+    });
+    card.appendChild(thumb);
+    card.appendChild(title);
+    card.appendChild(reason);
+    card.appendChild(orientationHint);
+    card.appendChild(applyButton);
+    els.assistantSuggestions.appendChild(card);
+  });
+}
+
+function setAssistantStatus(message, isError = false) {
+  if (!els.assistantStatus) return;
+  els.assistantStatus.textContent = message || "";
+  els.assistantStatus.classList.toggle("warning-text", Boolean(isError && message));
+}
+
+async function getFileAspectRatio(file) {
+  try {
+    const objectUrl = URL.createObjectURL(file);
+    const ratio = await new Promise((resolve) => {
+      const img = new Image();
+      img.onload = () => {
+        const width = Number(img.naturalWidth) || Number(img.width) || 1;
+        const height = Number(img.naturalHeight) || Number(img.height) || 1;
+        resolve(width / Math.max(1, height));
+      };
+      img.onerror = () => resolve(1);
+      img.src = objectUrl;
+    });
+    URL.revokeObjectURL(objectUrl);
+    return Number.isFinite(ratio) && ratio > 0 ? ratio : 1;
+  } catch {
+    return 1;
+  }
+}
+
+async function buildAssistantSuggestions(files) {
+  const fileCount = files.length;
+  if (!fileCount) return [];
+  const probeFiles = files.slice(0, 24);
+  const aspectRatios = await Promise.all(probeFiles.map((file) => getFileAspectRatio(file)));
+  const averageAspect = aspectRatios.reduce((sum, value) => sum + value, 0) / Math.max(1, aspectRatios.length);
+  const imageOrientationProfile = buildOrientationProfile(aspectRatios);
+  const sortedPresetOrder = getSortedPresets(PRESETS, state.language);
+  const rankById = new Map(sortedPresetOrder.map((preset, index) => [preset.id, index]));
+  return PRESETS
+    .map((preset) => {
+      const slotCount = preset.slots.length;
+      const shortage = Math.max(0, fileCount - slotCount);
+      const spare = Math.max(0, slotCount - fileCount);
+      const capacityPenalty = shortage * 5 + spare * 1.2;
+      const presetAspect = getPresetAspectRatioForSuggestion(preset);
+      const aspectPenalty = Math.abs(Math.log((presetAspect || 1) / (averageAspect || 1)));
+      const slotOrientationProfile = getPresetSlotOrientationProfile(preset);
+      const orientationPenalty = calculateOrientationMismatchPenalty(
+        imageOrientationProfile,
+        slotOrientationProfile,
+        Math.max(1, Math.min(fileCount, slotCount))
+      );
+      const hasSpecialShape = preset.slots.some((slot) => slot?.shape && slot.shape !== "rect");
+      const score = capacityPenalty + aspectPenalty + orientationPenalty + (hasSpecialShape ? 0.25 : 0);
+      return {
+        preset,
+        score,
+        fileCount,
+        slotCount,
+        imageOrientationProfile,
+        slotOrientationProfile,
+      };
+    })
+    .sort((a, b) => {
+      const scoreDiff = a.score - b.score;
+      if (Math.abs(scoreDiff) > 0.0001) return scoreDiff;
+      return (rankById.get(a.preset.id) || 0) - (rankById.get(b.preset.id) || 0);
+    })
+    .slice(0, 6);
+}
+
+async function analyzeAssistantFiles(fileList) {
+  const token = state.assistantRequestToken + 1;
+  state.assistantRequestToken = token;
+  const files = Array.from(fileList || []).filter((file) => file.type.startsWith("image/"));
+  state.assistantFiles = files;
+  state.assistantSuggestions = [];
+  if (!files.length) {
+    setAssistantStatus(t("assistantNoFiles"), true);
+    renderAssistantSuggestions();
+    return;
+  }
+  setAssistantStatus(format(t("assistantAnalyzing"), { count: files.length }), false);
+  const suggestions = await buildAssistantSuggestions(files);
+  if (token !== state.assistantRequestToken) return;
+  state.assistantSuggestions = suggestions;
+  setAssistantStatus(format(t("assistantLoaded"), { count: files.length }), false);
+  renderAssistantSuggestions();
+}
+
+async function applyAssistantSelection(presetId) {
+  const preset = PRESETS.find((entry) => entry.id === presetId);
+  if (!preset) return;
+  const files = state.assistantFiles.filter((file) => file?.type?.startsWith("image/"));
+  if (!files.length) {
+    setAssistantStatus(t("assistantNoFiles"), true);
+    return;
+  }
+  state.activePresetId = preset.id;
+  resetSlotShapeOverrides(preset);
+  applyGrid();
+  for (let i = 0; i < state.cells.length; i += 1) {
+    disposeCell(state.cells[i]);
+    state.cells[i] = createEmptyCell();
+  }
+  const useCount = Math.min(files.length, state.cells.length);
+  const assignments = await assignAssistantFilesToSlots(files, preset);
+  for (let i = 0; i < useCount; i += 1) {
+    const file = assignments[i] || files[i];
+    if (!file) continue;
+    await setCellImage(i, file);
+  }
+  state.selectedCell = 0;
+  setStep(3);
+  renderAll();
+  if (files.length > state.cells.length) {
+    setAssistantStatus(
+      format(t("assistantOnlyUsed"), { used: state.cells.length, count: files.length }),
+      false
+    );
+  }
+  if (els.assistantDialog?.open) {
+    els.assistantDialog.close();
+  }
 }
 
 function renderExportPresets() {
@@ -1582,38 +1988,7 @@ function renderPresets() {
       <span class="sr-only">${tooltip}</span>
     `;
     const mini = btn.querySelector(".grid-mini");
-    const miniCellSize = 14;
-    const miniGap = 4;
-    const hasHexagon = preset.slots.some((slot) => slot?.shape === "hexagon");
-    const hexYOffset = hasHexagon ? (miniCellSize + miniGap) * 0.5 : 0;
-    const miniWidth = preset.cols * miniCellSize + Math.max(0, preset.cols - 1) * miniGap;
-    const miniHeight = preset.rows * miniCellSize + Math.max(0, preset.rows - 1) * miniGap + hexYOffset;
-    mini.style.gridTemplateColumns = `repeat(${preset.cols}, 1fr)`;
-    mini.style.gridTemplateRows = `repeat(${preset.rows}, 1fr)`;
-    mini.style.width = `${miniWidth}px`;
-    mini.style.height = `${miniHeight}px`;
-    mini.innerHTML = "";
-    preset.slots.forEach((slot) => {
-      const span = document.createElement("span");
-      span.style.gridColumn = `${slot.x + 1} / span ${slot.w}`;
-      span.style.gridRow = `${slot.y + 1} / span ${slot.h}`;
-      const shape = SLOT_SHAPES.includes(slot?.shape) ? slot.shape : "rect";
-      if (shape === "circle") {
-        span.style.borderRadius = "50%";
-      } else if (shape === "rounded-rect") {
-        span.style.borderRadius = "6px";
-      } else if (shape === "diamond") {
-        span.style.borderRadius = "0";
-        span.style.clipPath = "polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)";
-      } else if (shape === "hexagon") {
-        span.style.borderRadius = "0";
-        span.style.clipPath = "polygon(20% 0%, 80% 0%, 100% 50%, 80% 100%, 20% 100%, 0% 50%)";
-        span.style.transform = `translateY(${slot.x % 2 === 1 ? hexYOffset : 0}px)`;
-      } else {
-        span.style.borderRadius = "5px";
-      }
-      mini.appendChild(span);
-    });
+    renderPresetMiniGrid(mini, preset, { cellSize: 14, gap: 4 });
     btn.addEventListener("click", () => {
       state.activePresetId = preset.id;
       resetSlotShapeOverrides(preset);
@@ -1669,18 +2044,17 @@ function renderSlots() {
     const img = node.querySelector("img");
     const label = node.querySelector(".slot-label");
     node.querySelector(".slot-index").textContent = `#${index + 1}`;
-    node.draggable = Boolean(cell.bitmap);
+    node.draggable = false;
     node.dataset.index = String(index);
     if (cell.bitmap) {
       node.classList.remove("empty");
       img.src = cell.objectUrl;
       img.alt = cell.fileName;
-      img.style.objectPosition = `${(cell.focusX + 1) * 50}% ${(cell.focusY + 1) * 50}%`;
-      img.style.transform = `scale(${cell.zoom || 1})`;
       label.textContent = cell.fileName;
     } else {
       node.classList.add("empty");
       img.removeAttribute("src");
+      resetImagePlacement(img);
       label.textContent = t("emptySlot");
     }
     node.addEventListener("click", () => {
@@ -1690,37 +2064,19 @@ function renderSlots() {
       }
       renderAll();
     });
-    node.addEventListener("dragstart", (event) => {
-      if (!cell.bitmap) {
-        event.preventDefault();
-        return;
+    node.addEventListener("keydown", (event) => {
+      if (event.key !== "Enter" && event.key !== " ") return;
+      event.preventDefault();
+      state.selectedCell = index;
+      if (hasCompleteGrid()) {
+        setStep(3);
       }
-      state.dragIndex = index;
-      event.dataTransfer.effectAllowed = "move";
-      event.dataTransfer.setData("text/plain", String(index));
-      node.classList.add("drag-source");
-    });
-    node.addEventListener("dragend", () => {
-      state.dragIndex = null;
-      node.classList.remove("drag-source");
-      node.classList.remove("drag-over");
-    });
-    node.addEventListener("dragover", (event) => {
-      if (state.dragIndex === null) return;
-      event.preventDefault();
-      node.classList.add("drag-over");
-    });
-    node.addEventListener("dragleave", () => {
-      node.classList.remove("drag-over");
-    });
-    node.addEventListener("drop", (event) => {
-      event.preventDefault();
-      node.classList.remove("drag-over");
-      const from = Number(event.dataTransfer.getData("text/plain") || state.dragIndex);
-      if (Number.isNaN(from)) return;
-      moveCell(from, index);
+      renderAll();
     });
     els.slotGrid.appendChild(node);
+    if (cell.bitmap) {
+      applyImagePlacement(img, node, cell);
+    }
   });
 }
 
@@ -1881,14 +2237,16 @@ function syncEditor() {
   if (!cell) return;
   const layout = getActiveLayoutDefinition();
   const circleAllowed = canUseCircleShape(layout, state.selectedCell);
-  els.editorFrame.style.background = state.background;
   const baseInfo = cell.bitmap
     ? `${state.selectedCell + 1}. ${t("field")}: ${cell.fileName}`
     : `${state.selectedCell + 1}. ${t("fieldEmpty")}`;
-  const reorderHint = state.reorderMode
-    ? (state.reorderSourceIndex === null ? t("reorderModeHintIdle") : t("reorderModeHintSource"))
-    : "";
-  els.activeCellInfo.textContent = reorderHint ? `${baseInfo} • ${reorderHint}` : baseInfo;
+  els.activeCellInfo.textContent = baseInfo;
+  if (els.dragHint) {
+    const hintText = state.reorderMode
+      ? (state.reorderSourceIndex === null ? t("reorderModeHintIdle") : t("reorderModeHintSource"))
+      : t("dragHint");
+    els.dragHint.textContent = hintText;
+  }
   if (cell.bitmap) {
     els.zoomInput.value = String(cell.zoom || 1);
     els.zoomValue.textContent = String(Math.round((cell.zoom || 1) * 100));
@@ -1898,6 +2256,15 @@ function syncEditor() {
   }
   if (els.deleteCell) {
     els.deleteCell.disabled = !cell.bitmap;
+  }
+  if (els.flipHorizontalButton) {
+    els.flipHorizontalButton.disabled = !cell.bitmap;
+  }
+  if (els.flipVerticalButton) {
+    els.flipVerticalButton.disabled = !cell.bitmap;
+  }
+  if (els.rotateLeftButton) {
+    els.rotateLeftButton.disabled = !cell.bitmap;
   }
   if (els.slotShapeField && els.slotShapeSelect) {
     els.slotShapeField.hidden = false;
@@ -1968,22 +2335,23 @@ function drawCollage(ctx, width, height, options = {}) {
     ctx.fillRect(x, y, cellWidth, cellHeight);
     ctx.restore();
     if (cell?.bitmap && i < visibleCount) {
-      const scale = Math.max(cellWidth / cell.width, cellHeight / cell.height);
-      const zoom = clamp(cell.zoom || 1, ZOOM_MIN, ZOOM_MAX);
-      const drawWidth = cell.width * scale * zoom;
-      const drawHeight = cell.height * scale * zoom;
-      const focusX = clamp(cell.focusX || 0, -1, 1);
-      const focusY = clamp(cell.focusY || 0, -1, 1);
-      const panRangeX = Math.abs(drawWidth - cellWidth);
-      const panRangeY = Math.abs(drawHeight - cellHeight);
-      const drawX = x + (cellWidth - drawWidth) / 2 - focusX * (panRangeX / 2);
-      const drawY = y + (cellHeight - drawHeight) / 2 - focusY * (panRangeY / 2);
-
+      const metrics = getImageRenderMetrics(cell, cellWidth, cellHeight);
       ctx.save();
       ctx.beginPath();
       applyCanvasSlotPath(ctx, slotShape, x, y, cellWidth, cellHeight);
       ctx.clip();
-      ctx.drawImage(cell.bitmap, drawX, drawY, drawWidth, drawHeight);
+      const centerX = x + metrics.drawX + metrics.baseWidth / 2;
+      const centerY = y + metrics.drawY + metrics.baseHeight / 2;
+      ctx.translate(centerX, centerY);
+      ctx.rotate((metrics.rotation * Math.PI) / 180);
+      ctx.scale(metrics.flipX ? -1 : 1, metrics.flipY ? -1 : 1);
+      ctx.drawImage(
+        cell.bitmap,
+        -metrics.baseWidth / 2,
+        -metrics.baseHeight / 2,
+        metrics.baseWidth,
+        metrics.baseHeight
+      );
       ctx.restore();
     } else {
       ctx.save();
@@ -2042,6 +2410,9 @@ async function setCellImage(index, file) {
   cell.focusX = 0;
   cell.focusY = 0;
   cell.zoom = 1;
+  cell.flipX = false;
+  cell.flipY = false;
+  cell.rotation = 0;
 }
 
 function clearCellImage(index) {
@@ -2061,6 +2432,9 @@ function clearCellImage(index) {
   cell.focusX = 0;
   cell.focusY = 0;
   cell.zoom = 1;
+  cell.flipX = false;
+  cell.flipY = false;
+  cell.rotation = 0;
 }
 
 async function loadFiles(fileList) {
@@ -2081,23 +2455,36 @@ async function loadFiles(fileList) {
 }
 
 function getImageRenderMetrics(cell, frameWidth, frameHeight) {
-  const scale = Math.max(frameWidth / cell.width, frameHeight / cell.height);
+  const rotation = normalizeRotation(cell.rotation || 0);
+  const isQuarterTurn = rotation % 180 !== 0;
+  const rotatedSourceWidth = isQuarterTurn ? cell.height : cell.width;
+  const rotatedSourceHeight = isQuarterTurn ? cell.width : cell.height;
+  const scale = Math.max(frameWidth / rotatedSourceWidth, frameHeight / rotatedSourceHeight);
   const zoom = clamp(cell.zoom || 1, ZOOM_MIN, ZOOM_MAX);
-  const coverWidth = cell.width * scale * zoom;
-  const coverHeight = cell.height * scale * zoom;
-  const panRangeX = Math.abs(coverWidth - frameWidth);
-  const panRangeY = Math.abs(coverHeight - frameHeight);
+  const baseWidth = cell.width * scale * zoom;
+  const baseHeight = cell.height * scale * zoom;
+  const rotatedCoverWidth = isQuarterTurn ? baseHeight : baseWidth;
+  const rotatedCoverHeight = isQuarterTurn ? baseWidth : baseHeight;
+  const panRangeX = Math.abs(rotatedCoverWidth - frameWidth);
+  const panRangeY = Math.abs(rotatedCoverHeight - frameHeight);
   const focusX = clamp(cell.focusX || 0, -1, 1);
   const focusY = clamp(cell.focusY || 0, -1, 1);
-  const drawX = (frameWidth - coverWidth) / 2 - focusX * (panRangeX / 2);
-  const drawY = (frameHeight - coverHeight) / 2 - focusY * (panRangeY / 2);
+  const rotatedDrawX = (frameWidth - rotatedCoverWidth) / 2 - focusX * (panRangeX / 2);
+  const rotatedDrawY = (frameHeight - rotatedCoverHeight) / 2 - focusY * (panRangeY / 2);
+  const drawX = rotatedDrawX + (rotatedCoverWidth - baseWidth) / 2;
+  const drawY = rotatedDrawY + (rotatedCoverHeight - baseHeight) / 2;
   return {
-    coverWidth,
-    coverHeight,
+    baseWidth,
+    baseHeight,
+    rotatedCoverWidth,
+    rotatedCoverHeight,
     panRangeX,
     panRangeY,
     drawX,
     drawY,
+    rotation,
+    flipX: Boolean(cell.flipX),
+    flipY: Boolean(cell.flipY),
   };
 }
 
@@ -2111,13 +2498,14 @@ function applyImagePlacement(img, frame, cell) {
   img.style.inset = "auto";
   img.style.right = "auto";
   img.style.bottom = "auto";
-  img.style.width = `${metrics.coverWidth}px`;
-  img.style.height = `${metrics.coverHeight}px`;
+  img.style.width = `${metrics.baseWidth}px`;
+  img.style.height = `${metrics.baseHeight}px`;
   img.style.left = `${metrics.drawX}px`;
   img.style.top = `${metrics.drawY}px`;
   img.style.objectFit = "fill";
   img.style.objectPosition = "50% 50%";
-  img.style.transform = "none";
+  img.style.transformOrigin = "center center";
+  img.style.transform = `rotate(${metrics.rotation}deg) scale(${metrics.flipX ? -1 : 1}, ${metrics.flipY ? -1 : 1})`;
 }
 
 function resetImagePlacement(img) {
@@ -2429,6 +2817,32 @@ function setCellZoom(index, nextZoom) {
   syncEditor();
   renderPreview();
   renderExportPreview();
+}
+
+function normalizeRotation(value) {
+  const num = Number(value) || 0;
+  return ((num % 360) + 360) % 360;
+}
+
+function toggleCellFlipX(index) {
+  const cell = state.cells[index];
+  if (!cell?.bitmap) return;
+  cell.flipX = !cell.flipX;
+  renderAll();
+}
+
+function toggleCellFlipY(index) {
+  const cell = state.cells[index];
+  if (!cell?.bitmap) return;
+  cell.flipY = !cell.flipY;
+  renderAll();
+}
+
+function rotateCellLeft(index) {
+  const cell = state.cells[index];
+  if (!cell?.bitmap) return;
+  cell.rotation = normalizeRotation((cell.rotation || 0) - 90);
+  renderAll();
 }
 
 function handlePreviewWheel(event, index) {
@@ -3337,24 +3751,20 @@ function registerServiceWorker() {
 
 function renderSlotsStatusControls() {
   els.dropZone.addEventListener("dragenter", (event) => {
-    if (getRemainingUploadSlots() <= 0) return;
     event.preventDefault();
-    els.dropZone.classList.add("dragging");
+    els.dropZone.classList.remove("dragging");
   });
   els.dropZone.addEventListener("dragover", (event) => {
-    if (getRemainingUploadSlots() <= 0) return;
     event.preventDefault();
-    els.dropZone.classList.add("dragging");
+    els.dropZone.classList.remove("dragging");
   });
   els.dropZone.addEventListener("dragleave", (event) => {
     event.preventDefault();
     els.dropZone.classList.remove("dragging");
   });
   els.dropZone.addEventListener("drop", (event) => {
-    if (getRemainingUploadSlots() <= 0) return;
     event.preventDefault();
     els.dropZone.classList.remove("dragging");
-    void loadFiles(event.dataTransfer.files);
   });
   els.fileInput.addEventListener("change", () => {
     void loadFiles(els.fileInput.files);
@@ -3433,6 +3843,15 @@ function wireControls() {
   els.nextCell.addEventListener("click", () => {
     state.selectedCell = (state.selectedCell + 1) % state.cells.length;
     renderAll();
+  });
+  els.flipHorizontalButton?.addEventListener("click", () => {
+    toggleCellFlipX(state.selectedCell);
+  });
+  els.flipVerticalButton?.addEventListener("click", () => {
+    toggleCellFlipY(state.selectedCell);
+  });
+  els.rotateLeftButton?.addEventListener("click", () => {
+    rotateCellLeft(state.selectedCell);
   });
   els.toggleReorderMode?.addEventListener("click", () => {
     state.reorderMode = !state.reorderMode;
@@ -3609,6 +4028,19 @@ function wireControls() {
     els.helpDialog.showModal();
     void loadReadmeContent();
   });
+  els.assistantStartButton?.addEventListener("click", () => {
+    setAssistantStatus(
+      state.assistantFiles.length
+        ? format(t("assistantLoaded"), { count: state.assistantFiles.length })
+        : t("assistantIdle"),
+      false
+    );
+    renderAssistantSuggestions();
+    els.assistantDialog?.showModal();
+  });
+  els.assistantFileInput?.addEventListener("change", () => {
+    void analyzeAssistantFiles(els.assistantFileInput.files);
+  });
   els.languageSelect.addEventListener("change", () => {
     applyLanguagePreference(els.languageSelect.value);
   });
@@ -3638,6 +4070,10 @@ function wireControls() {
       setTipsStatus(t("tipsDisabledInfo"));
     }
     els.tipDialog.close();
+  });
+  els.assistantForm?.addEventListener("submit", (event) => {
+    event.preventDefault();
+    els.assistantDialog?.close();
   });
   els.nextTipButton?.addEventListener("click", () => {
     const tips = getTipsForLanguage();
