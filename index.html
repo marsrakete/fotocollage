@@ -73,10 +73,6 @@
 
       <main class="workspace">
         <section class="wizard">
-          <div class="assistant-launch">
-            <button class="primary" id="assistantStartButton" type="button">Assistent starten</button>
-            <p id="assistantLaunchHint">Lade mehrere Fotos und erhalte passende Vorlagenvorschläge.</p>
-          </div>
           <div class="progress">
             <button class="step-chip active" data-step-target="1" id="stepChip1">1. Vorlage</button>
             <button class="step-chip" data-step-target="2" id="stepChip2">2. Fotos</button>
@@ -88,6 +84,17 @@
             <div class="panel-head">
               <h2 id="step1Title">Schritt 1: Collage-Vorlage</h2>
               <p id="step1Desc">Wähle ein Raster oder passe Zeilen und Spalten flexibel an.</p>
+            </div>
+
+            <div class="step1-action-cards">
+              <div class="assistant-launch">
+                <button class="primary" id="assistantStartButton" type="button">Assistent starten</button>
+                <p id="assistantLaunchHint">Lade mehrere Fotos und erhalte passende Vorlagenvorschläge.</p>
+              </div>
+              <div class="restart-launch" id="restartLaunchContainer" hidden>
+                <button class="secondary" id="restartButton" type="button">Neustart</button>
+                <p id="restartLaunchHint">Setzt Vorlage, Fotos und Texte zurück. Abstand, Randabstand und Hintergrund bleiben erhalten.</p>
+              </div>
             </div>
 
             <div class="preset-grid" id="presetGrid"></div>
@@ -119,8 +126,6 @@
                 <input id="backgroundInput" type="color" value="#101828" />
               </label>
             </div>
-            <button class="secondary" id="restartButton" type="button">Neustart</button>
-
             <div class="step-actions">
               <button class="primary" id="toStep2">Weiter zu den Fotos</button>
             </div>
@@ -497,6 +502,20 @@
         <div id="assistantSuggestions" class="assistant-suggestions"></div>
         <div class="settings-footer">
           <button class="secondary" value="cancel" type="submit">Schließen</button>
+        </div>
+      </form>
+    </dialog>
+
+    <dialog id="confirmDialog" class="settings-dialog">
+      <form id="confirmForm" method="dialog" class="settings-panel confirm-panel">
+        <div class="dialog-head">
+          <h2 id="confirmDialogTitle">Bitte bestätigen</h2>
+          <button id="confirmCloseButton" class="secondary icon-only" value="cancel" aria-label="Schließen" type="submit">✕</button>
+        </div>
+        <p id="confirmDialogMessage" class="dialog-copy"></p>
+        <div class="settings-footer">
+          <button id="confirmCancelButton" class="secondary" value="cancel" type="submit">Abbrechen</button>
+          <button id="confirmAcceptButton" class="primary" value="confirm" type="submit">Bestätigen</button>
         </div>
       </form>
     </dialog>

@@ -33,9 +33,9 @@ const I18N = i18nConfig.I18N;
 const DAILY_TIPS = tipsConfig.DAILY_TIPS;
 
 const DEFAULT_VERSION_INFO = Object.freeze({
-  appVersion: "1.3.25",
-  cacheVersion: "v112",
-  label: "Transform-Buttons von Schritt 2 nach Schritt 3 verschoben",
+  appVersion: "1.3.43",
+  cacheVersion: "v130",
+  label: "Assistent-Hinweise als eine mehrzeilige Karte untereinander",
 });
 
 const ZOOM_MIN = 0.35;
@@ -109,6 +109,7 @@ const state = {
   assistantFiles: [],
   assistantSuggestions: [],
   assistantRequestToken: 0,
+  hasLoadedPhotosEver: false,
 };
 
 const els = {
@@ -121,6 +122,8 @@ const els = {
   helpButtonLabel: document.getElementById("helpButtonLabel"),
   assistantStartButton: document.getElementById("assistantStartButton"),
   assistantLaunchHint: document.getElementById("assistantLaunchHint"),
+  restartLaunchContainer: document.getElementById("restartLaunchContainer"),
+  restartLaunchHint: document.getElementById("restartLaunchHint"),
   versionLabel: document.getElementById("versionLabel"),
   gridSummary: document.getElementById("gridSummary"),
   filledSummary: document.getElementById("filledSummary"),
@@ -266,6 +269,13 @@ const els = {
   assistantFileInput: document.getElementById("assistantFileInput"),
   assistantStatus: document.getElementById("assistantStatus"),
   assistantSuggestions: document.getElementById("assistantSuggestions"),
+  confirmDialog: document.getElementById("confirmDialog"),
+  confirmForm: document.getElementById("confirmForm"),
+  confirmDialogTitle: document.getElementById("confirmDialogTitle"),
+  confirmDialogMessage: document.getElementById("confirmDialogMessage"),
+  confirmCloseButton: document.getElementById("confirmCloseButton"),
+  confirmCancelButton: document.getElementById("confirmCancelButton"),
+  confirmAcceptButton: document.getElementById("confirmAcceptButton"),
   settingsTitle: document.getElementById("settingsTitle"),
   settingsIntro: document.getElementById("settingsIntro"),
   updatesTitle: document.getElementById("updatesTitle"),
@@ -356,6 +366,32 @@ function showTipOfDayDialog(options = {}) {
   els.tipDialog.showModal();
 }
 
+function showConfirmDialog(options = {}) {
+  const {
+    title = t("confirmDialogTitle"),
+    message = "",
+    confirmLabel = t("confirmContinue"),
+    cancelLabel = t("confirmCancel"),
+  } = options;
+  if (!els.confirmDialog || typeof els.confirmDialog.showModal !== "function") {
+    return Promise.resolve(false);
+  }
+  if (els.confirmDialog.open) {
+    els.confirmDialog.close("cancel");
+  }
+  if (els.confirmDialogTitle) els.confirmDialogTitle.textContent = title;
+  if (els.confirmDialogMessage) els.confirmDialogMessage.textContent = message;
+  if (els.confirmCancelButton) els.confirmCancelButton.textContent = cancelLabel;
+  if (els.confirmAcceptButton) els.confirmAcceptButton.textContent = confirmLabel;
+  return new Promise((resolve) => {
+    const handleClose = () => {
+      resolve(els.confirmDialog.returnValue === "confirm");
+    };
+    els.confirmDialog.addEventListener("close", handleClose, { once: true });
+    els.confirmDialog.showModal();
+  });
+}
+
 function setText(el, key) {
   if (el) el.textContent = t(key);
 }
@@ -428,6 +464,11 @@ function setTipsStatus(message) {
 function updateTipsControls() {
   if (!els.tipsResetButton) return;
   els.tipsResetButton.disabled = state.tipAutoShowEnabled;
+}
+
+function updateRestartLaunchVisibility() {
+  if (!els.restartLaunchContainer) return;
+  els.restartLaunchContainer.hidden = !state.hasLoadedPhotosEver;
 }
 
 function getSuggestedFreeExportWidth() {
@@ -660,6 +701,7 @@ function translateStaticUi() {
   setText(els.helpButtonLabel, "helpButtonLabel");
   setText(els.assistantStartButton, "assistantStartButton");
   setText(els.assistantLaunchHint, "assistantLaunchHint");
+  setText(els.restartLaunchHint, "restartLaunchHint");
   els.settingsButton.setAttribute("aria-label", t("settingsAria"));
   els.helpButton.setAttribute("aria-label", t("helpAria"));
   setText(els.step1Title, "step1Title");
@@ -703,6 +745,10 @@ function translateStaticUi() {
   setText(els.assistantTitle, "assistantTitle");
   setText(els.assistantIntro, "assistantIntro");
   setText(els.assistantFilesLabel, "assistantFilesLabel");
+  setText(els.confirmDialogTitle, "confirmDialogTitle");
+  setText(els.confirmCancelButton, "confirmCancel");
+  setText(els.confirmAcceptButton, "confirmContinue");
+  els.confirmCloseButton?.setAttribute("aria-label", t("close"));
   setText(els.tipsTitle, "tipsTitle");
   setText(els.tipsResetButton, "tipsResetButton");
   updateTipsControls();
@@ -803,6 +849,7 @@ function translateStaticUi() {
   if (els.helpDialog.open && !state.readmeText) {
     els.readmeStatus.textContent = t("helpLoading");
   }
+  updateRestartLaunchVisibility();
   renderAssistantSuggestions();
   renderExportPresets();
 }
@@ -1239,6 +1286,14 @@ function buildOrientationProfile(ratios) {
   return profile;
 }
 
+function countNonZeroOrientationBuckets(profile) {
+  return ["portrait", "landscape", "square"].filter((bucket) => (Number(profile?.[bucket]) || 0) > 0).length;
+}
+
+function hasMixedOrientation(profile) {
+  return countNonZeroOrientationBuckets(profile) > 1;
+}
+
 function getPresetSlotOrientationProfile(preset) {
   if (!preset?.slots?.length) {
     return { portrait: 0, landscape: 0, square: 1 };
@@ -1317,7 +1372,101 @@ function calculateOrientationMismatchPenalty(imageProfile, presetProfile, limit)
     Math.abs(imagePortrait - slotPortrait) +
     Math.abs(imageLandscape - slotLandscape) +
     Math.abs(imageSquare - slotSquare);
-  return diff * 1.6;
+  return diff * 3.2;
+}
+
+function calculateOrientationMismatchCount(imageProfile, presetProfile, limit) {
+  const total = Math.max(1, Number(limit) || 1);
+  const imageCounts = {
+    portrait: Math.min(total, Math.max(0, Number(imageProfile?.portrait) || 0)),
+    landscape: Math.min(total, Math.max(0, Number(imageProfile?.landscape) || 0)),
+    square: Math.min(total, Math.max(0, Number(imageProfile?.square) || 0)),
+  };
+  const slotCounts = {
+    portrait: Math.min(total, Math.max(0, Number(presetProfile?.portrait) || 0)),
+    landscape: Math.min(total, Math.max(0, Number(presetProfile?.landscape) || 0)),
+    square: Math.min(total, Math.max(0, Number(presetProfile?.square) || 0)),
+  };
+  const matches =
+    Math.min(imageCounts.portrait, slotCounts.portrait) +
+    Math.min(imageCounts.landscape, slotCounts.landscape) +
+    Math.min(imageCounts.square, slotCounts.square);
+  return Math.max(0, total - matches);
+}
+
+function evaluateAspectFit(imageRatios, slotRatios) {
+  const cleanImages = (Array.isArray(imageRatios) ? imageRatios : [])
+    .map((value) => Number(value))
+    .filter((value) => Number.isFinite(value) && value > 0)
+    .sort((a, b) => a - b);
+  const cleanSlots = (Array.isArray(slotRatios) ? slotRatios : [])
+    .map((value) => Number(value))
+    .filter((value) => Number.isFinite(value) && value > 0)
+    .sort((a, b) => a - b);
+  const pairCount = Math.min(cleanImages.length, cleanSlots.length);
+  if (!pairCount) {
+    return {
+      avgDiff: 0,
+      maxDiff: 0,
+      warnCount: 0,
+      severeCount: 0,
+      penalty: 0,
+    };
+  }
+  let diffSum = 0;
+  let maxDiff = 0;
+  let warnCount = 0;
+  let severeCount = 0;
+  for (let i = 0; i < pairCount; i += 1) {
+    const diff = Math.abs(Math.log(cleanImages[i] / cleanSlots[i]));
+    diffSum += diff;
+    maxDiff = Math.max(maxDiff, diff);
+    if (diff >= 0.55) warnCount += 1;
+    if (diff >= 0.9) severeCount += 1;
+  }
+  const avgDiff = diffSum / pairCount;
+  return {
+    avgDiff,
+    maxDiff,
+    warnCount,
+    severeCount,
+    penalty: avgDiff * 3.6 + severeCount * 0.9 + warnCount * 0.35,
+  };
+}
+
+function getAssistantAspectTone(suggestion) {
+  const severeCount = Math.max(0, Number(suggestion?.aspectSevereCount) || 0);
+  const warnCount = Math.max(0, Number(suggestion?.aspectWarnCount) || 0);
+  const avgDiff = Math.max(0, Number(suggestion?.aspectAvgDiff) || 0);
+  const maxDiff = Math.max(0, Number(suggestion?.aspectMaxDiff) || 0);
+  if (severeCount > 0 || maxDiff >= 0.95 || avgDiff >= 0.75) return "bad";
+  if (warnCount > 0 || avgDiff >= 0.4) return "warn";
+  return "good";
+}
+
+function getAssistantHintTone(suggestion) {
+  const fileCount = Math.max(0, Number(suggestion?.fileCount) || 0);
+  const slotCount = Math.max(0, Number(suggestion?.slotCount) || 0);
+  const useCount = Math.max(1, Math.min(fileCount, slotCount));
+  const mismatchCount = Math.max(0, Number(suggestion?.orientationMismatchCount) || 0);
+  const mismatchRatio = mismatchCount / useCount;
+  const aspectTone = getAssistantAspectTone(suggestion);
+  if (aspectTone === "bad") {
+    return "bad";
+  }
+  if (mismatchRatio >= 0.5) {
+    return "bad";
+  }
+  if (mismatchCount > 0) {
+    return "warn";
+  }
+  if (aspectTone === "warn") {
+    return "warn";
+  }
+  if (fileCount !== slotCount || suggestion?.hasMixedImages) {
+    return "warn";
+  }
+  return "good";
 }
 
 function getDominantOrientationBucket(profile) {
@@ -1334,6 +1483,17 @@ function getDominantOrientationBucket(profile) {
 }
 
 function getAssistantOrientationHintText(suggestion) {
+  const fileCount = Math.max(0, Number(suggestion?.fileCount) || 0);
+  const slotCount = Math.max(0, Number(suggestion?.slotCount) || 0);
+  const useCount = Math.max(1, Math.min(fileCount, slotCount));
+  const mismatchCount = Math.max(0, Number(suggestion?.orientationMismatchCount) || 0);
+  const mismatchRatio = mismatchCount / useCount;
+  if (mismatchRatio >= 0.5) {
+    return format(t("assistantOrientationHintMismatchBad"), { mismatch: mismatchCount, total: useCount });
+  }
+  if (mismatchCount > 0) {
+    return format(t("assistantOrientationHintMismatchWarn"), { mismatch: mismatchCount, total: useCount });
+  }
   const imageDominant = getDominantOrientationBucket(suggestion?.imageOrientationProfile);
   const slotDominant = getDominantOrientationBucket(suggestion?.slotOrientationProfile);
   if (!imageDominant || !slotDominant) {
@@ -1345,6 +1505,13 @@ function getAssistantOrientationHintText(suggestion) {
   if (imageDominant === "portrait") return t("assistantOrientationHintPortrait");
   if (imageDominant === "landscape") return t("assistantOrientationHintLandscape");
   return t("assistantOrientationHintSquare");
+}
+
+function getAssistantAspectHintText(suggestion) {
+  const tone = getAssistantAspectTone(suggestion);
+  if (tone === "bad") return t("assistantAspectHintBad");
+  if (tone === "warn") return t("assistantAspectHintWarn");
+  return t("assistantAspectHintGood");
 }
 
 function getAssistantReasonText(suggestion) {
@@ -1397,8 +1564,9 @@ function renderAssistantSuggestions() {
     reason.className = "settings-status";
     reason.textContent = getAssistantReasonText(suggestion);
     const orientationHint = document.createElement("p");
-    orientationHint.className = "assistant-orientation-hint";
-    orientationHint.textContent = getAssistantOrientationHintText(suggestion);
+    const hintTone = getAssistantHintTone(suggestion);
+    orientationHint.className = `assistant-orientation-hint assistant-orientation-hint--${hintTone} assistant-orientation-hint--multiline`;
+    orientationHint.textContent = `${getAssistantOrientationHintText(suggestion)}\n${getAssistantAspectHintText(suggestion)}`;
     const applyButton = document.createElement("button");
     applyButton.type = "button";
     applyButton.className = "primary";
@@ -1460,13 +1628,35 @@ async function buildAssistantSuggestions(files) {
       const presetAspect = getPresetAspectRatioForSuggestion(preset);
       const aspectPenalty = Math.abs(Math.log((presetAspect || 1) / (averageAspect || 1)));
       const slotOrientationProfile = getPresetSlotOrientationProfile(preset);
+      const useCount = Math.max(1, Math.min(fileCount, slotCount));
+      const aspectCount = Math.max(1, Math.min(useCount, aspectRatios.length));
+      const aspectFit = evaluateAspectFit(
+        aspectRatios.slice(0, aspectCount),
+        preset.slots.slice(0, aspectCount).map((slot) => getSlotAspectRatio(slot))
+      );
+      const orientationMismatchCount = calculateOrientationMismatchCount(
+        imageOrientationProfile,
+        slotOrientationProfile,
+        useCount
+      );
       const orientationPenalty = calculateOrientationMismatchPenalty(
         imageOrientationProfile,
         slotOrientationProfile,
-        Math.max(1, Math.min(fileCount, slotCount))
+        useCount
       );
+      const hardMismatchPenalty = orientationMismatchCount * 4.2;
+      const presetHasMixedOrientation = hasMixedOrientation(slotOrientationProfile);
+      const mixedToSinglePenalty =
+        hasMixedOrientation(imageOrientationProfile) && !presetHasMixedOrientation ? 1.8 : 0;
       const hasSpecialShape = preset.slots.some((slot) => slot?.shape && slot.shape !== "rect");
-      const score = capacityPenalty + aspectPenalty + orientationPenalty + (hasSpecialShape ? 0.25 : 0);
+      const score =
+        capacityPenalty +
+        aspectPenalty +
+        aspectFit.penalty +
+        orientationPenalty +
+        hardMismatchPenalty +
+        mixedToSinglePenalty +
+        (hasSpecialShape ? 0.25 : 0);
       return {
         preset,
         score,
@@ -1474,6 +1664,12 @@ async function buildAssistantSuggestions(files) {
         slotCount,
         imageOrientationProfile,
         slotOrientationProfile,
+        orientationMismatchCount,
+        aspectAvgDiff: aspectFit.avgDiff,
+        aspectMaxDiff: aspectFit.maxDiff,
+        aspectWarnCount: aspectFit.warnCount,
+        aspectSevereCount: aspectFit.severeCount,
+        hasMixedImages: hasMixedOrientation(imageOrientationProfile),
       };
     })
     .sort((a, b) => {
@@ -1853,8 +2049,13 @@ function resizeCells(count) {
   }
 }
 
-function restartWorkflow() {
-  if (!window.confirm(t("restartConfirm"))) {
+async function restartWorkflow() {
+  const confirmed = await showConfirmDialog({
+    title: t("restartConfirmTitle"),
+    message: t("restartConfirm"),
+    confirmLabel: t("restart"),
+  });
+  if (!confirmed) {
     return;
   }
   const keepGap = state.gap;
@@ -1892,11 +2093,22 @@ function restartWorkflow() {
   state.pinch = null;
   state.touchPoints.clear();
   state.hasOpenedExportStep = false;
+  state.assistantRequestToken += 1;
+  state.assistantFiles = [];
+  state.assistantSuggestions = [];
   if (els.fileInput) {
     els.fileInput.value = "";
   }
+  if (els.assistantFileInput) {
+    els.assistantFileInput.value = "";
+  }
   if (els.replaceInput) {
     els.replaceInput.value = "";
+  }
+  setAssistantStatus(t("assistantIdle"), false);
+  renderAssistantSuggestions();
+  if (els.assistantDialog?.open) {
+    els.assistantDialog.close();
   }
   resetSlotShapeOverrides(getActiveLayoutDefinition());
   applyGrid();
@@ -2009,6 +2221,9 @@ function updatePresetActive() {
 function renderStatus() {
   const total = state.cells.length;
   const filled = state.cells.filter((cell) => cell.bitmap).length;
+  if (filled > 0) {
+    state.hasLoadedPhotosEver = true;
+  }
   const complete = total > 0 && filled === total;
   const activePreset = PRESETS.find((preset) => preset.id === state.activePresetId);
   els.gridSummary.textContent = activePreset
@@ -2021,6 +2236,7 @@ function renderStatus() {
   els.toStep3.disabled = false;
   els.toStep4.disabled = false;
   updateUploadConstraints();
+  updateRestartLaunchVisibility();
 }
 
 function getRemainingUploadSlots() {
@@ -3720,9 +3936,11 @@ async function checkForUpdates(options = {}) {
       setUpdateStatus(`${updateMessage} ${t("updateAvailableAction")}`, true);
       return;
     }
-    const shouldUpdateNow = window.confirm(
-      `${updateMessage}\n\n${t("updatePromptQuestion")}`
-    );
+    const shouldUpdateNow = await showConfirmDialog({
+      title: t("updateConfirmTitle"),
+      message: `${updateMessage} ${t("updatePromptQuestion")}`,
+      confirmLabel: t("updateNow"),
+    });
     if (shouldUpdateNow) {
       setUpdateStatus(t("updateApplying"), false);
       await performAppReload();

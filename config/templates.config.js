@@ -584,6 +584,17 @@ const PRESETS = [
     { x: 3, y: 3, w: 1, h: 1, shape: "circle" },
   ],
 },
+{
+  id: "1-x-3-2-einheiten-breite",
+  label: "1 x 3 (2 Einheiten Breite)",
+  rows: 3,
+  cols: 2,
+  slots: [
+    { x: 0, y: 0, w: 2, h: 1 },
+    { x: 0, y: 1, w: 2, h: 1 },
+    { x: 0, y: 2, w: 2, h: 1 },
+  ],
+},
 ];
 
 const PRESET_LABELS = Object.freeze({
@@ -855,6 +866,11 @@ const PRESET_LABELS = Object.freeze({
   de: "Poster-Rahmen",
   en: "Poster frame",
   fr: "Cadre poster",
+},
+"1-x-3-2-einheiten-breite": {
+  de: "1 x 3 (2 Einheiten Breite)",
+  en: "1 x 3 (2 units width)",
+  fr: "1 x 3 (largeur 2 unites)",
 },
 });
 
