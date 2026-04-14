@@ -33,9 +33,9 @@ const I18N = i18nConfig.I18N;
 const DAILY_TIPS = tipsConfig.DAILY_TIPS;
 
 const DEFAULT_VERSION_INFO = Object.freeze({
-  appVersion: "1.3.43",
-  cacheVersion: "v130",
-  label: "Assistent-Hinweise als eine mehrzeilige Karte untereinander",
+  appVersion: "1.3.51",
+  cacheVersion: "v138",
+  label: "Wasserzeichen wird bei Auto-Fit innerhalb der Safe Area platziert",
 });
 
 const ZOOM_MIN = 0.35;
@@ -98,6 +98,7 @@ const state = {
     software: "Foto-Collage PWA",
   },
   exportFormat: "png",
+  autoFitToSafeArea: false,
   gifDelaySeconds: 1,
   languagePreference: "auto",
   language: "de",
@@ -109,6 +110,7 @@ const state = {
   assistantFiles: [],
   assistantSuggestions: [],
   assistantRequestToken: 0,
+  isSyncingSlotShapeSelect: false,
   hasLoadedPhotosEver: false,
 };
 
@@ -298,6 +300,15 @@ const els = {
   step4Desc: document.getElementById("step4Desc"),
   exportWidthLabel: document.getElementById("exportWidthLabel"),
   exportHelp: document.getElementById("exportHelp"),
+  safeAreaInfo: document.getElementById("safeAreaInfo"),
+  safeAreaInfoText: document.getElementById("safeAreaInfoText"),
+  safeAreaHelpButton: document.getElementById("safeAreaHelpButton"),
+  autoFitSafeAreaButton: document.getElementById("autoFitSafeAreaButton"),
+  safeAreaDialog: document.getElementById("safeAreaDialog"),
+  safeAreaForm: document.getElementById("safeAreaForm"),
+  safeAreaDialogTitle: document.getElementById("safeAreaDialogTitle"),
+  safeAreaDialogBody: document.getElementById("safeAreaDialogBody"),
+  safeAreaDialogClose: document.getElementById("safeAreaDialogClose"),
   exportWarning: document.getElementById("exportWarning"),
   stepChip1: document.getElementById("stepChip1"),
   stepChip2: document.getElementById("stepChip2"),
@@ -307,6 +318,71 @@ const els = {
 
 function clamp(value, min, max) {
   return Math.min(max, Math.max(min, value));
+}
+
+function parseHexColor(hex) {
+  const normalized = String(hex || "").trim();
+  const long = /^#([0-9a-f]{6})$/i.exec(normalized);
+  if (long) {
+    const value = long[1];
+    return {
+      r: Number.parseInt(value.slice(0, 2), 16),
+      g: Number.parseInt(value.slice(2, 4), 16),
+      b: Number.parseInt(value.slice(4, 6), 16),
+    };
+  }
+  const short = /^#([0-9a-f]{3})$/i.exec(normalized);
+  if (short) {
+    const value = short[1];
+    return {
+      r: Number.parseInt(`${value[0]}${value[0]}`, 16),
+      g: Number.parseInt(`${value[1]}${value[1]}`, 16),
+      b: Number.parseInt(`${value[2]}${value[2]}`, 16),
+    };
+  }
+  return null;
+}
+
+function toLinearChannel(value) {
+  const s = value / 255;
+  return s <= 0.03928 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4;
+}
+
+function getRelativeLuminance(rgb) {
+  const r = toLinearChannel(rgb.r);
+  const g = toLinearChannel(rgb.g);
+  const b = toLinearChannel(rgb.b);
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+}
+
+function getContrastRatio(first, second) {
+  const l1 = getRelativeLuminance(first);
+  const l2 = getRelativeLuminance(second);
+  const lighter = Math.max(l1, l2);
+  const darker = Math.min(l1, l2);
+  return (lighter + 0.05) / (darker + 0.05);
+}
+
+function getActiveOutlineColor(backgroundHex) {
+  const background = parseHexColor(backgroundHex);
+  if (!background) return "rgba(116, 192, 252, 0.9)";
+  const candidates = [
+    { hex: "#74c0fc", rgb: { r: 116, g: 192, b: 252 } },
+    { hex: "#ffd43b", rgb: { r: 255, g: 212, b: 59 } },
+    { hex: "#ff8787", rgb: { r: 255, g: 135, b: 135 } },
+    { hex: "#ffffff", rgb: { r: 255, g: 255, b: 255 } },
+    { hex: "#0b1220", rgb: { r: 11, g: 18, b: 32 } },
+  ];
+  let best = candidates[0];
+  let bestContrast = 0;
+  for (const candidate of candidates) {
+    const contrast = getContrastRatio(background, candidate.rgb);
+    if (contrast > bestContrast) {
+      bestContrast = contrast;
+      best = candidate;
+    }
+  }
+  return best.hex;
 }
 
 function format(template, values) {
@@ -394,6 +470,14 @@ function showConfirmDialog(options = {}) {
 
 function setText(el, key) {
   if (el) el.textContent = t(key);
+}
+
+function updateAutoFitSafeAreaButtonLabel() {
+  if (!els.autoFitSafeAreaButton) return;
+  els.autoFitSafeAreaButton.textContent = state.autoFitToSafeArea
+    ? t("autoFitSafeAreaDisable")
+    : t("autoFitSafeAreaEnable");
+  els.autoFitSafeAreaButton.classList.toggle("active", state.autoFitToSafeArea);
 }
 
 function safeStorageGet(key) {
@@ -737,6 +821,12 @@ function translateStaticUi() {
   setText(els.gifDelayLabel, "gifDelayLabel");
   setText(els.exportWidthLabel, "exportWidthLabel");
   setText(els.exportHelp, "exportHelp");
+  setText(els.safeAreaInfoText, "safeAreaHint");
+  updateAutoFitSafeAreaButtonLabel();
+  setText(els.safeAreaDialogTitle, "safeAreaDialogTitle");
+  setText(els.safeAreaDialogBody, "safeAreaDialogBody");
+  setText(els.safeAreaDialogClose, "close");
+  els.safeAreaHelpButton?.setAttribute("aria-label", t("safeAreaHelpAria"));
   setText(els.settingsTitle, "settingsTitle");
   setText(els.settingsIntro, "settingsIntro");
   setText(els.tipDialogTitle, "tipDialogTitle");
@@ -872,6 +962,10 @@ function updateReorderModeUi() {
   els.toggleReorderMode.textContent = enabled ? t("reorderModeDisable") : t("reorderModeEnable");
   els.toggleReorderMode.setAttribute("aria-pressed", String(enabled));
   els.toggleReorderMode.classList.toggle("active", enabled);
+}
+
+function isActiveFieldLockedByReorder() {
+  return Boolean(state.reorderMode);
 }
 
 async function loadReadmeContent() {
@@ -1434,6 +1528,37 @@ function evaluateAspectFit(imageRatios, slotRatios) {
   };
 }
 
+function getSquareAffinity(ratios) {
+  const values = (Array.isArray(ratios) ? ratios : [])
+    .map((value) => Number(value))
+    .filter((value) => Number.isFinite(value) && value > 0);
+  if (!values.length) return 0;
+  const score = values.reduce((sum, ratio) => {
+    const logDiff = Math.abs(Math.log(ratio));
+    return sum + Math.exp(-logDiff * 1.2);
+  }, 0) / values.length;
+  return clamp(score, 0, 1);
+}
+
+function getExtremeAspectShare(ratios) {
+  const values = (Array.isArray(ratios) ? ratios : [])
+    .map((value) => Number(value))
+    .filter((value) => Number.isFinite(value) && value > 0);
+  if (!values.length) return 0;
+  const extremeCount = values.filter((ratio) => Math.abs(Math.log(ratio)) >= 0.75).length;
+  return extremeCount / values.length;
+}
+
+function getPresetSquareSlotShare(preset, limit = Number.POSITIVE_INFINITY) {
+  const slots = Array.isArray(preset?.slots) ? preset.slots.slice(0, Math.max(0, Number(limit) || 0)) : [];
+  if (!slots.length) return 0;
+  const nearSquare = slots.filter((slot) => {
+    const ratio = getSlotAspectRatio(slot);
+    return Math.abs(Math.log(ratio || 1)) <= 0.36;
+  }).length;
+  return nearSquare / slots.length;
+}
+
 function getAssistantAspectTone(suggestion) {
   const severeCount = Math.max(0, Number(suggestion?.aspectSevereCount) || 0);
   const warnCount = Math.max(0, Number(suggestion?.aspectWarnCount) || 0);
@@ -1634,6 +1759,12 @@ async function buildAssistantSuggestions(files) {
         aspectRatios.slice(0, aspectCount),
         preset.slots.slice(0, aspectCount).map((slot) => getSlotAspectRatio(slot))
       );
+      const imageSquareAffinity = getSquareAffinity(aspectRatios.slice(0, aspectCount));
+      const imageExtremeShare = getExtremeAspectShare(aspectRatios.slice(0, aspectCount));
+      const imageBalancedShare = 1 - imageExtremeShare;
+      const presetSquareShare = getPresetSquareSlotShare(preset, aspectCount);
+      const squareTemplateBonus = imageSquareAffinity * presetSquareShare * (1.1 + imageBalancedShare * 1.3);
+      const squareMismatchPenalty = Math.max(0, imageSquareAffinity - presetSquareShare) * 0.9;
       const orientationMismatchCount = calculateOrientationMismatchCount(
         imageOrientationProfile,
         slotOrientationProfile,
@@ -1653,10 +1784,12 @@ async function buildAssistantSuggestions(files) {
         capacityPenalty +
         aspectPenalty +
         aspectFit.penalty +
+        squareMismatchPenalty +
         orientationPenalty +
         hardMismatchPenalty +
         mixedToSinglePenalty +
-        (hasSpecialShape ? 0.25 : 0);
+        (hasSpecialShape ? 0.25 : 0) -
+        squareTemplateBonus;
       return {
         preset,
         score,
@@ -1810,6 +1943,18 @@ function getCollageContentRect(canvasWidth, canvasHeight) {
     y: Math.round((canvasHeight - height) / 2),
     width,
     height,
+  };
+}
+
+function getSafeAreaFittedContentRect(canvasWidth, canvasHeight, preset = getExportPresetDefinition()) {
+  const safeRect = getSafeAreaRect(canvasWidth, canvasHeight, preset);
+  if (!safeRect) return null;
+  const inner = getCollageContentRect(safeRect.width, safeRect.height);
+  return {
+    x: safeRect.x + inner.x,
+    y: safeRect.y + inner.y,
+    width: inner.width,
+    height: inner.height,
   };
 }
 
@@ -2314,9 +2459,6 @@ function swapCells(first, second) {
 
 function handleReorderModeTap(index) {
   const cell = state.cells[index];
-  if (!cell?.bitmap) {
-    return;
-  }
   if (state.reorderSourceIndex === null) {
     state.reorderSourceIndex = index;
     state.selectedCell = index;
@@ -2325,6 +2467,14 @@ function handleReorderModeTap(index) {
     return;
   }
   if (state.reorderSourceIndex === index) {
+    state.reorderSourceIndex = null;
+    renderPreview();
+    return;
+  }
+  const sourceCell = state.cells[state.reorderSourceIndex];
+  const hasSourceBitmap = Boolean(sourceCell?.bitmap);
+  const hasTargetBitmap = Boolean(cell?.bitmap);
+  if (!hasSourceBitmap && !hasTargetBitmap) {
     state.reorderSourceIndex = null;
     renderPreview();
     return;
@@ -2364,6 +2514,7 @@ function renderPreview() {
   els.collagePreview.style.aspectRatio = `${1 / safeRatio}`;
   els.collagePreview.style.setProperty("--grid-gap", `${state.gap}px`);
   els.collagePreview.style.setProperty("--outer-gap", `${state.outerGap}px`);
+  els.collagePreview.style.setProperty("--active-outline-color", getActiveOutlineColor(state.background));
   els.collagePreview.style.background = state.background;
   els.collagePreview.innerHTML = "";
   const template = document.getElementById("previewCellTemplate");
@@ -2444,13 +2595,14 @@ function renderPreview() {
       applyImagePlacement(img, node, cell);
     }
     applyTextOverlayStyle(textOverlay, cell, rect.width, rect.height);
-    textOverlay.classList.toggle("interactive", index === state.selectedCell && hasCellText(cell));
+    textOverlay.classList.toggle("interactive", !state.reorderMode && index === state.selectedCell && hasCellText(cell));
   });
 }
 
 function syncEditor() {
   const cell = state.cells[state.selectedCell];
   if (!cell) return;
+  const controlsLocked = isActiveFieldLockedByReorder();
   const layout = getActiveLayoutDefinition();
   const circleAllowed = canUseCircleShape(layout, state.selectedCell);
   const baseInfo = cell.bitmap
@@ -2471,37 +2623,70 @@ function syncEditor() {
     els.zoomValue.textContent = "100";
   }
   if (els.deleteCell) {
-    els.deleteCell.disabled = !cell.bitmap;
+    els.deleteCell.disabled = controlsLocked || !cell.bitmap;
   }
   if (els.flipHorizontalButton) {
-    els.flipHorizontalButton.disabled = !cell.bitmap;
+    els.flipHorizontalButton.disabled = controlsLocked || !cell.bitmap;
   }
   if (els.flipVerticalButton) {
-    els.flipVerticalButton.disabled = !cell.bitmap;
+    els.flipVerticalButton.disabled = controlsLocked || !cell.bitmap;
   }
   if (els.rotateLeftButton) {
-    els.rotateLeftButton.disabled = !cell.bitmap;
+    els.rotateLeftButton.disabled = controlsLocked || !cell.bitmap;
+  }
+  if (els.replaceCell) {
+    els.replaceCell.disabled = controlsLocked;
+  }
+  if (els.prevCell) {
+    els.prevCell.disabled = controlsLocked;
+  }
+  if (els.nextCell) {
+    els.nextCell.disabled = controlsLocked;
+  }
+  if (els.resetFocus) {
+    els.resetFocus.disabled = controlsLocked;
+  }
+  if (els.zoomInput) {
+    els.zoomInput.disabled = controlsLocked;
+  }
+  if (els.resetZoom) {
+    els.resetZoom.disabled = controlsLocked;
   }
   if (els.slotShapeField && els.slotShapeSelect) {
     els.slotShapeField.hidden = false;
+    els.slotShapeSelect.disabled = controlsLocked;
     if (els.slotShapeSelect.options[2]) {
       els.slotShapeSelect.options[2].disabled = !circleAllowed;
     }
     const selectedShape = getSlotShape(layout, state.selectedCell);
+    let targetShape = selectedShape;
     if (!circleAllowed && selectedShape === "circle") {
       setSelectedSlotShape("rect");
-      els.slotShapeSelect.value = "rect";
-    } else {
-      els.slotShapeSelect.value = selectedShape;
+      targetShape = "rect";
     }
+    state.isSyncingSlotShapeSelect = true;
+    for (const option of Array.from(els.slotShapeSelect.options)) {
+      option.selected = option.value === targetShape;
+    }
+    els.slotShapeSelect.value = targetShape;
+    state.isSyncingSlotShapeSelect = false;
   }
   els.textInput.value = cell.text || "";
+  els.textInput.disabled = controlsLocked;
   els.textSizeInput.value = String(clamp(Number(cell.fontSize) || 48, 12, 160));
+  els.textSizeInput.disabled = controlsLocked;
   els.textSizeValue.textContent = String(clamp(Number(cell.fontSize) || 48, 12, 160));
   els.textFontSelect.value = cell.fontFamily || "Segoe UI, system-ui, sans-serif";
+  els.textFontSelect.disabled = controlsLocked;
   els.textBoldInput.checked = Boolean(cell.bold);
+  els.textBoldInput.disabled = controlsLocked;
   els.textItalicInput.checked = Boolean(cell.italic);
+  els.textItalicInput.disabled = controlsLocked;
   els.textColorInput.value = /^#[0-9a-f]{6}$/i.test(String(cell.color || "")) ? cell.color : "#ffffff";
+  els.textColorInput.disabled = controlsLocked;
+  if (els.resetTextPosition) {
+    els.resetTextPosition.disabled = controlsLocked || !hasCellText(cell);
+  }
   updateTextWarnings();
 }
 
@@ -2524,7 +2709,13 @@ function hasCompleteGrid() {
 function drawCollage(ctx, width, height, options = {}) {
   const visibleCount = typeof options.visibleCount === "number" ? options.visibleCount : state.cells.length;
   const layout = getActiveLayoutDefinition();
-  const contentRect = options.contentRect || getCollageContentRect(width, height);
+  const preset = getExportPresetDefinition();
+  const contentRect = options.contentRect
+    || (
+      state.autoFitToSafeArea
+      ? (getSafeAreaFittedContentRect(width, height, preset) || getCollageContentRect(width, height))
+      : getCollageContentRect(width, height)
+    );
   ctx.save();
   ctx.fillStyle = state.background;
   ctx.fillRect(0, 0, width, height);
@@ -2598,7 +2789,8 @@ function drawCollage(ctx, width, height, options = {}) {
   }
   ctx.restore();
   ctx.restore();
-  drawWatermark(ctx, width, height);
+  const watermarkBounds = state.autoFitToSafeArea ? getSafeAreaRect(width, height, preset) : null;
+  drawWatermark(ctx, width, height, { bounds: watermarkBounds });
 }
 
 function renderAll() {
@@ -2908,6 +3100,14 @@ function updateTextWarnings() {
   if (!exportCtx) return;
   const preset = getExportPresetDefinition();
   const safeRect = getSafeAreaRect(els.exportCanvas.width, els.exportCanvas.height, preset);
+  if (els.autoFitSafeAreaButton) {
+    const supportsSafeAreaFit = Boolean(safeRect);
+    els.autoFitSafeAreaButton.hidden = !supportsSafeAreaFit;
+    if (!supportsSafeAreaFit && state.autoFitToSafeArea) {
+      state.autoFitToSafeArea = false;
+    }
+    updateAutoFitSafeAreaButtonLabel();
+  }
   const textBounds = getTextBoundsForAllCells(exportCtx, els.exportCanvas.width, els.exportCanvas.height);
   const hasOverflowText = textBounds.some((entry) => entry.overflow);
   const hasSafeAreaViolation = safeRect
@@ -2918,8 +3118,11 @@ function updateTextWarnings() {
       || (entry.y + entry.height) > (safeRect.y + safeRect.height))
     : false;
   const messages = [];
-  if (safeRect) {
-    messages.push(t("safeAreaHint"));
+  if (els.safeAreaInfo) {
+    els.safeAreaInfo.hidden = !safeRect;
+  }
+  if (els.safeAreaInfoText && safeRect) {
+    els.safeAreaInfoText.textContent = t("safeAreaHint");
   }
   if (hasSafeAreaViolation) {
     messages.push(t("safeAreaTextWarning"));
@@ -2976,7 +3179,7 @@ function drawCellText(ctx, cell, x, y, width, height, slotShape = "rect") {
   ctx.restore();
 }
 
-function drawWatermark(ctx, canvasWidth, canvasHeight) {
+function drawWatermark(ctx, canvasWidth, canvasHeight, options = {}) {
   const { text, position, fontFamily, color, size, enabled } = state.watermark;
   if (!enabled || !text) return;
   const cleaned = String(text || "").trim();
@@ -2990,22 +3193,27 @@ function drawWatermark(ctx, canvasWidth, canvasHeight) {
   ctx.textAlign = position === "center" ? "center" : position.endsWith("right") ? "right" : "left";
   ctx.shadowColor = "rgba(0,0,0,0.55)";
   ctx.shadowBlur = Math.max(2, scaleFont * 0.2);
-  const padding = 24;
+  const bounds = options?.bounds;
+  const areaX = Number.isFinite(bounds?.x) ? bounds.x : 0;
+  const areaY = Number.isFinite(bounds?.y) ? bounds.y : 0;
+  const areaWidth = Number.isFinite(bounds?.width) ? bounds.width : canvasWidth;
+  const areaHeight = Number.isFinite(bounds?.height) ? bounds.height : canvasHeight;
+  const padding = Math.max(12, Math.min(24, Math.min(areaWidth, areaHeight) * 0.05));
   const lines = cleaned.split("\n");
-  let baseX = padding;
-  let baseY = padding;
+  let baseX = areaX + padding;
+  let baseY = areaY + padding;
   if (position === "top-right") {
-    baseX = canvasWidth - padding;
-    baseY = padding;
+    baseX = areaX + areaWidth - padding;
+    baseY = areaY + padding;
   } else if (position === "bottom-left") {
-    baseX = padding;
-    baseY = canvasHeight - padding - (lines.length * lineHeight);
+    baseX = areaX + padding;
+    baseY = areaY + areaHeight - padding - (lines.length * lineHeight);
   } else if (position === "bottom-right") {
-    baseX = canvasWidth - padding;
-    baseY = canvasHeight - padding - (lines.length * lineHeight);
+    baseX = areaX + areaWidth - padding;
+    baseY = areaY + areaHeight - padding - (lines.length * lineHeight);
   } else if (position === "center") {
-    baseX = canvasWidth / 2;
-    baseY = (canvasHeight - lines.length * lineHeight) / 2;
+    baseX = areaX + areaWidth / 2;
+    baseY = areaY + (areaHeight - lines.length * lineHeight) / 2;
   }
   for (let i = 0; i < lines.length; i += 1) {
     const line = lines[i];
@@ -3195,6 +3403,7 @@ function stopDrag() {
 }
 
 function startTextDrag(event, index = state.selectedCell, frame = els.editorFrame, overlay = els.editorTextOverlay) {
+  if (isActiveFieldLockedByReorder()) return;
   const cell = state.cells[index];
   if (!cell) return;
   event.preventDefault();
@@ -3327,6 +3536,16 @@ function updateExportFormatUi() {
     els.gifDelayValue.textContent = delay.toFixed(1);
   }
   state.exportWidthLocked = widthLocked;
+  if (els.autoFitSafeAreaButton) {
+    const target = getExportTargetSize();
+    const safeRect = getSafeAreaRect(target.width, target.height, preset);
+    const supportsSafeAreaFit = Boolean(safeRect);
+    els.autoFitSafeAreaButton.hidden = !supportsSafeAreaFit;
+    if (!supportsSafeAreaFit && state.autoFitToSafeArea) {
+      state.autoFitToSafeArea = false;
+    }
+    updateAutoFitSafeAreaButtonLabel();
+  }
 }
 
 function setExportStatus(message, loading = false) {
@@ -4055,20 +4274,25 @@ function wireControls() {
     button.addEventListener("click", () => setStep(Number(button.dataset.stepTarget)));
   });
   els.prevCell.addEventListener("click", () => {
+    if (isActiveFieldLockedByReorder()) return;
     state.selectedCell = (state.selectedCell - 1 + state.cells.length) % state.cells.length;
     renderAll();
   });
   els.nextCell.addEventListener("click", () => {
+    if (isActiveFieldLockedByReorder()) return;
     state.selectedCell = (state.selectedCell + 1) % state.cells.length;
     renderAll();
   });
   els.flipHorizontalButton?.addEventListener("click", () => {
+    if (isActiveFieldLockedByReorder()) return;
     toggleCellFlipX(state.selectedCell);
   });
   els.flipVerticalButton?.addEventListener("click", () => {
+    if (isActiveFieldLockedByReorder()) return;
     toggleCellFlipY(state.selectedCell);
   });
   els.rotateLeftButton?.addEventListener("click", () => {
+    if (isActiveFieldLockedByReorder()) return;
     rotateCellLeft(state.selectedCell);
   });
   els.toggleReorderMode?.addEventListener("click", () => {
@@ -4079,6 +4303,7 @@ function wireControls() {
     renderPreview();
   });
   els.resetFocus.addEventListener("click", () => {
+    if (isActiveFieldLockedByReorder()) return;
     const cell = state.cells[state.selectedCell];
     if (!cell) return;
     cell.focusX = 0;
@@ -4089,19 +4314,27 @@ function wireControls() {
   window.addEventListener("pointerup", handlePreviewPointerUp);
   window.addEventListener("pointercancel", handlePreviewPointerUp);
   els.zoomInput.addEventListener("input", () => {
+    if (isActiveFieldLockedByReorder()) return;
     setCellZoom(state.selectedCell, Number(els.zoomInput.value) || 1);
   });
   els.resetZoom.addEventListener("click", () => {
+    if (isActiveFieldLockedByReorder()) return;
     setCellZoom(state.selectedCell, 1);
   });
   els.slotShapeSelect?.addEventListener("change", () => {
+    if (isActiveFieldLockedByReorder()) return;
+    if (state.isSyncingSlotShapeSelect) return;
     setSelectedSlotShape(String(els.slotShapeSelect.value || "rect"));
     updateLayoutModeSuggestion();
     syncEditor();
     renderPreview();
     renderExportPreview();
   });
+  els.slotShapeSelect?.addEventListener("focus", () => {
+    syncEditor();
+  });
   els.textInput.addEventListener("input", () => {
+    if (isActiveFieldLockedByReorder()) return;
     const cell = state.cells[state.selectedCell];
     if (!cell) return;
     cell.text = els.textInput.value;
@@ -4110,6 +4343,7 @@ function wireControls() {
     renderExportPreview();
   });
   els.textSizeInput.addEventListener("input", () => {
+    if (isActiveFieldLockedByReorder()) return;
     const cell = state.cells[state.selectedCell];
     if (!cell) return;
     const value = clamp(Number(els.textSizeInput.value) || 48, 12, 160);
@@ -4121,6 +4355,7 @@ function wireControls() {
     renderExportPreview();
   });
   els.textFontSelect.addEventListener("change", () => {
+    if (isActiveFieldLockedByReorder()) return;
     const cell = state.cells[state.selectedCell];
     if (!cell) return;
     cell.fontFamily = els.textFontSelect.value;
@@ -4129,6 +4364,7 @@ function wireControls() {
     renderExportPreview();
   });
   els.textBoldInput.addEventListener("change", () => {
+    if (isActiveFieldLockedByReorder()) return;
     const cell = state.cells[state.selectedCell];
     if (!cell) return;
     cell.bold = els.textBoldInput.checked;
@@ -4137,6 +4373,7 @@ function wireControls() {
     renderExportPreview();
   });
   els.textItalicInput.addEventListener("change", () => {
+    if (isActiveFieldLockedByReorder()) return;
     const cell = state.cells[state.selectedCell];
     if (!cell) return;
     cell.italic = els.textItalicInput.checked;
@@ -4145,6 +4382,7 @@ function wireControls() {
     renderExportPreview();
   });
   els.textColorInput.addEventListener("input", () => {
+    if (isActiveFieldLockedByReorder()) return;
     const cell = state.cells[state.selectedCell];
     if (!cell) return;
     cell.color = els.textColorInput.value;
@@ -4153,6 +4391,7 @@ function wireControls() {
     renderExportPreview();
   });
   els.resetTextPosition.addEventListener("click", () => {
+    if (isActiveFieldLockedByReorder()) return;
     const cell = state.cells[state.selectedCell];
     if (!cell) return;
     cell.textX = 0.5;
@@ -4162,13 +4401,19 @@ function wireControls() {
     renderExportPreview();
   });
   els.replaceCell.addEventListener("click", () => {
+    if (isActiveFieldLockedByReorder()) return;
     els.replaceInput.click();
   });
   els.deleteCell?.addEventListener("click", () => {
+    if (isActiveFieldLockedByReorder()) return;
     clearCellImage(state.selectedCell);
     renderAll();
   });
   els.replaceInput.addEventListener("change", () => {
+    if (isActiveFieldLockedByReorder()) {
+      els.replaceInput.value = "";
+      return;
+    }
     const file = els.replaceInput.files?.[0];
     if (!file) return;
     void setCellImage(state.selectedCell, file).then(() => {
@@ -4246,6 +4491,14 @@ function wireControls() {
     els.helpDialog.showModal();
     void loadReadmeContent();
   });
+  els.safeAreaHelpButton?.addEventListener("click", () => {
+    els.safeAreaDialog?.showModal();
+  });
+  els.autoFitSafeAreaButton?.addEventListener("click", () => {
+    state.autoFitToSafeArea = !state.autoFitToSafeArea;
+    updateAutoFitSafeAreaButtonLabel();
+    renderExportPreview();
+  });
   els.assistantStartButton?.addEventListener("click", () => {
     setAssistantStatus(
       state.assistantFiles.length
@@ -4280,6 +4533,10 @@ function wireControls() {
   els.helpForm.addEventListener("submit", (event) => {
     event.preventDefault();
     els.helpDialog.close();
+  });
+  els.safeAreaForm?.addEventListener("submit", (event) => {
+    event.preventDefault();
+    els.safeAreaDialog?.close();
   });
   els.tipForm?.addEventListener("submit", (event) => {
     event.preventDefault();

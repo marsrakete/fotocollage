@@ -313,7 +313,14 @@
                   Der Export skaliert das gewählte Raster samt Zwischenräumen
                   und verwendet die aktuellen Ausschnitte.
                 </p>
-                <p class="settings-status warning-text" id="exportWarning" hidden></p>
+                <div class="safe-area-info" id="safeAreaInfo" hidden>
+                  <span class="settings-status" id="safeAreaInfoText">Safe Area aktiv für dieses Social-Preset.</span>
+                  <button class="secondary icon-only" id="safeAreaHelpButton" type="button" aria-label="Safe-Area-Hilfe">?</button>
+                </div>
+                <button class="secondary" id="autoFitSafeAreaButton" type="button" hidden>
+                  Passe die Collage automatisch an die Zielgröße an
+                </button>
+                <p class="settings-status warning-text export-warning" id="exportWarning" hidden></p>
                 <div class="export-actions">
                   <button class="primary" id="shareButton">Teilen</button>
                   <button class="secondary" id="downloadButton" hidden>Als PNG speichern</button>
@@ -516,6 +523,19 @@
         <div class="settings-footer">
           <button id="confirmCancelButton" class="secondary" value="cancel" type="submit">Abbrechen</button>
           <button id="confirmAcceptButton" class="primary" value="confirm" type="submit">Bestätigen</button>
+        </div>
+      </form>
+    </dialog>
+
+    <dialog id="safeAreaDialog" class="settings-dialog">
+      <form id="safeAreaForm" method="dialog" class="settings-panel confirm-panel">
+        <div class="dialog-head">
+          <h2 id="safeAreaDialogTitle">Safe Area</h2>
+          <button class="secondary icon-only" value="cancel" aria-label="Schließen" type="submit">✕</button>
+        </div>
+        <p id="safeAreaDialogBody" class="dialog-copy"></p>
+        <div class="settings-footer">
+          <button id="safeAreaDialogClose" class="secondary" value="cancel" type="submit">Schließen</button>
         </div>
       </form>
     </dialog>

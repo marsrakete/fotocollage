@@ -5,9 +5,10 @@
 Eine Progressive Web App zum Erstellen von Foto-Collagen direkt im Browser:
 
 - Vorlage waehlen (z. B. 2x2, 3x3, Hero-Layouts, Hex-Layouts)
+- Optional: Assistent fuer automatische Vorlagenvorschlaege starten
 - Fotos laden
 - Bildausschnitte pro Feld anpassen
-- Reihenfolge der Bilder per Drag-and-drop aendern
+- Reihenfolge der Bilder im Feinschliff per Sortiermodus aendern
 - Text pro Bildfeld platzieren und verschieben
 - Wasserzeichen im Export einblenden
 - Collage als PNG, JPEG, PDF oder GIF exportieren
@@ -22,7 +23,7 @@ Repository: [https://github.com/marsrakete/fotocollage](https://github.com/marsr
 ### Fuer Anwender
 
 1. Oeffnen: [https://marsrakete.github.io/fotocollage/](https://marsrakete.github.io/fotocollage/)
-2. Vorlage waehlen -> Fotos laden -> Feinschliff -> Export
+2. Entweder direkt `Vorlage waehlen -> Fotos laden -> Feinschliff -> Export` oder den `Assistenten` starten
 3. Optional als PWA installieren (Browser-Menue: App installieren / Zum Home-Bildschirm)
 
 ### Fuer lokale Entwicklung
@@ -72,10 +73,11 @@ Optional fuer Nerds:
 - Viele Presets inkl. asymmetrischer Layouts und freier Einheiten-Presets
 - Layout-Modi: `Raster` und `Hex-Pack` (kompakter Hex-Raster)
 - Slot-Formen pro Feld: `rect`, `rounded-rect`, `circle`, `diamond`, `hexagon`
-- Drag-and-drop Laden
 - Lade-Limit passend zur Anzahl der benoetigten Felder
 - Feinschliff des Bildausschnitts pro Feld direkt in der Vorschau
 - Sortiermodus zum Umordnen der Bildfelder (Tap Quelle, Tap Ziel)
+- Assistent mit Vorlagenvorschlaegen auf Basis der geladenen Bilder (Ausrichtung + Seitenverhaeltnis)
+- Neustart-Button zum schnellen Leeren von Vorlage/Fotos/Texten bei beibehaltenen Layout-Basiswerten
 - Feld-Textoverlay (Schriftart, Groesse, Fett/Kursiv, Farbe, Position)
 - Wasserzeichen (Text, Position, Schriftart, Groesse, Farbe, persistent speicherbar)
 - EXIF-Metadaten (optional, fuer JPEG-Export)
@@ -83,7 +85,8 @@ Optional fuer Nerds:
 - Export-Presets (freie Formate + Social-Media-Formate)
 - Mehrsprachig: Deutsch, Englisch, Franzoesisch
 - Automatische Sprachwahl anhand der Browsersprache
-- Einstellungen-Dialog mit Update-Pruefung
+- Einstellungen-Dialog mit Update-Pruefung und Hilfe-Anzeige
+- Automatische Update-Pruefung beim App-Start (Update kann bestaetigt oder verschoben werden)
 - PWA mit Service Worker und Offline-Cache
 
 ## Schritt-fuer-Schritt (1 bis 4)
@@ -93,12 +96,13 @@ Optional fuer Nerds:
 - Waehle ein Preset fuer die Collage (z. B. 2x2, 3x3, asymmetrische Vorlagen, Hex-Vorlagen).
 - Waehle den Layout-Modus: `Raster` oder `Hex-Pack`.
 - Stelle Abstand, Randabstand und Hintergrundfarbe ein.
+- Optional: Starte den `Assistenten`, lade mehrere Fotos und lass dir passende Vorlagen vorschlagen.
+- `Neustart` setzt Vorlage, geladenen Fotos und Feldtexte zurueck, behaelt aber Abstand, Randabstand und Hintergrund.
 
 ### Schritt 2: Fotos laden
 
-- Lade genau so viele Bilder, wie die gewaehlte Vorlage Felder hat.
-- Auf Desktop geht auch Drag-and-drop in die Ladeflaeche.
-- In der Slot-Uebersicht kannst du die Reihenfolge bereits anpassen.
+- Lade Bilder ueber die Dateiauswahl in die gewaehlte Vorlage.
+- Es koennen auch weniger Bilder geladen werden; leere Felder bleiben als freie Flaechen erhalten.
 
 ### Schritt 3: Feinschliff
 
@@ -337,8 +341,9 @@ Weitere hinzugefuegte Vorlagen:
   - `appVersion`
   - `cacheVersion`
   - `label`
-- In den Einstellungen kann ueber **Auf Update pruefen** eine neue Version erkannt werden.
-- Bei neuer Version wird **Neu laden** angeboten.
+- Beim App-Start wird automatisch auf neue Versionen geprueft.
+- In den Einstellungen kann ueber **Auf Update pruefen** jederzeit manuell geprueft werden.
+- Bei neuer Version erscheint ein UI-Dialog zur Bestaetigung des Reloads (kein Browser-Systempopup).
 - Der Service Worker cached statische Assets und behandelt `version.json` mit Netz-Prioritaet (Fallback auf Cache).
 
 ## Warum mindestens einmal ein Server noetig ist
