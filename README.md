@@ -4,6 +4,7 @@
 
 Eine Progressive Web App zum Erstellen von Foto-Collagen direkt im Browser:
 
+- Startschirm mit Moduswahl: `Foto-Collage` oder `Form-Collage`
 - Vorlage waehlen (z. B. 2x2, 3x3, Hero-Layouts, Hex-Layouts)
 - Optional: Assistent fuer automatische Vorlagenvorschlaege starten
 - Fotos laden
@@ -12,6 +13,7 @@ Eine Progressive Web App zum Erstellen von Foto-Collagen direkt im Browser:
 - Text pro Bildfeld platzieren und verschieben
 - Wasserzeichen im Export einblenden
 - Collage als PNG, JPEG, PDF oder GIF exportieren
+- Form-Collage mit Wort- oder SVG-Stanze, Untertitel und eigenem Export
 
 Die App laeuft komplett clientseitig und benoetigt kein Backend.
 Die Fotos verlassen dein Geraet nicht.
@@ -23,8 +25,10 @@ Repository: [https://github.com/marsrakete/fotocollage](https://github.com/marsr
 ### Fuer Anwender
 
 1. Oeffnen: [https://marsrakete.github.io/fotocollage/](https://marsrakete.github.io/fotocollage/)
-2. Entweder direkt `Vorlage waehlen -> Fotos laden -> Feinschliff -> Export` oder den `Assistenten` starten
-3. Optional als PWA installieren (Browser-Menue: App installieren / Zum Home-Bildschirm)
+2. Auf dem Startschirm den Modus waehlen: `Foto-Collage` oder `Form-Collage`
+3. Im Foto-Modus: `Vorlage waehlen -> Fotos laden -> Feinschliff -> Export` (optional mit `Assistent`)
+4. Im Form-Modus: `Schritt A Zielgroesse -> Schritt B Stanze/Wort -> Schritt C Fotos, Untertitel, Export`
+5. Optional als PWA installieren (Browser-Menue: App installieren / Zum Home-Bildschirm)
 
 ### Fuer lokale Entwicklung
 
@@ -70,6 +74,7 @@ Optional fuer Nerds:
 ## Features
 
 - 4-Schritt-Workflow fuer schnelle Collage-Erstellung
+- Separater Form-Collage-Workflow (A bis C) mit Wort-/Motiv-Stanzen
 - Viele Presets inkl. asymmetrischer Layouts und freier Einheiten-Presets
 - Layout-Modi: `Raster` und `Hex-Pack` (kompakter Hex-Raster)
 - Slot-Formen pro Feld: `rect`, `rounded-rect`, `circle`, `diamond`, `hexagon`
@@ -88,6 +93,7 @@ Optional fuer Nerds:
 - Einstellungen-Dialog mit Update-Pruefung und Hilfe-Anzeige
 - Automatische Update-Pruefung beim App-Start (Update kann bestaetigt oder verschoben werden)
 - PWA mit Service Worker und Offline-Cache
+- Umfangreiche SVG-Motivbibliothek fuer Form-Collage (u. a. Karten, Saison, Symbole)
 
 ## Schritt-fuer-Schritt (1 bis 4)
 
@@ -120,6 +126,14 @@ Optional fuer Nerds:
 - GIF nutzt einen Breitenbereich von `480 bis 800 px` und bietet die Frame-Dauer in Sekunden.
 - Wenn in den Einstellungen `EXIF Felder schreiben` aktiv ist, werden beim JPEG-Export EXIF-Daten geschrieben.
 - Teile die Collage direkt oder speichere sie als Datei.
+
+## Form-Collage (A bis C)
+
+- Auf dem Startschirm `Form-Collage` waehlen.
+- Schritt A: Zielgroesse/Preset waehlen (inkl. freie Groesse).
+- Schritt B: Stanze waehlen (`Wort` oder `Motive`) und Form grob einstellen.
+- Schritt C: Fotos laden, Untertitel gestalten und frei positionieren, dann exportieren.
+- Die Stencil-Bibliothek enthaelt viele SVG-Motive; der neue `Blitz` ersetzt den bisherigen Blitz.
 
 ## Export-Formate
 

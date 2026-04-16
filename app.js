@@ -2,6 +2,7 @@ const templateConfig = window.FOTOCOLLAGE_TEMPLATE_CONFIG;
 const exportConfig = window.FOTOCOLLAGE_EXPORT_CONFIG;
 const i18nConfig = window.FOTOCOLLAGE_I18N_CONFIG;
 const tipsConfig = window.FOTOCOLLAGE_TIPS_CONFIG;
+const stencilConfig = window.FOTOCOLLAGE_STENCIL_CONFIG;
 
 if (!templateConfig || !Array.isArray(templateConfig.PRESETS) || typeof templateConfig.PRESET_LABELS !== "object") {
   throw new Error("Missing or invalid templates config (window.FOTOCOLLAGE_TEMPLATE_CONFIG).");
@@ -14,6 +15,9 @@ if (!i18nConfig || typeof i18nConfig.I18N !== "object") {
 }
 if (!tipsConfig || typeof tipsConfig.DAILY_TIPS !== "object") {
   throw new Error("Missing or invalid tips config (window.FOTOCOLLAGE_TIPS_CONFIG).");
+}
+if (!stencilConfig || !Array.isArray(stencilConfig.STENCIL_OPTIONS)) {
+  throw new Error("Missing or invalid stencil config (window.FOTOCOLLAGE_STENCIL_CONFIG).");
 }
 
 const PRESETS = templateConfig.PRESETS;
@@ -31,11 +35,18 @@ const SAFE_AREA_RATIOS_BY_PRESET = exportConfig.SAFE_AREA_RATIOS_BY_PRESET || {}
 
 const I18N = i18nConfig.I18N;
 const DAILY_TIPS = tipsConfig.DAILY_TIPS;
+const STENCIL_OPTIONS = stencilConfig.STENCIL_OPTIONS;
+const STENCIL_SVG_BY_ID = new Map(
+  STENCIL_OPTIONS.filter((entry) => entry && typeof entry.id === "string" && typeof entry.src === "string")
+    .map((entry) => [entry.id, entry])
+);
+const stencilPathCache = new Map();
+let stencilSvgLoadPromise = null;
 
 const DEFAULT_VERSION_INFO = Object.freeze({
-  appVersion: "1.3.51",
-  cacheVersion: "v138",
-  label: "Wasserzeichen wird bei Auto-Fit innerhalb der Safe Area platziert",
+  appVersion: "1.3.85",
+  cacheVersion: "v172",
+  label: "Form-Collage erweitert: neue SVG-Motive, Blitz ersetzt, UI/README aktualisiert",
 });
 
 const ZOOM_MIN = 0.35;
@@ -56,6 +67,13 @@ const STORAGE_KEYS = {
   exif: "fotocollage-exif",
   tipsEnabled: "fotocollage-tips-enabled",
 };
+
+const WORD_MASK_PRESET_SIZES = Object.freeze({
+  postcard: Object.freeze({ width: 1500, height: 1000 }),
+  "a4-portrait": Object.freeze({ width: 1240, height: 1754 }),
+  "a4-landscape": Object.freeze({ width: 1754, height: 1240 }),
+  poster: Object.freeze({ width: 1200, height: 1800 }),
+});
 const state = {
   activePresetId: "grid-2x2",
   layoutMode: "grid",
@@ -67,6 +85,7 @@ const state = {
   outerGap: 12,
   background: "#101828",
   activeStep: 1,
+  uiMode: "launcher",
   cells: [],
   slotShapeOverrides: [],
   selectedCell: 0,
@@ -110,6 +129,34 @@ const state = {
   assistantFiles: [],
   assistantSuggestions: [],
   assistantRequestToken: 0,
+  wordMask: {
+    preset: "postcard",
+    freeWidth: 1500,
+    freeHeight: 1000,
+    mode: "word",
+    word: "DANKE",
+    stencil: "word",
+    fontFamily: "Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif",
+    fontSize: 1300,
+    letterSpacing: 8,
+    bold: true,
+    italic: false,
+    subtitle: "",
+    subtitleFontFamily: "'Times New Roman', Times, serif",
+    subtitleSize: 56,
+    subtitleColor: "#222222",
+    subtitleBold: false,
+    subtitleItalic: false,
+    subtitleX: 0.5,
+    subtitleY: 0.93,
+    background: "#f5f5f3",
+    outputFormat: "png",
+    photos: [],
+    reorderMode: false,
+    reorderSourceIndex: null,
+    subtitleDrag: null,
+    subtitleBounds: null,
+  },
   isSyncingSlotShapeSelect: false,
   hasLoadedPhotosEver: false,
 };
@@ -118,12 +165,29 @@ const els = {
   heroEyebrow: document.getElementById("heroEyebrow"),
   appTitle: document.getElementById("appTitle"),
   heroLede: document.getElementById("heroLede"),
+  heroCard: document.getElementById("heroCard"),
+  homeButton: document.getElementById("homeButton"),
+  homeButtonLabel: document.getElementById("homeButtonLabel"),
   settingsButton: document.getElementById("settingsButton"),
   settingsButtonLabel: document.getElementById("settingsButtonLabel"),
   helpButton: document.getElementById("helpButton"),
   helpButtonLabel: document.getElementById("helpButtonLabel"),
+  modeSelector: document.getElementById("modeSelector"),
+  modeSelectorTitle: document.getElementById("modeSelectorTitle"),
+  modeSelectorDesc: document.getElementById("modeSelectorDesc"),
+  photoCollageStartButton: document.getElementById("photoCollageStartButton"),
+  photoModeTitle: document.getElementById("photoModeTitle"),
+  photoModeDesc: document.getElementById("photoModeDesc"),
+  wordMaskModeTitle: document.getElementById("wordMaskModeTitle"),
+  photoModeArea: document.getElementById("photoModeArea"),
   assistantStartButton: document.getElementById("assistantStartButton"),
   assistantLaunchHint: document.getElementById("assistantLaunchHint"),
+  wordMaskStartButton: document.getElementById("wordMaskStartButton"),
+  wordMaskLaunchHint: document.getElementById("wordMaskLaunchHint"),
+  wordMaskStage: document.getElementById("wordMaskStage"),
+  wordMaskStageTitle: document.getElementById("wordMaskStageTitle"),
+  wordMaskIntro: document.getElementById("wordMaskIntro"),
+  wizardRoot: document.getElementById("wizardRoot"),
   restartLaunchContainer: document.getElementById("restartLaunchContainer"),
   restartLaunchHint: document.getElementById("restartLaunchHint"),
   versionLabel: document.getElementById("versionLabel"),
@@ -271,6 +335,46 @@ const els = {
   assistantFileInput: document.getElementById("assistantFileInput"),
   assistantStatus: document.getElementById("assistantStatus"),
   assistantSuggestions: document.getElementById("assistantSuggestions"),
+  wordMaskPresetSelect: document.getElementById("wordMaskPresetSelect"),
+  wordMaskFreeSizeRow: document.getElementById("wordMaskFreeSizeRow"),
+  wordMaskWidthInput: document.getElementById("wordMaskWidthInput"),
+  wordMaskHeightInput: document.getElementById("wordMaskHeightInput"),
+  wordMaskModeLabel: document.getElementById("wordMaskModeLabel"),
+  wordMaskModeWordButton: document.getElementById("wordMaskModeWordButton"),
+  wordMaskModeMotifButton: document.getElementById("wordMaskModeMotifButton"),
+  wordMaskMotifField: document.getElementById("wordMaskMotifField"),
+  wordMaskMotifGrid: document.getElementById("wordMaskMotifGrid"),
+  wordMaskStencilLabel: document.getElementById("wordMaskStencilLabel"),
+  wordMaskWordInput: document.getElementById("wordMaskWordInput"),
+  wordMaskShapeSizeField: document.getElementById("wordMaskShapeSizeField"),
+  wordMaskShapeSizeLabel: document.getElementById("wordMaskShapeSizeLabel"),
+  wordMaskShapeSizeInput: document.getElementById("wordMaskShapeSizeInput"),
+  wordMaskShapeSizeValue: document.getElementById("wordMaskShapeSizeValue"),
+  wordMaskFontSelect: document.getElementById("wordMaskFontSelect"),
+  wordMaskSizeInput: document.getElementById("wordMaskSizeInput"),
+  wordMaskSpacingInput: document.getElementById("wordMaskSpacingInput"),
+  wordMaskWordBoldInput: document.getElementById("wordMaskWordBoldInput"),
+  wordMaskWordItalicInput: document.getElementById("wordMaskWordItalicInput"),
+  wordMaskPhotosInput: document.getElementById("wordMaskPhotosInput"),
+  wordMaskShufflePhotosButton: document.getElementById("wordMaskShufflePhotosButton"),
+  wordMaskToggleReorderButton: document.getElementById("wordMaskToggleReorderButton"),
+  wordMaskPhotosStatus: document.getElementById("wordMaskPhotosStatus"),
+  wordMaskReorderHint: document.getElementById("wordMaskReorderHint"),
+  wordMaskPhotoOrderField: document.getElementById("wordMaskPhotoOrderField"),
+  wordMaskPhotoOrderLabel: document.getElementById("wordMaskPhotoOrderLabel"),
+  wordMaskPhotoOrder: document.getElementById("wordMaskPhotoOrder"),
+  wordMaskBackgroundInput: document.getElementById("wordMaskBackgroundInput"),
+  wordMaskSubtitleLabel: document.getElementById("wordMaskSubtitleLabel"),
+  wordMaskSubtitleInput: document.getElementById("wordMaskSubtitleInput"),
+  wordMaskSubtitleFontSelect: document.getElementById("wordMaskSubtitleFontSelect"),
+  wordMaskSubtitleSizeInput: document.getElementById("wordMaskSubtitleSizeInput"),
+  wordMaskSubtitleBoldInput: document.getElementById("wordMaskSubtitleBoldInput"),
+  wordMaskSubtitleItalicInput: document.getElementById("wordMaskSubtitleItalicInput"),
+  wordMaskSubtitleColorInput: document.getElementById("wordMaskSubtitleColorInput"),
+  wordMaskOutputFormatSelect: document.getElementById("wordMaskOutputFormatSelect"),
+  wordMaskCanvas: document.getElementById("wordMaskCanvas"),
+  wordMaskShareButton: document.getElementById("wordMaskShareButton"),
+  wordMaskSaveButton: document.getElementById("wordMaskSaveButton"),
   confirmDialog: document.getElementById("confirmDialog"),
   confirmForm: document.getElementById("confirmForm"),
   confirmDialogTitle: document.getElementById("confirmDialogTitle"),
@@ -552,7 +656,7 @@ function updateTipsControls() {
 
 function updateRestartLaunchVisibility() {
   if (!els.restartLaunchContainer) return;
-  els.restartLaunchContainer.hidden = !state.hasLoadedPhotosEver;
+  els.restartLaunchContainer.hidden = false;
 }
 
 function getSuggestedFreeExportWidth() {
@@ -776,17 +880,98 @@ function applyLanguagePreference(preference) {
   renderVersionLabel();
 }
 
+function getStencilLabel(entry, language) {
+  const lang = language === "de" || language === "fr" || language === "en" ? language : "en";
+  if (!entry || typeof entry !== "object") return "";
+  if (entry.label && typeof entry.label === "object") {
+    if (typeof entry.label[lang] === "string" && entry.label[lang].trim().length) return entry.label[lang];
+    if (typeof entry.label.en === "string" && entry.label.en.trim().length) return entry.label.en;
+    if (typeof entry.label.de === "string" && entry.label.de.trim().length) return entry.label.de;
+    if (typeof entry.label.fr === "string" && entry.label.fr.trim().length) return entry.label.fr;
+  }
+  return typeof entry.id === "string" ? entry.id : "";
+}
+
+function getMotifStencilOptions() {
+  return STENCIL_OPTIONS.filter((entry) => entry && typeof entry.id === "string" && entry.id !== "word" && typeof entry.src === "string");
+}
+
+function normalizeWordMaskMode(mode) {
+  return mode === "motif" ? "motif" : "word";
+}
+
+function setWordMaskMode(mode) {
+  state.wordMask.mode = normalizeWordMaskMode(mode);
+  if (state.wordMask.mode === "word") {
+    state.wordMask.stencil = "word";
+    return;
+  }
+  if (state.wordMask.stencil === "word") {
+    const firstMotif = getMotifStencilOptions()[0];
+    state.wordMask.stencil = firstMotif?.id || "heart";
+  }
+}
+
+function renderWordMaskStencilOptions() {
+  if (!els.wordMaskMotifGrid) return;
+  const motifOptions = getMotifStencilOptions();
+  els.wordMaskMotifGrid.innerHTML = "";
+  for (const optionDef of motifOptions) {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "wordmask-motif";
+    button.dataset.stencilId = optionDef.id;
+    if (optionDef.id === state.wordMask.stencil) {
+      button.classList.add("active");
+    }
+    const image = document.createElement("img");
+    image.src = optionDef.src;
+    image.alt = getStencilLabel(optionDef, state.language);
+    const caption = document.createElement("span");
+    caption.textContent = getStencilLabel(optionDef, state.language);
+    button.append(image, caption);
+    button.addEventListener("click", () => {
+      state.wordMask.stencil = optionDef.id;
+      setWordMaskMode("motif");
+      updateWordMaskStencilUi();
+      renderWordMaskStencilOptions();
+      syncWordMaskInputsFromState();
+      renderWordMaskPreview();
+    });
+    els.wordMaskMotifGrid.append(button);
+  }
+}
+
 function translateStaticUi() {
   document.title = t("appTitle");
   setText(els.heroEyebrow, "heroEyebrow");
   setText(els.appTitle, "appTitle");
   setText(els.heroLede, "heroLede");
+  setText(els.homeButtonLabel, "homeButtonLabel");
   setText(els.settingsButtonLabel, "settingsButtonLabel");
   setText(els.helpButtonLabel, "helpButtonLabel");
+  setText(els.modeSelectorTitle, "modeSelectorTitle");
+  setText(els.modeSelectorDesc, "modeSelectorDesc");
+  setText(els.photoModeTitle, "photoModeTitle");
+  setText(els.photoModeDesc, "photoModeDesc");
+  setText(els.wordMaskModeTitle, "wordMaskStageTitle");
   setText(els.assistantStartButton, "assistantStartButton");
+  setText(els.wordMaskLaunchHint, "wordMaskLaunchHint");
+  setText(els.wordMaskStageTitle, "wordMaskStageTitle");
+  setText(els.wordMaskIntro, "wordMaskIntro");
+  setText(els.wordMaskModeLabel, "wordMaskModeLabel");
+  setText(els.wordMaskModeWordButton, "wordMaskModeWord");
+  setText(els.wordMaskModeMotifButton, "wordMaskModeMotif");
+  setText(els.wordMaskStencilLabel, "wordMaskStencilLabel");
+  setText(els.wordMaskShapeSizeLabel, "wordMaskShapeSizeLabel");
+  setText(els.wordMaskShufflePhotosButton, "wordMaskShufflePhotosButton");
+  setText(els.wordMaskToggleReorderButton, "reorderModeEnable");
+  setText(els.wordMaskPhotoOrderLabel, "wordMaskPhotoOrderLabel");
+  setText(els.wordMaskSubtitleLabel, "wordMaskSubtitleLabel");
   setText(els.assistantLaunchHint, "assistantLaunchHint");
   setText(els.restartLaunchHint, "restartLaunchHint");
   els.settingsButton.setAttribute("aria-label", t("settingsAria"));
+  els.homeButton?.setAttribute("aria-label", t("homeAria"));
   els.helpButton.setAttribute("aria-label", t("helpAria"));
   setText(els.step1Title, "step1Title");
   setText(els.step1Desc, "step1Desc");
@@ -936,6 +1121,8 @@ function translateStaticUi() {
   if (els.exportFormatSelect.options[3]) {
     els.exportFormatSelect.options[3].textContent = t("exportFormatGif");
   }
+  renderWordMaskStencilOptions();
+  updateWordMaskReorderUi();
   if (els.helpDialog.open && !state.readmeText) {
     els.readmeStatus.textContent = t("helpLoading");
   }
@@ -962,6 +1149,31 @@ function updateReorderModeUi() {
   els.toggleReorderMode.textContent = enabled ? t("reorderModeDisable") : t("reorderModeEnable");
   els.toggleReorderMode.setAttribute("aria-pressed", String(enabled));
   els.toggleReorderMode.classList.toggle("active", enabled);
+}
+
+function updateWordMaskReorderUi() {
+  const active = Boolean(state.wordMask?.reorderMode);
+  if (els.wordMaskToggleReorderButton) {
+    els.wordMaskToggleReorderButton.textContent = active ? t("reorderModeDisable") : t("reorderModeEnable");
+    els.wordMaskToggleReorderButton.setAttribute("aria-pressed", String(active));
+    els.wordMaskToggleReorderButton.classList.toggle("active", active);
+  }
+  if (els.wordMaskReorderHint) {
+    const hint = active
+      ? (state.wordMask.reorderSourceIndex === null ? t("reorderModeHintIdle") : t("reorderModeHintSource"))
+      : "";
+    els.wordMaskReorderHint.textContent = hint;
+    els.wordMaskReorderHint.hidden = !hint;
+  }
+  if (!els.wordMaskStage) return;
+  const controls = els.wordMaskStage.querySelectorAll("button, input, select, textarea");
+  controls.forEach((control) => {
+    if (control === els.wordMaskToggleReorderButton) return;
+    control.disabled = active;
+  });
+  if (!active) {
+    updateWordMaskStencilUi();
+  }
 }
 
 function isActiveFieldLockedByReorder() {
@@ -1236,6 +1448,10 @@ function getExportPresetDefinition() {
 function getExportPresetCopy(preset, language = state.language) {
   const labels = EXPORT_PRESET_LABELS[preset.id];
   return labels?.[language] || labels?.de || labels?.en || { title: preset.id, subtitle: "" };
+}
+
+function isSocialExportPreset(preset) {
+  return String(preset?.group || "").trim().toLowerCase() === "social";
 }
 
 function getLayoutUnitCells(layout) {
@@ -2265,6 +2481,60 @@ async function restartWorkflow() {
   renderAll();
 }
 
+function setUiMode(mode, options = {}) {
+  const nextMode = mode === "photo" || mode === "form" ? mode : "launcher";
+  const { scrollToTop = true } = options;
+  state.uiMode = nextMode;
+  const isPhoto = nextMode === "photo";
+  const isForm = nextMode === "form";
+  const isLauncher = nextMode === "launcher";
+  if (!isForm) {
+    state.wordMask.subtitleDrag = null;
+  }
+  if (els.modeSelector) {
+    els.modeSelector.hidden = !isLauncher;
+  }
+  if (els.photoModeArea) {
+    els.photoModeArea.hidden = !isPhoto;
+  }
+  if (els.wordMaskStage) {
+    els.wordMaskStage.hidden = !isForm;
+  }
+  if (els.heroCard) {
+    els.heroCard.hidden = !isPhoto;
+  }
+  if (els.wizardRoot) {
+    els.wizardRoot.classList.toggle("wordmask-open", isForm);
+    els.wizardRoot.classList.toggle("launcher-open", isLauncher);
+  }
+  if (isPhoto) {
+    setStep(state.activeStep || 1);
+    renderAllWithoutExport();
+  } else if (isForm) {
+    state.wordMask.reorderMode = false;
+    state.wordMask.reorderSourceIndex = null;
+    syncWordMaskInputsFromState();
+    renderWordMaskPhotoOrder();
+    updateWordMaskReorderUi();
+    renderWordMaskPreview();
+    void ensureSvgStencilsLoaded().then(() => {
+      if (state.uiMode === "form") {
+        renderWordMaskPreview();
+      }
+    });
+  } else {
+    state.wordMask.reorderMode = false;
+    state.wordMask.reorderSourceIndex = null;
+    updateWordMaskReorderUi();
+    els.gridSummary.textContent = "\u2013";
+    els.filledSummary.textContent = "\u2013";
+    els.stepSummary.textContent = "\u2013";
+  }
+  if (scrollToTop) {
+    els.wizardRoot?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+}
+
 function setStep(step) {
   state.activeStep = step;
   if (step === 4 && !state.hasOpenedExportStep) {
@@ -2281,7 +2551,8 @@ function setStep(step) {
   document.querySelectorAll(".step-chip").forEach((chip) => {
     chip.classList.toggle("active", Number(chip.dataset.stepTarget) === step);
   });
-  els.stepSummary.textContent = `${step} / 4`;
+  const totalSteps = Math.max(1, document.querySelectorAll(".step-chip").length);
+  els.stepSummary.textContent = `${step} / ${totalSteps}`;
   if (step >= 3) {
     renderPreview();
     renderExportPreview();
@@ -3007,7 +3278,7 @@ function getCellTextLayout(ctx, cell, width, height) {
 }
 
 function getSafeAreaRatiosForPreset(preset = getExportPresetDefinition()) {
-  if (!preset || preset.group !== "social") return null;
+  if (!isSocialExportPreset(preset)) return null;
   return SAFE_AREA_RATIOS_BY_PRESET[preset.id] || DEFAULT_SOCIAL_SAFE_AREA;
 }
 
@@ -3099,7 +3370,10 @@ function updateTextWarnings() {
   const exportCtx = els.exportCanvas.getContext("2d");
   if (!exportCtx) return;
   const preset = getExportPresetDefinition();
-  const safeRect = getSafeAreaRect(els.exportCanvas.width, els.exportCanvas.height, preset);
+  const socialPresetActive = isSocialExportPreset(preset);
+  const safeRect = socialPresetActive
+    ? getSafeAreaRect(els.exportCanvas.width, els.exportCanvas.height, preset)
+    : null;
   if (els.autoFitSafeAreaButton) {
     const supportsSafeAreaFit = Boolean(safeRect);
     els.autoFitSafeAreaButton.hidden = !supportsSafeAreaFit;
@@ -3123,6 +3397,8 @@ function updateTextWarnings() {
   }
   if (els.safeAreaInfoText && safeRect) {
     els.safeAreaInfoText.textContent = t("safeAreaHint");
+  } else if (els.safeAreaInfoText) {
+    els.safeAreaInfoText.textContent = "";
   }
   if (hasSafeAreaViolation) {
     messages.push(t("safeAreaTextWarning"));
@@ -3552,6 +3828,809 @@ function setExportStatus(message, loading = false) {
   els.exportStatus.textContent = message;
   els.exportStatus.hidden = !message;
   els.exportStatus.classList.toggle("loading", Boolean(loading && message));
+}
+
+function getWordMaskTargetSize() {
+  const presetId = String(state.wordMask.preset || "postcard");
+  if (presetId !== "free") {
+    return WORD_MASK_PRESET_SIZES[presetId] || WORD_MASK_PRESET_SIZES.postcard;
+  }
+  return {
+    width: clamp(Number(state.wordMask.freeWidth) || 1500, 600, 6000),
+    height: clamp(Number(state.wordMask.freeHeight) || 1000, 600, 6000),
+  };
+}
+
+function updateWordMaskFreeSizeUi() {
+  const isFree = String(els.wordMaskPresetSelect?.value || state.wordMask.preset) === "free";
+  if (els.wordMaskFreeSizeRow) {
+    els.wordMaskFreeSizeRow.hidden = !isFree;
+    els.wordMaskFreeSizeRow.style.display = isFree ? "grid" : "none";
+  }
+}
+
+function updateWordMaskStencilUi() {
+  const isWordStencil = normalizeWordMaskMode(state.wordMask.mode) === "word";
+  const isReorderActive = Boolean(state.wordMask.reorderMode);
+  const wordField = document.getElementById("wordMaskWordField");
+  const wordStyleRow = document.getElementById("wordMaskWordStyleRow");
+  const wordToggleRow = document.getElementById("wordMaskWordToggleRow");
+  const spacingField = document.getElementById("wordMaskSpacingField");
+  const shapeSizeField = els.wordMaskShapeSizeField;
+  const motifField = els.wordMaskMotifField;
+  if (wordField) {
+    wordField.hidden = !isWordStencil;
+    wordField.style.display = isWordStencil ? "" : "none";
+  }
+  if (wordStyleRow) {
+    wordStyleRow.hidden = !isWordStencil;
+    wordStyleRow.style.display = isWordStencil ? "" : "none";
+  }
+  if (wordToggleRow) {
+    wordToggleRow.hidden = !isWordStencil;
+    wordToggleRow.style.display = isWordStencil ? "" : "none";
+  }
+  if (spacingField) {
+    spacingField.hidden = !isWordStencil;
+    spacingField.style.display = isWordStencil ? "" : "none";
+  }
+  if (shapeSizeField) {
+    shapeSizeField.hidden = isWordStencil;
+    shapeSizeField.style.display = isWordStencil ? "none" : "";
+  }
+  if (motifField) {
+    motifField.hidden = isWordStencil;
+    motifField.style.display = isWordStencil ? "none" : "";
+  }
+  if (els.wordMaskModeWordButton) {
+    els.wordMaskModeWordButton.classList.toggle("active", isWordStencil);
+    els.wordMaskModeWordButton.setAttribute("aria-pressed", String(isWordStencil));
+  }
+  if (els.wordMaskModeMotifButton) {
+    els.wordMaskModeMotifButton.classList.toggle("active", !isWordStencil);
+    els.wordMaskModeMotifButton.setAttribute("aria-pressed", String(!isWordStencil));
+  }
+  if (els.wordMaskWordInput) els.wordMaskWordInput.disabled = !isWordStencil || isReorderActive;
+  if (els.wordMaskFontSelect) els.wordMaskFontSelect.disabled = !isWordStencil || isReorderActive;
+  if (els.wordMaskSpacingInput) els.wordMaskSpacingInput.disabled = !isWordStencil || isReorderActive;
+  if (els.wordMaskWordBoldInput) els.wordMaskWordBoldInput.disabled = !isWordStencil || isReorderActive;
+  if (els.wordMaskWordItalicInput) els.wordMaskWordItalicInput.disabled = !isWordStencil || isReorderActive;
+  if (els.wordMaskShapeSizeInput) els.wordMaskShapeSizeInput.disabled = isWordStencil || isReorderActive;
+  if (els.wordMaskSizeInput) els.wordMaskSizeInput.disabled = !isWordStencil || isReorderActive;
+  renderWordMaskStencilOptions();
+}
+
+function syncWordMaskStateFromInputs() {
+  state.wordMask.preset = String(els.wordMaskPresetSelect?.value || state.wordMask.preset);
+  state.wordMask.freeWidth = clamp(Number(els.wordMaskWidthInput?.value) || state.wordMask.freeWidth, 600, 6000);
+  state.wordMask.freeHeight = clamp(Number(els.wordMaskHeightInput?.value) || state.wordMask.freeHeight, 600, 6000);
+  state.wordMask.mode = normalizeWordMaskMode(state.wordMask.mode);
+  state.wordMask.word = String(els.wordMaskWordInput?.value || state.wordMask.word);
+  if (state.wordMask.mode === "word") {
+    state.wordMask.stencil = "word";
+  }
+  state.wordMask.fontFamily = String(els.wordMaskFontSelect?.value || state.wordMask.fontFamily);
+  const isWordStencil = state.wordMask.stencil === "word";
+  const sizeInputValue = isWordStencil
+    ? Number(els.wordMaskSizeInput?.value)
+    : Number(els.wordMaskShapeSizeInput?.value);
+  state.wordMask.fontSize = clamp(sizeInputValue || state.wordMask.fontSize, 10, 6000);
+  state.wordMask.letterSpacing = clamp(Number(els.wordMaskSpacingInput?.value) || state.wordMask.letterSpacing, 0, 120);
+  state.wordMask.bold = Boolean(els.wordMaskWordBoldInput?.checked);
+  state.wordMask.italic = Boolean(els.wordMaskWordItalicInput?.checked);
+  state.wordMask.subtitle = String(els.wordMaskSubtitleInput?.value || state.wordMask.subtitle);
+  state.wordMask.background = String(els.wordMaskBackgroundInput?.value || state.wordMask.background);
+  state.wordMask.subtitleFontFamily = String(els.wordMaskSubtitleFontSelect?.value || state.wordMask.subtitleFontFamily);
+  state.wordMask.subtitleSize = clamp(Number(els.wordMaskSubtitleSizeInput?.value) || state.wordMask.subtitleSize, 18, 140);
+  state.wordMask.subtitleBold = Boolean(els.wordMaskSubtitleBoldInput?.checked);
+  state.wordMask.subtitleItalic = Boolean(els.wordMaskSubtitleItalicInput?.checked);
+  state.wordMask.subtitleColor = String(els.wordMaskSubtitleColorInput?.value || state.wordMask.subtitleColor);
+  state.wordMask.outputFormat = String(els.wordMaskOutputFormatSelect?.value || state.wordMask.outputFormat).toLowerCase();
+  if (els.wordMaskSizeInput) els.wordMaskSizeInput.value = String(state.wordMask.fontSize);
+  if (els.wordMaskShapeSizeInput) els.wordMaskShapeSizeInput.value = String(state.wordMask.fontSize);
+  if (els.wordMaskShapeSizeValue) els.wordMaskShapeSizeValue.textContent = String(state.wordMask.fontSize);
+}
+
+function syncWordMaskInputsFromState() {
+  if (state.wordMask.mode !== "word" && state.wordMask.mode !== "motif") {
+    state.wordMask.mode = state.wordMask.stencil === "word" ? "word" : "motif";
+  }
+  state.wordMask.mode = normalizeWordMaskMode(state.wordMask.mode);
+  if (state.wordMask.mode === "word") {
+    state.wordMask.stencil = "word";
+  }
+  if (els.wordMaskPresetSelect) els.wordMaskPresetSelect.value = state.wordMask.preset;
+  if (els.wordMaskWidthInput) els.wordMaskWidthInput.value = String(state.wordMask.freeWidth);
+  if (els.wordMaskHeightInput) els.wordMaskHeightInput.value = String(state.wordMask.freeHeight);
+  if (els.wordMaskWordInput) els.wordMaskWordInput.value = state.wordMask.word;
+  if (els.wordMaskFontSelect) els.wordMaskFontSelect.value = state.wordMask.fontFamily;
+  if (els.wordMaskSizeInput) els.wordMaskSizeInput.value = String(state.wordMask.fontSize);
+  if (els.wordMaskShapeSizeInput) els.wordMaskShapeSizeInput.value = String(state.wordMask.fontSize);
+  if (els.wordMaskShapeSizeValue) els.wordMaskShapeSizeValue.textContent = String(state.wordMask.fontSize);
+  if (els.wordMaskSpacingInput) els.wordMaskSpacingInput.value = String(state.wordMask.letterSpacing);
+  if (els.wordMaskWordBoldInput) els.wordMaskWordBoldInput.checked = state.wordMask.bold;
+  if (els.wordMaskWordItalicInput) els.wordMaskWordItalicInput.checked = state.wordMask.italic;
+  if (els.wordMaskSubtitleInput) els.wordMaskSubtitleInput.value = state.wordMask.subtitle;
+  if (els.wordMaskBackgroundInput) els.wordMaskBackgroundInput.value = state.wordMask.background;
+  if (els.wordMaskSubtitleFontSelect) els.wordMaskSubtitleFontSelect.value = state.wordMask.subtitleFontFamily;
+  if (els.wordMaskSubtitleSizeInput) els.wordMaskSubtitleSizeInput.value = String(state.wordMask.subtitleSize);
+  if (els.wordMaskSubtitleBoldInput) els.wordMaskSubtitleBoldInput.checked = state.wordMask.subtitleBold;
+  if (els.wordMaskSubtitleItalicInput) els.wordMaskSubtitleItalicInput.checked = state.wordMask.subtitleItalic;
+  if (els.wordMaskSubtitleColorInput) els.wordMaskSubtitleColorInput.value = state.wordMask.subtitleColor;
+  if (els.wordMaskOutputFormatSelect) els.wordMaskOutputFormatSelect.value = state.wordMask.outputFormat;
+  updateWordMaskFreeSizeUi();
+  updateWordMaskStencilUi();
+  updateWordMaskReorderUi();
+}
+
+function openWordMaskStage() {
+  if (!els.wordMaskStage || !els.wizardRoot) return;
+  state.wordMask.reorderMode = false;
+  state.wordMask.reorderSourceIndex = null;
+  setUiMode("form");
+}
+
+function closeWordMaskStage() {
+  if (!els.wordMaskStage || !els.wizardRoot) return;
+  state.wordMask.reorderMode = false;
+  state.wordMask.reorderSourceIndex = null;
+  state.wordMask.subtitleDrag = null;
+  updateWordMaskReorderUi();
+  setUiMode("launcher");
+}
+
+function closeWordMaskPhotos() {
+  for (const photo of state.wordMask.photos) {
+    if (photo?.source && "close" in photo.source) {
+      photo.source.close();
+    }
+    if (photo?.objectUrl) {
+      URL.revokeObjectURL(photo.objectUrl);
+    }
+  }
+  state.wordMask.photos = [];
+  state.wordMask.reorderMode = false;
+  state.wordMask.reorderSourceIndex = null;
+  updateWordMaskReorderUi();
+  renderWordMaskPhotoOrder();
+}
+
+function drawBitmapCover(ctx, source, targetX, targetY, targetWidth, targetHeight) {
+  if (!source) return;
+  const sourceWidth = Number(source.width || source.naturalWidth || 0);
+  const sourceHeight = Number(source.height || source.naturalHeight || 0);
+  if (!sourceWidth || !sourceHeight) return;
+  const targetRatio = targetWidth / targetHeight;
+  const sourceRatio = sourceWidth / sourceHeight;
+  let sx = 0;
+  let sy = 0;
+  let sw = sourceWidth;
+  let sh = sourceHeight;
+  if (sourceRatio > targetRatio) {
+    sw = Math.max(1, Math.round(sourceHeight * targetRatio));
+    sx = Math.max(0, Math.round((sourceWidth - sw) / 2));
+  } else {
+    sh = Math.max(1, Math.round(sourceWidth / targetRatio));
+    sy = Math.max(0, Math.round((sourceHeight - sh) / 2));
+  }
+  ctx.drawImage(source, sx, sy, sw, sh, targetX, targetY, targetWidth, targetHeight);
+}
+
+function measureSpacedText(ctx, text, spacing) {
+  const chars = Array.from(text || "");
+  if (!chars.length) return 0;
+  let width = 0;
+  for (let i = 0; i < chars.length; i += 1) {
+    width += ctx.measureText(chars[i]).width;
+    if (i < chars.length - 1) width += spacing;
+  }
+  return width;
+}
+
+function drawSpacedText(ctx, text, centerX, centerY, spacing) {
+  const chars = Array.from(text || "");
+  if (!chars.length) return;
+  const previousAlign = ctx.textAlign;
+  const totalWidth = measureSpacedText(ctx, text, spacing);
+  let x = centerX - totalWidth / 2;
+  ctx.textAlign = "left";
+  for (let i = 0; i < chars.length; i += 1) {
+    const char = chars[i];
+    const w = ctx.measureText(char).width;
+    ctx.fillText(char, x, centerY);
+    x += w + spacing;
+  }
+  ctx.textAlign = previousAlign;
+}
+
+function parseSvgViewBox(viewBoxValue) {
+  const fallback = { x: 0, y: 0, width: 100, height: 100 };
+  if (!viewBoxValue) return fallback;
+  const values = String(viewBoxValue)
+    .trim()
+    .split(/[\s,]+/)
+    .map((value) => Number(value))
+    .filter((value) => Number.isFinite(value));
+  if (values.length !== 4) return fallback;
+  const [, , width, height] = values;
+  if (width <= 0 || height <= 0) return fallback;
+  return {
+    x: values[0],
+    y: values[1],
+    width,
+    height,
+  };
+}
+
+async function loadSvgStencilById(stencilId) {
+  if (stencilPathCache.has(stencilId)) {
+    return stencilPathCache.get(stencilId);
+  }
+  const stencilEntry = STENCIL_SVG_BY_ID.get(stencilId);
+  if (!stencilEntry) return null;
+  try {
+    const response = await fetch(stencilEntry.src);
+    if (!response.ok) {
+      stencilPathCache.set(stencilId, null);
+      return null;
+    }
+    const svgText = await response.text();
+    const xml = new DOMParser().parseFromString(svgText, "image/svg+xml");
+    const svgElement = xml.querySelector("svg");
+    if (!svgElement) {
+      stencilPathCache.set(stencilId, null);
+      return null;
+    }
+    const viewBox = parseSvgViewBox(svgElement.getAttribute("viewBox"));
+    const svgBlob = new Blob([svgText], { type: "image/svg+xml" });
+    const svgObjectUrl = URL.createObjectURL(svgBlob);
+    const image = await new Promise((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => resolve(img);
+      img.onerror = () => reject(new Error("SVG image decode failed"));
+      img.src = svgObjectUrl;
+    }).finally(() => {
+      URL.revokeObjectURL(svgObjectUrl);
+    });
+    const loaded = { image, viewBox };
+    stencilPathCache.set(stencilId, loaded);
+    return loaded;
+  } catch {
+    stencilPathCache.set(stencilId, null);
+    return null;
+  }
+}
+
+function ensureSvgStencilsLoaded() {
+  if (!stencilSvgLoadPromise) {
+    const stencilIds = Array.from(STENCIL_SVG_BY_ID.keys());
+    stencilSvgLoadPromise = Promise.all(stencilIds.map((stencilId) => loadSvgStencilById(stencilId))).catch(() => []);
+  }
+  return stencilSvgLoadPromise;
+}
+
+function drawSvgStencil(ctx, width, height, stencilId, scale = 1) {
+  const stencilDef = stencilPathCache.get(stencilId);
+  if (!stencilDef || !stencilDef.image || !stencilDef.viewBox) {
+    return false;
+  }
+  const viewBox = stencilDef.viewBox;
+  const shapeScale = Math.max(0.2, Math.min(3, Number(scale) || 1));
+  const drawWidth = Math.max(1, Math.round(viewBox.width * Math.min((width * 0.9 * shapeScale) / Math.max(1, viewBox.width), (height * 0.9 * shapeScale) / Math.max(1, viewBox.height))));
+  const drawHeight = Math.max(1, Math.round(viewBox.height * Math.min((width * 0.9 * shapeScale) / Math.max(1, viewBox.width), (height * 0.9 * shapeScale) / Math.max(1, viewBox.height))));
+  if (!Number.isFinite(drawWidth) || !Number.isFinite(drawHeight) || drawWidth <= 0 || drawHeight <= 0) {
+    return false;
+  }
+  const x = Math.round((width - drawWidth) / 2);
+  const y = Math.round((height - drawHeight) / 2);
+  ctx.drawImage(stencilDef.image, x, y, drawWidth, drawHeight);
+  return true;
+}
+
+function drawHeartStencil(ctx, width, height, scale = 1) {
+  const size = Math.min(width, height) * 0.42 * scale;
+  const x = width / 2;
+  const y = height / 2;
+  ctx.beginPath();
+  ctx.moveTo(x, y + size * 0.9);
+  ctx.bezierCurveTo(x - size * 1.1, y + size * 0.28, x - size * 1.05, y - size * 0.58, x, y - size * 0.15);
+  ctx.bezierCurveTo(x + size * 1.05, y - size * 0.58, x + size * 1.1, y + size * 0.28, x, y + size * 0.9);
+  ctx.closePath();
+  ctx.fill();
+}
+
+function drawFlowerStencil(ctx, width, height, scale = 1) {
+  const radius = Math.min(width, height) * 0.16 * scale;
+  const centerX = width / 2;
+  const centerY = height / 2;
+  const petalOffset = radius * 1.25;
+  for (let i = 0; i < 8; i += 1) {
+    const angle = (Math.PI * 2 * i) / 8;
+    const px = centerX + Math.cos(angle) * petalOffset;
+    const py = centerY + Math.sin(angle) * petalOffset;
+    ctx.beginPath();
+    ctx.arc(px, py, radius, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.beginPath();
+  ctx.arc(centerX, centerY, radius * 0.95, 0, Math.PI * 2);
+  ctx.fill();
+}
+
+function drawStarStencil(ctx, width, height, scale = 1) {
+  const cx = width / 2;
+  const cy = height / 2;
+  const outer = Math.min(width, height) * 0.34 * scale;
+  const inner = outer * 0.45;
+  ctx.beginPath();
+  for (let i = 0; i < 10; i += 1) {
+    const angle = -Math.PI / 2 + (Math.PI * i) / 5;
+    const r = i % 2 === 0 ? outer : inner;
+    const x = cx + Math.cos(angle) * r;
+    const y = cy + Math.sin(angle) * r;
+    if (i === 0) ctx.moveTo(x, y);
+    else ctx.lineTo(x, y);
+  }
+  ctx.closePath();
+  ctx.fill();
+}
+
+function drawCloverStencil(ctx, width, height, scale = 1) {
+  const cx = width / 2;
+  const cy = height / 2;
+  const radius = Math.min(width, height) * 0.125 * scale;
+  const offset = radius * 1.35;
+  const drawLeaf = (x, y) => {
+    ctx.beginPath();
+    ctx.moveTo(x, y - radius);
+    ctx.bezierCurveTo(x + radius, y - radius * 1.4, x + radius * 1.35, y + radius * 0.2, x, y + radius);
+    ctx.bezierCurveTo(x - radius * 1.35, y + radius * 0.2, x - radius, y - radius * 1.4, x, y - radius);
+    ctx.closePath();
+    ctx.fill();
+  };
+  drawLeaf(cx - offset, cy - offset * 0.15);
+  drawLeaf(cx + offset, cy - offset * 0.15);
+  drawLeaf(cx, cy - offset * 1.05);
+  drawLeaf(cx, cy + offset * 0.85);
+  ctx.beginPath();
+  ctx.moveTo(cx + radius * 0.2, cy + offset * 1.5);
+  ctx.bezierCurveTo(cx + radius * 0.9, cy + offset * 2.3, cx - radius * 0.1, cy + offset * 2.9, cx - radius * 0.75, cy + offset * 3.3);
+  ctx.lineWidth = Math.max(8, radius * 0.42);
+  ctx.lineCap = "round";
+  ctx.strokeStyle = "#ffffff";
+  ctx.stroke();
+}
+
+function drawLightningStencil(ctx, width, height, scale = 1) {
+  const cx = width / 2;
+  const cy = height / 2;
+  const w = Math.min(width, height) * 0.5 * scale;
+  const h = Math.min(width, height) * 0.75 * scale;
+  ctx.beginPath();
+  ctx.moveTo(cx - w * 0.18, cy - h * 0.5);
+  ctx.lineTo(cx + w * 0.08, cy - h * 0.5);
+  ctx.lineTo(cx - w * 0.02, cy - h * 0.05);
+  ctx.lineTo(cx + w * 0.2, cy - h * 0.05);
+  ctx.lineTo(cx - w * 0.12, cy + h * 0.5);
+  ctx.lineTo(cx - w * 0.02, cy + h * 0.1);
+  ctx.lineTo(cx - w * 0.22, cy + h * 0.1);
+  ctx.closePath();
+  ctx.fill();
+}
+
+function getWordMaskCanvasContext() {
+  if (!els.wordMaskCanvas) return null;
+  return els.wordMaskCanvas.getContext("2d");
+}
+
+function getWordMaskPhotoRects(count, width, height) {
+  const safeCount = Math.max(0, Math.floor(Number(count) || 0));
+  if (!safeCount) return [];
+  if (safeCount === 1) {
+    return [{ x: 0, y: 0, width, height }];
+  }
+  if (safeCount === 2) {
+    if (width >= height) {
+      const w = width / 2;
+      return [{ x: 0, y: 0, width: w, height }, { x: w, y: 0, width: width - w, height }];
+    }
+    const h = height / 2;
+    return [{ x: 0, y: 0, width, height: h }, { x: 0, y: h, width, height: height - h }];
+  }
+
+  const targetCols = Math.max(1, Math.round(Math.sqrt((safeCount * width) / Math.max(1, height))));
+  const rows = Math.max(1, Math.ceil(safeCount / Math.max(1, targetCols)));
+  const basePerRow = Math.floor(safeCount / rows);
+  const extra = safeCount % rows;
+  const rowCounts = Array.from({ length: rows }, (_, rowIndex) => basePerRow + (rowIndex < extra ? 1 : 0));
+  const rects = [];
+  let y = 0;
+  for (let row = 0; row < rowCounts.length; row += 1) {
+    const cellsInRow = Math.max(1, rowCounts[row]);
+    const rowHeight = row === rowCounts.length - 1 ? (height - y) : Math.round(height / rowCounts.length);
+    const cellWidth = width / cellsInRow;
+    let x = 0;
+    for (let col = 0; col < cellsInRow; col += 1) {
+      const w = col === cellsInRow - 1 ? (width - x) : Math.round(cellWidth);
+      rects.push({ x, y, width: w, height: rowHeight });
+      x += w;
+    }
+    y += rowHeight;
+  }
+  return rects.slice(0, safeCount);
+}
+
+function getWordMaskPointerPosition(event) {
+  if (!els.wordMaskCanvas) return null;
+  const rect = els.wordMaskCanvas.getBoundingClientRect();
+  if (rect.width <= 0 || rect.height <= 0) return null;
+  const scaleX = els.wordMaskCanvas.width / rect.width;
+  const scaleY = els.wordMaskCanvas.height / rect.height;
+  return {
+    x: (event.clientX - rect.left) * scaleX,
+    y: (event.clientY - rect.top) * scaleY,
+  };
+}
+
+function isPointInsideRect(point, rect) {
+  if (!point || !rect) return false;
+  return point.x >= rect.x && point.x <= rect.x + rect.width && point.y >= rect.y && point.y <= rect.y + rect.height;
+}
+
+function startWordMaskSubtitleDrag(event) {
+  if (!els.wordMaskCanvas || !state.wordMask.subtitleBounds) return;
+  const pointer = getWordMaskPointerPosition(event);
+  if (!isPointInsideRect(pointer, state.wordMask.subtitleBounds)) return;
+  event.preventDefault();
+  const width = Math.max(1, els.wordMaskCanvas.width);
+  const height = Math.max(1, els.wordMaskCanvas.height);
+  const centerX = clamp(Number(state.wordMask.subtitleX) || 0.5, 0.01, 0.99) * width;
+  const centerY = clamp(Number(state.wordMask.subtitleY) || 0.93, 0.01, 0.99) * height;
+  state.wordMask.subtitleDrag = {
+    pointerId: event.pointerId,
+    offsetX: pointer.x - centerX,
+    offsetY: pointer.y - centerY,
+  };
+  try {
+    els.wordMaskCanvas.setPointerCapture(event.pointerId);
+  } catch {
+    // Pointer capture can fail on some browsers; dragging still works without it.
+  }
+}
+
+function moveWordMaskSubtitleDrag(event) {
+  const drag = state.wordMask.subtitleDrag;
+  if (!drag || !els.wordMaskCanvas || event.pointerId !== drag.pointerId) return;
+  const pointer = getWordMaskPointerPosition(event);
+  if (!pointer) return;
+  event.preventDefault();
+  const canvasWidth = Math.max(1, els.wordMaskCanvas.width);
+  const canvasHeight = Math.max(1, els.wordMaskCanvas.height);
+  const bounds = state.wordMask.subtitleBounds || { width: canvasWidth * 0.3, height: canvasHeight * 0.08 };
+  const halfW = bounds.width / 2;
+  const halfH = bounds.height / 2;
+  const nextX = clamp(pointer.x - drag.offsetX, halfW, canvasWidth - halfW);
+  const nextY = clamp(pointer.y - drag.offsetY, halfH, canvasHeight - halfH);
+  state.wordMask.subtitleX = nextX / canvasWidth;
+  state.wordMask.subtitleY = nextY / canvasHeight;
+  renderWordMaskPreview();
+}
+
+function endWordMaskSubtitleDrag(event) {
+  const drag = state.wordMask.subtitleDrag;
+  if (!drag || !els.wordMaskCanvas) return;
+  if (event?.pointerId != null && event.pointerId !== drag.pointerId) return;
+  state.wordMask.subtitleDrag = null;
+}
+
+function renderWordMaskPreview() {
+  const ctx = getWordMaskCanvasContext();
+  if (!ctx || !els.wordMaskCanvas) return;
+  const target = getWordMaskTargetSize();
+  const width = Math.max(1, Math.round(target.width));
+  const height = Math.max(1, Math.round(target.height));
+  if (els.wordMaskCanvas.width !== width) els.wordMaskCanvas.width = width;
+  if (els.wordMaskCanvas.height !== height) els.wordMaskCanvas.height = height;
+  if (els.wordMaskStage) {
+    els.wordMaskStage.style.setProperty("--wordmask-canvas-ratio", (width / Math.max(1, height)).toFixed(4));
+  }
+
+  const maskRect = {
+    x: 0,
+    y: 0,
+    width: Math.max(1, width),
+    height: Math.max(1, height),
+  };
+
+  ctx.clearRect(0, 0, width, height);
+  ctx.fillStyle = state.wordMask.background || "#f5f5f3";
+  ctx.fillRect(0, 0, width, height);
+
+  const maskCanvas = document.createElement("canvas");
+  maskCanvas.width = maskRect.width;
+  maskCanvas.height = maskRect.height;
+  const maskCtx = maskCanvas.getContext("2d");
+  if (!maskCtx) return;
+  maskCtx.clearRect(0, 0, maskRect.width, maskRect.height);
+
+  const rawWord = String(state.wordMask.word || "").trim();
+  const word = rawWord || "DANKE";
+  const requestedWordSize = clamp(Number(state.wordMask.fontSize) || 1500, 10, 6000);
+  let fitSize = 1200;
+  const stencil = String(state.wordMask.stencil || "word");
+
+  // Layer 1: Text alpha mask.
+  const textCanvas = document.createElement("canvas");
+  textCanvas.width = maskRect.width;
+  textCanvas.height = maskRect.height;
+  const textCtx = textCanvas.getContext("2d");
+  if (!textCtx) return;
+  textCtx.clearRect(0, 0, textCanvas.width, textCanvas.height);
+  textCtx.fillStyle = "#ffffff";
+  textCtx.textAlign = "center";
+  textCtx.textBaseline = "middle";
+  textCtx.lineJoin = "round";
+
+  const spacing = clamp(Number(state.wordMask.letterSpacing) || 0, 0, 120);
+  if (stencil === "word") {
+    for (let pass = 0; pass < 8; pass += 1) {
+      textCtx.font = `${state.wordMask.italic ? "italic " : ""}${state.wordMask.bold ? "900" : "600"} ${fitSize}px ${state.wordMask.fontFamily}`;
+      const metricsWidth = Math.max(1, measureSpacedText(textCtx, word, spacing));
+      if (metricsWidth <= maskRect.width * 0.92 && fitSize <= maskRect.height * 0.9) {
+        break;
+      }
+      const fitByWidth = (maskRect.width * 0.92) / metricsWidth;
+      const fitByHeight = (maskRect.height * 0.9) / Math.max(1, fitSize);
+      const factor = Math.max(0.5, Math.min(fitByWidth, fitByHeight));
+      fitSize = Math.max(36, Math.floor(fitSize * factor));
+    }
+    const sizeFactor = requestedWordSize / 1200;
+    const finalWordSize = clamp(Math.round(fitSize * sizeFactor), 8, 6000);
+    textCtx.font = `${state.wordMask.italic ? "italic " : ""}${state.wordMask.bold ? "900" : "600"} ${finalWordSize}px ${state.wordMask.fontFamily}`;
+    drawSpacedText(textCtx, word, maskRect.width / 2, maskRect.height / 2, spacing);
+  } else {
+    const shapeScale = clamp(requestedWordSize / 1200, 0.08, 6);
+    const drewSvgStencil = drawSvgStencil(textCtx, maskRect.width, maskRect.height, stencil, shapeScale);
+    if (!drewSvgStencil) {
+      if (stencil === "heart") {
+        drawHeartStencil(textCtx, maskRect.width, maskRect.height, shapeScale);
+      } else if (stencil === "flower") {
+        drawFlowerStencil(textCtx, maskRect.width, maskRect.height, shapeScale);
+      } else if (stencil === "clover") {
+        drawCloverStencil(textCtx, maskRect.width, maskRect.height, shapeScale);
+      } else if (stencil === "lightning") {
+        drawLightningStencil(textCtx, maskRect.width, maskRect.height, shapeScale);
+      } else {
+        drawFlowerStencil(textCtx, maskRect.width, maskRect.height, shapeScale);
+      }
+    }
+  }
+
+  // Layer 2: Photo/gradient fill.
+  const fillCanvas = document.createElement("canvas");
+  fillCanvas.width = maskRect.width;
+  fillCanvas.height = maskRect.height;
+  const fillCtx = fillCanvas.getContext("2d");
+  if (!fillCtx) return;
+  fillCtx.clearRect(0, 0, fillCanvas.width, fillCanvas.height);
+  fillCtx.imageSmoothingEnabled = true;
+  fillCtx.imageSmoothingQuality = "high";
+
+  const photos = state.wordMask.photos;
+  let drawnPhotos = 0;
+  if (photos.length) {
+    const photoRects = getWordMaskPhotoRects(photos.length, maskRect.width, maskRect.height);
+    for (let i = 0; i < photos.length; i += 1) {
+      const photo = photos[i];
+      const rect = photoRects[i];
+      if (!rect) continue;
+      try {
+        drawBitmapCover(fillCtx, photo.source, rect.x, rect.y, rect.width, rect.height);
+        drawnPhotos += 1;
+      } catch {
+        // Keep rendering remaining files.
+      }
+    }
+  }
+  if (!drawnPhotos) {
+    const gradient = fillCtx.createLinearGradient(0, 0, maskRect.width, maskRect.height);
+    gradient.addColorStop(0, "#b9c8d8");
+    gradient.addColorStop(1, "#8ea3b8");
+    fillCtx.fillStyle = gradient;
+    fillCtx.fillRect(0, 0, maskRect.width, maskRect.height);
+  }
+
+  // Apply text mask.
+  fillCtx.globalCompositeOperation = "destination-in";
+  fillCtx.drawImage(textCanvas, 0, 0);
+  fillCtx.globalCompositeOperation = "source-over";
+
+  ctx.drawImage(fillCanvas, maskRect.x, maskRect.y);
+
+  if (!photos.length) {
+    ctx.save();
+    ctx.fillStyle = "#5f6368";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.font = `600 ${Math.max(18, Math.round(width * 0.023))}px "Segoe UI", system-ui, sans-serif`;
+    ctx.fillText("Fotos laden für die Form-Collage", width / 2, maskRect.y + maskRect.height / 2);
+    ctx.restore();
+  }
+
+  const subtitle = String(state.wordMask.subtitle || "").trim();
+  if (subtitle) {
+    const subtitleXNorm = clamp(Number(state.wordMask.subtitleX) || 0.5, 0.01, 0.99);
+    const subtitleYNorm = clamp(Number(state.wordMask.subtitleY) || 0.93, 0.01, 0.99);
+    const subtitleX = subtitleXNorm * width;
+    const subtitleY = subtitleYNorm * height;
+    ctx.save();
+    ctx.fillStyle = state.wordMask.subtitleColor || "#222222";
+    ctx.textAlign = "left";
+    ctx.textBaseline = "middle";
+    const subtitleSize = clamp(Number(state.wordMask.subtitleSize) || 56, 12, 220);
+    ctx.font = `${state.wordMask.subtitleItalic ? "italic " : ""}${state.wordMask.subtitleBold ? "700" : "500"} ${subtitleSize}px ${state.wordMask.subtitleFontFamily}`;
+    const maxWidth = Math.max(1, width - 16);
+    const measuredWidth = Math.min(maxWidth, Math.max(1, ctx.measureText(subtitle).width));
+    const textLeft = clamp(subtitleX - measuredWidth / 2, 8, Math.max(8, width - 8 - measuredWidth));
+    const textTop = subtitleY - subtitleSize / 2;
+    state.wordMask.subtitleBounds = {
+      x: textLeft - 10,
+      y: textTop - 8,
+      width: measuredWidth + 20,
+      height: subtitleSize + 16,
+    };
+    ctx.fillText(subtitle, textLeft, subtitleY, maxWidth);
+    ctx.restore();
+  } else {
+    state.wordMask.subtitleBounds = null;
+  }
+}
+
+async function loadWordMaskFiles(fileList) {
+  closeWordMaskPhotos();
+  const files = Array.from(fileList || []).filter((file) => file.type.startsWith("image/"));
+  const loadViaImageElement = (file) =>
+    new Promise((resolve, reject) => {
+      const objectUrl = URL.createObjectURL(file);
+      const image = new Image();
+      image.onload = () => {
+        resolve({ image, objectUrl });
+      };
+      image.onerror = () => {
+        URL.revokeObjectURL(objectUrl);
+        reject(new Error("Image decode failed"));
+      };
+      image.src = objectUrl;
+    });
+  for (const file of files) {
+    try {
+      const loaded = await loadViaImageElement(file);
+      state.wordMask.photos.push({ source: loaded.image, objectUrl: loaded.objectUrl, fileName: file.name });
+    } catch {
+      // Ignore single-file decode errors and continue with remaining files.
+    }
+  }
+  if (els.wordMaskPhotosStatus) {
+    els.wordMaskPhotosStatus.textContent = state.wordMask.photos.length
+      ? `${state.wordMask.photos.length} Foto(s) geladen.`
+      : "Keine Fotos geladen.";
+  }
+  renderWordMaskPhotoOrder();
+  renderWordMaskPreview();
+}
+
+function shuffleWordMaskPhotos() {
+  if (!Array.isArray(state.wordMask.photos) || state.wordMask.photos.length < 2) return;
+  for (let i = state.wordMask.photos.length - 1; i > 0; i -= 1) {
+    const j = Math.floor(Math.random() * (i + 1));
+    const tmp = state.wordMask.photos[i];
+    state.wordMask.photos[i] = state.wordMask.photos[j];
+    state.wordMask.photos[j] = tmp;
+  }
+  renderWordMaskPhotoOrder();
+  renderWordMaskPreview();
+}
+
+function handleWordMaskReorderTap(index) {
+  const photos = state.wordMask.photos;
+  if (!Array.isArray(photos) || index < 0 || index >= photos.length) return;
+  if (!state.wordMask.reorderMode) return;
+  if (state.wordMask.reorderSourceIndex === null) {
+    state.wordMask.reorderSourceIndex = index;
+    updateWordMaskReorderUi();
+    renderWordMaskPhotoOrder();
+    return;
+  }
+  if (state.wordMask.reorderSourceIndex === index) {
+    state.wordMask.reorderSourceIndex = null;
+    updateWordMaskReorderUi();
+    renderWordMaskPhotoOrder();
+    return;
+  }
+  const source = state.wordMask.reorderSourceIndex;
+  const tmp = photos[source];
+  photos[source] = photos[index];
+  photos[index] = tmp;
+  state.wordMask.reorderSourceIndex = null;
+  updateWordMaskReorderUi();
+  renderWordMaskPhotoOrder();
+  renderWordMaskPreview();
+}
+
+function renderWordMaskPhotoOrder() {
+  if (!els.wordMaskPhotoOrder || !els.wordMaskPhotoOrderField) return;
+  const photos = Array.isArray(state.wordMask.photos) ? state.wordMask.photos : [];
+  els.wordMaskPhotoOrder.innerHTML = "";
+  const showOrder = photos.length > 1;
+  els.wordMaskPhotoOrderField.hidden = !showOrder;
+  if (!showOrder) return;
+  photos.forEach((photo, index) => {
+    const item = document.createElement("div");
+    item.className = "wordmask-photo-item";
+    item.dataset.photoIndex = String(index);
+    item.classList.toggle("reorder-source", state.wordMask.reorderMode && state.wordMask.reorderSourceIndex === index);
+    const image = document.createElement("img");
+    image.src = photo?.objectUrl || photo?.source?.src || "";
+    image.alt = `Foto ${index + 1}`;
+    const caption = document.createElement("span");
+    caption.textContent = `#${index + 1}`;
+    item.append(image, caption);
+    item.addEventListener("click", () => {
+      handleWordMaskReorderTap(index);
+    });
+    els.wordMaskPhotoOrder.append(item);
+  });
+}
+
+async function buildWordMaskPayload() {
+  renderWordMaskPreview();
+  const format = String(state.wordMask.outputFormat || "png").toLowerCase();
+  if (format === "pdf") {
+    const jpegBlob = await canvasToBlob(els.wordMaskCanvas, "image/jpeg", 0.92);
+    const jpegBytes = new Uint8Array(await jpegBlob.arrayBuffer());
+    const pdfBlob = createPdfFromJpegBytes(jpegBytes, els.wordMaskCanvas.width, els.wordMaskCanvas.height);
+    return {
+      blob: pdfBlob,
+      filename: buildTimestampFilename("pdf"),
+      mimeType: "application/pdf",
+    };
+  }
+  const isJpeg = format === "jpeg" || format === "jpg";
+  const blob = await canvasToBlob(els.wordMaskCanvas, isJpeg ? "image/jpeg" : "image/png", isJpeg ? 0.92 : undefined);
+  return {
+    blob,
+    filename: buildTimestampFilename(isJpeg ? "jpg" : "png"),
+    mimeType: isJpeg ? "image/jpeg" : "image/png",
+  };
+}
+
+async function saveWordMaskResult() {
+  if (!els.wordMaskSaveButton) return;
+  try {
+    els.wordMaskSaveButton.disabled = true;
+    const payload = await buildWordMaskPayload();
+    downloadBlob(payload.blob, payload.filename);
+  } finally {
+    els.wordMaskSaveButton.disabled = false;
+  }
+}
+
+async function shareWordMaskResult() {
+  if (!els.wordMaskShareButton) return;
+  try {
+    els.wordMaskShareButton.disabled = true;
+    const payload = await buildWordMaskPayload();
+    const file = new File([payload.blob], payload.filename, { type: payload.mimeType });
+    if (canShareFiles(file)) {
+      await navigator.share({ files: [file], title: payload.filename });
+      return;
+    }
+    downloadBlob(payload.blob, payload.filename);
+  } catch {
+    // ignore user-cancel share errors
+  } finally {
+    els.wordMaskShareButton.disabled = false;
+  }
 }
 
 function canvasToBlob(canvas, mimeType = "image/png", quality) {
@@ -4270,7 +5349,7 @@ function wireControls() {
   document.querySelectorAll("[data-prev-step]").forEach((button) => {
     button.addEventListener("click", () => setStep(Number(button.dataset.prevStep)));
   });
-  document.querySelectorAll(".step-chip").forEach((button) => {
+  document.querySelectorAll("[data-step-target]").forEach((button) => {
     button.addEventListener("click", () => setStep(Number(button.dataset.stepTarget)));
   });
   els.prevCell.addEventListener("click", () => {
@@ -4499,6 +5578,16 @@ function wireControls() {
     updateAutoFitSafeAreaButtonLabel();
     renderExportPreview();
   });
+  els.homeButton?.addEventListener("click", () => {
+    if (state.uiMode === "form") {
+      closeWordMaskStage();
+      return;
+    }
+    setUiMode("launcher");
+  });
+  els.photoCollageStartButton?.addEventListener("click", () => {
+    setUiMode("photo");
+  });
   els.assistantStartButton?.addEventListener("click", () => {
     setAssistantStatus(
       state.assistantFiles.length
@@ -4508,6 +5597,74 @@ function wireControls() {
     );
     renderAssistantSuggestions();
     els.assistantDialog?.showModal();
+  });
+  els.wordMaskStartButton?.addEventListener("click", () => {
+    openWordMaskStage();
+  });
+  const onWordMaskInputChange = () => {
+    syncWordMaskStateFromInputs();
+    updateWordMaskFreeSizeUi();
+    updateWordMaskStencilUi();
+    renderWordMaskPreview();
+  };
+  els.wordMaskModeWordButton?.addEventListener("click", () => {
+    setWordMaskMode("word");
+    syncWordMaskInputsFromState();
+    renderWordMaskPreview();
+  });
+  els.wordMaskModeMotifButton?.addEventListener("click", () => {
+    setWordMaskMode("motif");
+    syncWordMaskInputsFromState();
+    renderWordMaskPreview();
+  });
+  els.wordMaskToggleReorderButton?.addEventListener("click", () => {
+    state.wordMask.reorderMode = !state.wordMask.reorderMode;
+    state.wordMask.reorderSourceIndex = null;
+    updateWordMaskReorderUi();
+    renderWordMaskPhotoOrder();
+  });
+  els.wordMaskPresetSelect?.addEventListener("change", onWordMaskInputChange);
+  els.wordMaskWidthInput?.addEventListener("input", onWordMaskInputChange);
+  els.wordMaskHeightInput?.addEventListener("input", onWordMaskInputChange);
+  els.wordMaskWordInput?.addEventListener("input", onWordMaskInputChange);
+  els.wordMaskFontSelect?.addEventListener("change", onWordMaskInputChange);
+  els.wordMaskSizeInput?.addEventListener("input", onWordMaskInputChange);
+  els.wordMaskShapeSizeInput?.addEventListener("input", onWordMaskInputChange);
+  els.wordMaskSpacingInput?.addEventListener("input", onWordMaskInputChange);
+  els.wordMaskWordBoldInput?.addEventListener("change", onWordMaskInputChange);
+  els.wordMaskWordItalicInput?.addEventListener("change", onWordMaskInputChange);
+  els.wordMaskBackgroundInput?.addEventListener("input", onWordMaskInputChange);
+  els.wordMaskSubtitleInput?.addEventListener("input", onWordMaskInputChange);
+  els.wordMaskSubtitleFontSelect?.addEventListener("change", onWordMaskInputChange);
+  els.wordMaskSubtitleSizeInput?.addEventListener("input", onWordMaskInputChange);
+  els.wordMaskSubtitleBoldInput?.addEventListener("change", onWordMaskInputChange);
+  els.wordMaskSubtitleItalicInput?.addEventListener("change", onWordMaskInputChange);
+  els.wordMaskSubtitleColorInput?.addEventListener("input", onWordMaskInputChange);
+  els.wordMaskOutputFormatSelect?.addEventListener("change", onWordMaskInputChange);
+  els.wordMaskCanvas?.addEventListener("pointerdown", (event) => {
+    startWordMaskSubtitleDrag(event);
+  });
+  els.wordMaskCanvas?.addEventListener("pointermove", (event) => {
+    moveWordMaskSubtitleDrag(event);
+  });
+  els.wordMaskCanvas?.addEventListener("pointerup", (event) => {
+    endWordMaskSubtitleDrag(event);
+  });
+  els.wordMaskCanvas?.addEventListener("pointercancel", (event) => {
+    endWordMaskSubtitleDrag(event);
+  });
+  els.wordMaskPhotosInput?.addEventListener("change", () => {
+    void loadWordMaskFiles(els.wordMaskPhotosInput.files);
+    els.wordMaskPhotosInput.value = "";
+  });
+  els.wordMaskShufflePhotosButton?.addEventListener("click", () => {
+    shuffleWordMaskPhotos();
+  });
+  els.wordMaskSaveButton?.addEventListener("click", () => {
+    void saveWordMaskResult();
+  });
+  els.wordMaskShareButton?.addEventListener("click", () => {
+    void shareWordMaskResult();
   });
   els.assistantFileInput?.addEventListener("change", () => {
     void analyzeAssistantFiles(els.assistantFileInput.files);
@@ -4566,6 +5723,9 @@ function wireControls() {
     if (state.activeStep >= 3) {
       renderPreview();
       renderExportPreview();
+    }
+    if (els.wordMaskStage && !els.wordMaskStage.hidden) {
+      renderWordMaskPreview();
     }
   });
 }
@@ -4639,6 +5799,11 @@ function init() {
   resizeCells(getActiveLayoutDefinition().slots.length);
   renderSlotsStatusControls();
   wireControls();
+  void ensureSvgStencilsLoaded().then(() => {
+    if (els.wordMaskStage && !els.wordMaskStage.hidden) {
+      renderWordMaskPreview();
+    }
+  });
   void loadVersionInfo().then(() => {
     renderVersionLabel();
     void checkForUpdates({ showChecking: false, silentNoChange: true, silentError: true, promptOnAvailable: true });
@@ -4647,6 +5812,7 @@ function init() {
   updateExportActionButtons();
   applyGrid();
   renderAllWithoutExport();
+  setUiMode("launcher", { scrollToTop: false });
   if (els.exportWidthInput) {
     els.exportWidthInput.value = String(state.exportWidth);
   }

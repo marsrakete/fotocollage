@@ -1,5 +1,5 @@
 const CACHE_PREFIX = "fotocollage-cache";
-const CACHE_VERSION = "v138";
+const CACHE_VERSION = "v172";
 const CACHE_NAME = `${CACHE_PREFIX}-${CACHE_VERSION}`;
 const ASSETS = [
   "./",
@@ -10,6 +10,27 @@ const ASSETS = [
   "./config/export.config.js",
   "./config/i18n.config.js",
   "./config/tips.config.js",
+  "./config/stencils.config.js",
+  "./config/stencils/heart.svg",
+  "./config/stencils/flower.svg",
+  "./config/stencils/clover.svg",
+  "./config/stencils/lightning.svg",
+  "./config/stencils/rose.svg",
+  "./config/stencils/sun.svg",
+  "./config/stencils/kraken.svg",
+  "./config/stencils/splash.svg",
+  "./config/stencils/horse.svg",
+  "./config/stencils/piglet.svg",
+  "./config/stencils/stegosaurus.svg",
+  "./config/stencils/balloons-50.svg",
+  "./config/stencils/france-map.svg",
+  "./config/stencils/germany-map.svg",
+  "./config/stencils/birthday-cake.svg",
+  "./config/stencils/rocket.svg",
+  "./config/stencils/ball.svg",
+  "./config/stencils/gift.svg",
+  "./config/stencils/medals.svg",
+  "./config/stencils/bicycle.svg",
   "./manifest.json",
   "./version.json",
   "./README.md",
