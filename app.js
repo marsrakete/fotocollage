@@ -44,9 +44,9 @@ const stencilPathCache = new Map();
 let stencilSvgLoadPromise = null;
 
 const DEFAULT_VERSION_INFO = Object.freeze({
-  appVersion: "1.3.85",
-  cacheVersion: "v172",
-  label: "Form-Collage erweitert: neue SVG-Motive, Blitz ersetzt, UI/README aktualisiert",
+  appVersion: "1.3.87",
+  cacheVersion: "v174",
+  label: "Form-Collage vollstaendig lokalisiert (DE/EN/FR)",
 });
 
 const ZOOM_MIN = 0.35;
@@ -187,6 +187,26 @@ const els = {
   wordMaskStage: document.getElementById("wordMaskStage"),
   wordMaskStageTitle: document.getElementById("wordMaskStageTitle"),
   wordMaskIntro: document.getElementById("wordMaskIntro"),
+  wordMaskStepA: document.getElementById("wordMaskStepA"),
+  wordMaskPresetLabel: document.getElementById("wordMaskPresetLabel"),
+  wordMaskWidthLabel: document.getElementById("wordMaskWidthLabel"),
+  wordMaskHeightLabel: document.getElementById("wordMaskHeightLabel"),
+  wordMaskStepB: document.getElementById("wordMaskStepB"),
+  wordMaskWordLabel: document.getElementById("wordMaskWordLabel"),
+  wordMaskFontLabel: document.getElementById("wordMaskFontLabel"),
+  wordMaskSizeLabel: document.getElementById("wordMaskSizeLabel"),
+  wordMaskWordBoldLabel: document.getElementById("wordMaskWordBoldLabel"),
+  wordMaskWordItalicLabel: document.getElementById("wordMaskWordItalicLabel"),
+  wordMaskSpacingLabel: document.getElementById("wordMaskSpacingLabel"),
+  wordMaskStepC: document.getElementById("wordMaskStepC"),
+  wordMaskBackgroundLabel: document.getElementById("wordMaskBackgroundLabel"),
+  wordMaskPhotosLabel: document.getElementById("wordMaskPhotosLabel"),
+  wordMaskSubtitleFontLabel: document.getElementById("wordMaskSubtitleFontLabel"),
+  wordMaskSubtitleSizeLabel: document.getElementById("wordMaskSubtitleSizeLabel"),
+  wordMaskSubtitleBoldLabel: document.getElementById("wordMaskSubtitleBoldLabel"),
+  wordMaskSubtitleItalicLabel: document.getElementById("wordMaskSubtitleItalicLabel"),
+  wordMaskSubtitleColorLabel: document.getElementById("wordMaskSubtitleColorLabel"),
+  wordMaskOutputFormatLabel: document.getElementById("wordMaskOutputFormatLabel"),
   wizardRoot: document.getElementById("wizardRoot"),
   restartLaunchContainer: document.getElementById("restartLaunchContainer"),
   restartLaunchHint: document.getElementById("restartLaunchHint"),
@@ -959,15 +979,37 @@ function translateStaticUi() {
   setText(els.wordMaskLaunchHint, "wordMaskLaunchHint");
   setText(els.wordMaskStageTitle, "wordMaskStageTitle");
   setText(els.wordMaskIntro, "wordMaskIntro");
+  setText(els.wordMaskStepA, "wordMaskStepA");
+  setText(els.wordMaskPresetLabel, "wordMaskPresetLabel");
+  setText(els.wordMaskWidthLabel, "wordMaskWidthLabel");
+  setText(els.wordMaskHeightLabel, "wordMaskHeightLabel");
+  setText(els.wordMaskStepB, "wordMaskStepB");
   setText(els.wordMaskModeLabel, "wordMaskModeLabel");
   setText(els.wordMaskModeWordButton, "wordMaskModeWord");
   setText(els.wordMaskModeMotifButton, "wordMaskModeMotif");
   setText(els.wordMaskStencilLabel, "wordMaskStencilLabel");
   setText(els.wordMaskShapeSizeLabel, "wordMaskShapeSizeLabel");
+  setText(els.wordMaskWordLabel, "wordMaskWordLabel");
+  setText(els.wordMaskFontLabel, "wordMaskFontLabel");
+  setText(els.wordMaskSizeLabel, "wordMaskSizeLabel");
+  setText(els.wordMaskWordBoldLabel, "wordMaskWordBoldLabel");
+  setText(els.wordMaskWordItalicLabel, "wordMaskWordItalicLabel");
+  setText(els.wordMaskSpacingLabel, "wordMaskSpacingLabel");
+  setText(els.wordMaskStepC, "wordMaskStepC");
+  setText(els.wordMaskBackgroundLabel, "wordMaskBackgroundLabel");
+  setText(els.wordMaskPhotosLabel, "wordMaskPhotosLabel");
   setText(els.wordMaskShufflePhotosButton, "wordMaskShufflePhotosButton");
   setText(els.wordMaskToggleReorderButton, "reorderModeEnable");
   setText(els.wordMaskPhotoOrderLabel, "wordMaskPhotoOrderLabel");
   setText(els.wordMaskSubtitleLabel, "wordMaskSubtitleLabel");
+  setText(els.wordMaskSubtitleFontLabel, "wordMaskSubtitleFontLabel");
+  setText(els.wordMaskSubtitleSizeLabel, "wordMaskSubtitleSizeLabel");
+  setText(els.wordMaskSubtitleBoldLabel, "wordMaskSubtitleBoldLabel");
+  setText(els.wordMaskSubtitleItalicLabel, "wordMaskSubtitleItalicLabel");
+  setText(els.wordMaskSubtitleColorLabel, "wordMaskSubtitleColorLabel");
+  setText(els.wordMaskOutputFormatLabel, "wordMaskOutputFormatLabel");
+  setText(els.wordMaskShareButton, "wordMaskShareButton");
+  setText(els.wordMaskSaveButton, "wordMaskSaveButton");
   setText(els.assistantLaunchHint, "assistantLaunchHint");
   setText(els.restartLaunchHint, "restartLaunchHint");
   els.settingsButton.setAttribute("aria-label", t("settingsAria"));
@@ -1120,6 +1162,33 @@ function translateStaticUi() {
   }
   if (els.exportFormatSelect.options[3]) {
     els.exportFormatSelect.options[3].textContent = t("exportFormatGif");
+  }
+  if (els.wordMaskPresetSelect?.options?.[0]) {
+    els.wordMaskPresetSelect.options[0].textContent = t("wordMaskPresetPostcard");
+  }
+  if (els.wordMaskPresetSelect?.options?.[1]) {
+    els.wordMaskPresetSelect.options[1].textContent = t("wordMaskPresetA4Portrait");
+  }
+  if (els.wordMaskPresetSelect?.options?.[2]) {
+    els.wordMaskPresetSelect.options[2].textContent = t("wordMaskPresetA4Landscape");
+  }
+  if (els.wordMaskPresetSelect?.options?.[3]) {
+    els.wordMaskPresetSelect.options[3].textContent = t("wordMaskPresetPoster");
+  }
+  if (els.wordMaskPresetSelect?.options?.[4]) {
+    els.wordMaskPresetSelect.options[4].textContent = t("wordMaskPresetFree");
+  }
+  if (els.wordMaskOutputFormatSelect?.options?.[0]) {
+    els.wordMaskOutputFormatSelect.options[0].textContent = t("exportFormatPng");
+  }
+  if (els.wordMaskOutputFormatSelect?.options?.[1]) {
+    els.wordMaskOutputFormatSelect.options[1].textContent = t("exportFormatJpeg");
+  }
+  if (els.wordMaskOutputFormatSelect?.options?.[2]) {
+    els.wordMaskOutputFormatSelect.options[2].textContent = t("exportFormatPdf");
+  }
+  if (els.wordMaskSubtitleInput) {
+    els.wordMaskSubtitleInput.placeholder = t("wordMaskSubtitlePlaceholder");
   }
   renderWordMaskStencilOptions();
   updateWordMaskReorderUi();
