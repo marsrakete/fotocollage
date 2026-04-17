@@ -44,9 +44,9 @@ const stencilPathCache = new Map();
 let stencilSvgLoadPromise = null;
 
 const DEFAULT_VERSION_INFO = Object.freeze({
-  appVersion: "1.3.87",
-  cacheVersion: "v174",
-  label: "Form-Collage vollstaendig lokalisiert (DE/EN/FR)",
+  appVersion: "1.3.91",
+  cacheVersion: "v178",
+  label: "UI: .field kompakter mobil (Padding/Radius) und Media-Fix",
 });
 
 const ZOOM_MIN = 0.35;
@@ -151,6 +151,7 @@ const state = {
     subtitleY: 0.93,
     background: "#f5f5f3",
     outputFormat: "png",
+    activeTab: "photos",
     photos: [],
     reorderMode: false,
     reorderSourceIndex: null,
@@ -376,6 +377,13 @@ const els = {
   wordMaskWordBoldInput: document.getElementById("wordMaskWordBoldInput"),
   wordMaskWordItalicInput: document.getElementById("wordMaskWordItalicInput"),
   wordMaskPhotosInput: document.getElementById("wordMaskPhotosInput"),
+  wordMaskTabs: document.getElementById("wordMaskTabs"),
+  wordMaskTabPhotos: document.getElementById("wordMaskTabPhotos"),
+  wordMaskTabSubtitle: document.getElementById("wordMaskTabSubtitle"),
+  wordMaskTabExport: document.getElementById("wordMaskTabExport"),
+  wordMaskPanelPhotos: document.getElementById("wordMaskPanelPhotos"),
+  wordMaskPanelSubtitle: document.getElementById("wordMaskPanelSubtitle"),
+  wordMaskPanelExport: document.getElementById("wordMaskPanelExport"),
   wordMaskShufflePhotosButton: document.getElementById("wordMaskShufflePhotosButton"),
   wordMaskToggleReorderButton: document.getElementById("wordMaskToggleReorderButton"),
   wordMaskPhotosStatus: document.getElementById("wordMaskPhotosStatus"),
@@ -998,6 +1006,9 @@ function translateStaticUi() {
   setText(els.wordMaskStepC, "wordMaskStepC");
   setText(els.wordMaskBackgroundLabel, "wordMaskBackgroundLabel");
   setText(els.wordMaskPhotosLabel, "wordMaskPhotosLabel");
+  setText(els.wordMaskTabPhotos, "wordMaskTabPhotos");
+  setText(els.wordMaskTabSubtitle, "wordMaskTabSubtitle");
+  setText(els.wordMaskTabExport, "wordMaskTabExport");
   setText(els.wordMaskShufflePhotosButton, "wordMaskShufflePhotosButton");
   setText(els.wordMaskToggleReorderButton, "reorderModeEnable");
   setText(els.wordMaskPhotoOrderLabel, "wordMaskPhotoOrderLabel");
@@ -1243,6 +1254,31 @@ function updateWordMaskReorderUi() {
   if (!active) {
     updateWordMaskStencilUi();
   }
+}
+
+function setWordMaskTab(nextTab) {
+  const tab = nextTab === "subtitle" || nextTab === "export" ? nextTab : "photos";
+  state.wordMask.activeTab = tab;
+  const tabs = [
+    { button: els.wordMaskTabPhotos, panel: els.wordMaskPanelPhotos, id: "photos" },
+    { button: els.wordMaskTabSubtitle, panel: els.wordMaskPanelSubtitle, id: "subtitle" },
+    { button: els.wordMaskTabExport, panel: els.wordMaskPanelExport, id: "export" },
+  ];
+  tabs.forEach((entry) => {
+    const active = entry.id === tab;
+    if (entry.button) {
+      entry.button.classList.toggle("active", active);
+      entry.button.setAttribute("aria-pressed", String(active));
+      if (active) {
+        entry.button.setAttribute("aria-current", "true");
+      } else {
+        entry.button.removeAttribute("aria-current");
+      }
+    }
+    if (entry.panel) {
+      entry.panel.hidden = !active;
+    }
+  });
 }
 
 function isActiveFieldLockedByReorder() {
@@ -4036,6 +4072,7 @@ function openWordMaskStage() {
   if (!els.wordMaskStage || !els.wizardRoot) return;
   state.wordMask.reorderMode = false;
   state.wordMask.reorderSourceIndex = null;
+  setWordMaskTab(state.wordMask.activeTab || "photos");
   setUiMode("form");
 }
 
@@ -5686,6 +5723,15 @@ function wireControls() {
     syncWordMaskInputsFromState();
     renderWordMaskPreview();
   });
+  els.wordMaskTabPhotos?.addEventListener("click", () => {
+    setWordMaskTab("photos");
+  });
+  els.wordMaskTabSubtitle?.addEventListener("click", () => {
+    setWordMaskTab("subtitle");
+  });
+  els.wordMaskTabExport?.addEventListener("click", () => {
+    setWordMaskTab("export");
+  });
   els.wordMaskToggleReorderButton?.addEventListener("click", () => {
     state.wordMask.reorderMode = !state.wordMask.reorderMode;
     state.wordMask.reorderSourceIndex = null;
@@ -5868,6 +5914,7 @@ function init() {
   resizeCells(getActiveLayoutDefinition().slots.length);
   renderSlotsStatusControls();
   wireControls();
+  setWordMaskTab(state.wordMask.activeTab || "photos");
   void ensureSvgStencilsLoaded().then(() => {
     if (els.wordMaskStage && !els.wordMaskStage.hidden) {
       renderWordMaskPreview();

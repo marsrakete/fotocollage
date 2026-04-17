@@ -155,7 +155,7 @@ h1 { margin: 0; font-size: clamp(2.6rem, 5vw, 4.6rem); line-height: 1; }
 .grid-mini span { border-radius: 5px; background: rgba(255,255,255,0.16); }
 .sr-only { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; border: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 .form-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; margin-bottom: 20px; }
-.field {margin-top: 10px;display: grid; gap: 8px; padding: 16px; border-radius: 20px; border: 1px solid var(--border); background: rgba(255,255,255,0.04); }
+.field {margin-top: 6px;display: grid; gap: 6px; padding: 16px; border-radius: 20px; border: 1px solid var(--border); background: rgba(255,255,255,0.04); }
 .field span { color: var(--muted); font-size: 0.95rem; }
 .field strong { font-size: 1rem; }
 .field input[type="number"], .field input[type="text"], .field textarea, .field select {
@@ -266,6 +266,50 @@ h1 { margin: 0; font-size: clamp(2.6rem, 5vw, 4.6rem); line-height: 1; }
   grid-template-columns: 1fr 1fr;
   gap: 10px;
 }
+.wordmask-tabs {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+.wordmask-tabs .secondary {
+  position: relative;
+  width: 100%;
+}
+.wordmask-tabs .secondary.active {
+  border-color: rgba(116, 192, 252, 0.82);
+  background: linear-gradient(180deg, rgba(116, 192, 252, 0.28), rgba(116, 192, 252, 0.12));
+  color: #eef8ff;
+  font-weight: 700;
+}
+.wordmask-tabs .secondary.active::after {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 20px;
+  height: 20px;
+  border-radius: 999px;
+  border: 1px solid rgba(116, 192, 252, 0.65);
+  background: rgba(8, 17, 31, 0.68);
+  display: grid;
+  place-items: center;
+  font-size: 0.72rem;
+  line-height: 1;
+}
+.wordmask-tabs .secondary[data-wordmask-tab="photos"].active::after {
+  content: "🖼";
+}
+.wordmask-tabs .secondary[data-wordmask-tab="subtitle"].active::after {
+  content: "T";
+  font-weight: 800;
+}
+.wordmask-tabs .secondary[data-wordmask-tab="export"].active::after {
+  content: "⇪";
+}
+.wordmask-tab-panel {
+  display: grid;
+  gap: 10px;
+}
 .wordmask-photo-item {
   border: 1px solid var(--border);
   border-radius: 10px;
@@ -328,6 +372,9 @@ h1 { margin: 0; font-size: clamp(2.6rem, 5vw, 4.6rem); line-height: 1; }
 }
 .wordmask-actions {
   justify-content: flex-end;
+}
+body.touch-upload-mode #wordMaskSaveButton {
+  display: none;
 }
 .confirm-panel { width: min(460px, calc(100vw - 24px)); }
 .dialog-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
@@ -770,7 +817,24 @@ input[type="file"] { color: var(--muted); }
     top: 4px;
   }
   .wordmask-preview-wrap {
-    --wordmask-preview-max-width: min(100%, calc((44vh) * var(--wordmask-canvas-ratio)));
+    --wordmask-preview-max-width: min(100%, calc((32vh) * var(--wordmask-canvas-ratio)));
+  }
+  .wordmask-stage > .updates-block:last-of-type {
+    position: sticky;
+    bottom: 0;
+    z-index: 6;
+    max-height: 50vh;
+    overflow: auto;
+    padding-bottom: 10px;
+    border-radius: 18px 18px 0 0;
+    background: linear-gradient(180deg, rgba(12, 19, 34, 0.98), rgba(8, 14, 26, 0.98));
+  }
+  .wordmask-actions {
+    position: sticky;
+    bottom: 0;
+    z-index: 2;
+    background: linear-gradient(180deg, rgba(8, 17, 31, 0), rgba(8, 17, 31, 0.95) 35%);
+    padding-top: 8px;
   }
   .assistant-suggestion-card .grid-mini {
     grid-row: auto;
@@ -778,4 +842,10 @@ input[type="file"] { color: var(--muted); }
   }
   .export-preset-grid { display: none; }
   .export-preset-select { display: block; }
+  .field {
+    margin-top: 4px;
+    gap: 4px;
+    padding: 12px;
+    border-radius: 14px;
+  }
 }

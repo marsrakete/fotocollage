@@ -470,73 +470,82 @@
 
             <section class="updates-block">
               <h3 id="wordMaskStepC">Schritt C: Fotos + Untertitel</h3>
-              <label class="field">
-                <span id="wordMaskBackgroundLabel">Hintergrundfarbe</span>
-                <input id="wordMaskBackgroundInput" type="color" value="#f5f5f3" />
-              </label>
-              <label class="field">
-                <span id="wordMaskPhotosLabel">Fotos laden</span>
-                <input id="wordMaskPhotosInput" type="file" accept="image/*" multiple />
-              </label>
-              <div class="wordmask-order-actions">
-                <button id="wordMaskShufflePhotosButton" class="secondary" type="button">Bilder zufällig neu platzieren</button>
-                <button id="wordMaskToggleReorderButton" class="secondary" type="button">Sortieren</button>
+              <div class="wordmask-tabs" id="wordMaskTabs">
+                <button id="wordMaskTabPhotos" class="secondary active" data-wordmask-tab="photos" type="button">Fotos</button>
+                <button id="wordMaskTabSubtitle" class="secondary" data-wordmask-tab="subtitle" type="button">Untertitel</button>
+                <button id="wordMaskTabExport" class="secondary" data-wordmask-tab="export" type="button">Export</button>
               </div>
-              <p class="settings-status" id="wordMaskPhotosStatus"></p>
-              <p class="settings-status" id="wordMaskReorderHint" hidden></p>
-              <div class="field" id="wordMaskPhotoOrderField" hidden>
-                <span id="wordMaskPhotoOrderLabel">Foto-Reihenfolge</span>
-                <div id="wordMaskPhotoOrder" class="wordmask-photo-order"></div>
-              </div>
-              <label class="field">
-                <span id="wordMaskSubtitleLabel">Untertitel (frei bewegbar)</span>
-                <input id="wordMaskSubtitleInput" type="text" maxlength="120" placeholder="Für ein erfolgreiches Jahr" />
-              </label>
-              <div class="wordmask-row">
+              <div id="wordMaskPanelPhotos" class="wordmask-tab-panel" data-wordmask-panel="photos">
                 <label class="field">
-                  <span id="wordMaskSubtitleFontLabel">Schriftart</span>
-                  <select id="wordMaskSubtitleFontSelect">
-                    <option value="Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif">Impact</option>
-                    <option value="'Arial Black', Arial, Helvetica, sans-serif">Arial Black</option>
-                    <option value="'Franklin Gothic Heavy', 'Arial Narrow Bold', Arial, sans-serif">Franklin Gothic Heavy</option>
-                    <option value="Haettenschweiler, 'Arial Narrow Bold', sans-serif">Haettenschweiler</option>
-                    <option value="'Brush Script MT', 'Segoe Script', cursive">Brush Script</option>
-                    <option value="'Segoe Script', 'Lucida Handwriting', cursive">Segoe Script</option>
-                    <option value="'Monotype Corsiva', 'Times New Roman', cursive">Monotype Corsiva</option>
-                    <option value="'Snell Roundhand', 'Brush Script MT', cursive">Snell Roundhand</option>
-                    <option value="'Times New Roman', Times, serif">Times New Roman</option>
-                    <option value="Georgia, serif">Georgia</option>
-                    <option value="Arial, Helvetica, sans-serif">Arial</option>
-                    <option value="Segoe UI, system-ui, sans-serif">Segoe UI</option>
-                    <option value="'Courier New', Courier, monospace">Courier New</option>
-                    <option value="'Trebuchet MS', 'Segoe UI', sans-serif">Trebuchet MS</option>
-                    <option value="Verdana, Geneva, sans-serif">Verdana</option>
-                    <option value="'Gill Sans', 'Gill Sans MT', Calibri, sans-serif">Gill Sans</option>
-                    <option value="'Palatino Linotype', Palatino, serif">Palatino</option>
-                    <option value="'Lucida Handwriting', 'Brush Script MT', cursive">Handwriting</option>
-                    <option value="'Comic Sans MS', 'Comic Sans', cursive">Comic Sans</option>
-                  </select>
+                  <span id="wordMaskBackgroundLabel">Hintergrundfarbe</span>
+                  <input id="wordMaskBackgroundInput" type="color" value="#f5f5f3" />
                 </label>
                 <label class="field">
-                  <span id="wordMaskSubtitleSizeLabel">Schriftgröße</span>
-                  <input id="wordMaskSubtitleSizeInput" type="range" min="18" max="140" step="1" value="56" />
+                  <span id="wordMaskPhotosLabel">Fotos laden</span>
+                  <input id="wordMaskPhotosInput" type="file" accept="image/*" multiple />
                 </label>
+                <div class="wordmask-order-actions">
+                  <button id="wordMaskShufflePhotosButton" class="secondary" type="button">Bilder zufällig neu platzieren</button>
+                  <button id="wordMaskToggleReorderButton" class="secondary" type="button">Sortieren</button>
+                </div>
+                <p class="settings-status" id="wordMaskPhotosStatus"></p>
+                <p class="settings-status" id="wordMaskReorderHint" hidden></p>
+                <div class="field" id="wordMaskPhotoOrderField" hidden>
+                  <span id="wordMaskPhotoOrderLabel">Foto-Reihenfolge</span>
+                  <div id="wordMaskPhotoOrder" class="wordmask-photo-order"></div>
+                </div>
               </div>
-              <div class="wordmask-row">
-                <label class="watermark-toggle">
-                  <input id="wordMaskSubtitleBoldInput" type="checkbox" />
-                  <span id="wordMaskSubtitleBoldLabel">Fett</span>
+              <div id="wordMaskPanelSubtitle" class="wordmask-tab-panel" data-wordmask-panel="subtitle" hidden>
+                <label class="field">
+                  <span id="wordMaskSubtitleLabel">Untertitel (frei bewegbar)</span>
+                  <input id="wordMaskSubtitleInput" type="text" maxlength="120" placeholder="Für ein erfolgreiches Jahr" />
                 </label>
-                <label class="watermark-toggle">
-                  <input id="wordMaskSubtitleItalicInput" type="checkbox" />
-                  <span id="wordMaskSubtitleItalicLabel">Kursiv</span>
-                </label>
-              </div>
-              <div class="wordmask-row">
+                <div class="wordmask-row">
+                  <label class="field">
+                    <span id="wordMaskSubtitleFontLabel">Schriftart</span>
+                    <select id="wordMaskSubtitleFontSelect">
+                      <option value="Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif">Impact</option>
+                      <option value="'Arial Black', Arial, Helvetica, sans-serif">Arial Black</option>
+                      <option value="'Franklin Gothic Heavy', 'Arial Narrow Bold', Arial, sans-serif">Franklin Gothic Heavy</option>
+                      <option value="Haettenschweiler, 'Arial Narrow Bold', sans-serif">Haettenschweiler</option>
+                      <option value="'Brush Script MT', 'Segoe Script', cursive">Brush Script</option>
+                      <option value="'Segoe Script', 'Lucida Handwriting', cursive">Segoe Script</option>
+                      <option value="'Monotype Corsiva', 'Times New Roman', cursive">Monotype Corsiva</option>
+                      <option value="'Snell Roundhand', 'Brush Script MT', cursive">Snell Roundhand</option>
+                      <option value="'Times New Roman', Times, serif">Times New Roman</option>
+                      <option value="Georgia, serif">Georgia</option>
+                      <option value="Arial, Helvetica, sans-serif">Arial</option>
+                      <option value="Segoe UI, system-ui, sans-serif">Segoe UI</option>
+                      <option value="'Courier New', Courier, monospace">Courier New</option>
+                      <option value="'Trebuchet MS', 'Segoe UI', sans-serif">Trebuchet MS</option>
+                      <option value="Verdana, Geneva, sans-serif">Verdana</option>
+                      <option value="'Gill Sans', 'Gill Sans MT', Calibri, sans-serif">Gill Sans</option>
+                      <option value="'Palatino Linotype', Palatino, serif">Palatino</option>
+                      <option value="'Lucida Handwriting', 'Brush Script MT', cursive">Handwriting</option>
+                      <option value="'Comic Sans MS', 'Comic Sans', cursive">Comic Sans</option>
+                    </select>
+                  </label>
+                  <label class="field">
+                    <span id="wordMaskSubtitleSizeLabel">Schriftgröße</span>
+                    <input id="wordMaskSubtitleSizeInput" type="range" min="18" max="140" step="1" value="56" />
+                  </label>
+                </div>
+                <div class="wordmask-row">
+                  <label class="watermark-toggle">
+                    <input id="wordMaskSubtitleBoldInput" type="checkbox" />
+                    <span id="wordMaskSubtitleBoldLabel">Fett</span>
+                  </label>
+                  <label class="watermark-toggle">
+                    <input id="wordMaskSubtitleItalicInput" type="checkbox" />
+                    <span id="wordMaskSubtitleItalicLabel">Kursiv</span>
+                  </label>
+                </div>
                 <label class="field">
                   <span id="wordMaskSubtitleColorLabel">Textfarbe</span>
                   <input id="wordMaskSubtitleColorInput" type="color" value="#222222" />
                 </label>
+              </div>
+              <div id="wordMaskPanelExport" class="wordmask-tab-panel" data-wordmask-panel="export" hidden>
                 <label class="field">
                   <span id="wordMaskOutputFormatLabel">Exportformat</span>
                   <select id="wordMaskOutputFormatSelect">
@@ -545,10 +554,10 @@
                     <option value="pdf">PDF</option>
                   </select>
                 </label>
-              </div>
-              <div class="settings-footer wordmask-actions">
-                <button id="wordMaskShareButton" class="primary" type="button">Teilen</button>
-                <button id="wordMaskSaveButton" class="secondary" type="button">Speichern</button>
+                <div class="settings-footer wordmask-actions">
+                  <button id="wordMaskShareButton" class="primary" type="button">Teilen</button>
+                  <button id="wordMaskSaveButton" class="secondary" type="button">Speichern</button>
+                </div>
               </div>
             </section>
 
