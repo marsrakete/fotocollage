@@ -44,9 +44,9 @@ const stencilPathCache = new Map();
 let stencilSvgLoadPromise = null;
 
 const DEFAULT_VERSION_INFO = Object.freeze({
-  appVersion: "1.3.93",
-  cacheVersion: "v180",
-  label: "Frontend-Skill: visuelles Mode-Redesign fuer Foto- und Form-Collage",
+  appVersion: "1.3.95",
+  cacheVersion: "v182",
+  label: "FR-Tipps fuer Form-Collage sprachlich verbessert",
 });
 
 const ZOOM_MIN = 0.35;
