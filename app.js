@@ -44,9 +44,9 @@ const stencilPathCache = new Map();
 let stencilSvgLoadPromise = null;
 
 const DEFAULT_VERSION_INFO = Object.freeze({
-  appVersion: "1.3.91",
-  cacheVersion: "v178",
-  label: "UI: .field kompakter mobil (Padding/Radius) und Media-Fix",
+  appVersion: "1.3.93",
+  cacheVersion: "v180",
+  label: "Frontend-Skill: visuelles Mode-Redesign fuer Foto- und Form-Collage",
 });
 
 const ZOOM_MIN = 0.35;
@@ -2590,6 +2590,9 @@ function setUiMode(mode, options = {}) {
   const nextMode = mode === "photo" || mode === "form" ? mode : "launcher";
   const { scrollToTop = true } = options;
   state.uiMode = nextMode;
+  document.body.classList.toggle("ui-launcher", nextMode === "launcher");
+  document.body.classList.toggle("ui-photo", nextMode === "photo");
+  document.body.classList.toggle("ui-form", nextMode === "form");
   const isPhoto = nextMode === "photo";
   const isForm = nextMode === "form";
   const isLauncher = nextMode === "launcher";
