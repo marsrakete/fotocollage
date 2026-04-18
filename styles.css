@@ -185,6 +185,13 @@ h1 { margin: 0; font-size: clamp(2.6rem, 5vw, 4.6rem); line-height: 1; }
   gap: 12px;
   margin-bottom: 14px;
 }
+.wordmask-step-toggle {
+  display: none;
+}
+.wordmask-step-content {
+  display: grid;
+  gap: 10px;
+}
 .ui-photo .photo-mode-area {
   display: grid;
   gap: 14px;
@@ -969,6 +976,36 @@ input[type="file"] { color: var(--muted); }
   .wordmask-free-size {
     grid-template-columns: 1fr;
   }
+  .ui-form .wordmask-step-block {
+    padding: 0;
+    overflow: clip;
+  }
+  .ui-form .wordmask-step-toggle {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    border: 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    background: linear-gradient(180deg, rgba(255,255,255,0.07), rgba(255,255,255,0.02));
+    color: var(--text);
+    padding: 12px 12px 11px;
+    font-weight: 700;
+    text-align: left;
+  }
+  .ui-form .wordmask-step-toggle .wordmask-step-chevron {
+    font-size: 0.9rem;
+    opacity: 0.9;
+    transition: transform 140ms ease;
+  }
+  .ui-form .wordmask-step-toggle.active .wordmask-step-chevron {
+    transform: rotate(180deg);
+  }
+  .ui-form .wordmask-step-content {
+    padding: 8px 10px 10px;
+    gap: 8px;
+  }
   .ui-form .wordmask-stage {
     gap: 8px;
   }
@@ -1004,9 +1041,15 @@ input[type="file"] { color: var(--muted); }
     --wordmask-preview-max-width: min(100%, calc((32vh) * var(--wordmask-canvas-ratio)));
   }
   .ui-form .wordmask-preview-wrap {
-    --wordmask-preview-max-width: min(100%, calc((30svh) * var(--wordmask-canvas-ratio)));
+    --wordmask-preview-max-width: 100%;
+    width: 100%;
+    max-width: 100%;
+    margin: 0;
     padding: 8px;
     border-radius: 12px;
+  }
+  .ui-form .wordmask-preview-wrap canvas {
+    width: 100%;
   }
   .wordmask-stage > .updates-block:last-of-type {
     position: sticky;
@@ -1019,8 +1062,12 @@ input[type="file"] { color: var(--muted); }
     background: linear-gradient(180deg, rgba(12, 19, 34, 0.98), rgba(8, 14, 26, 0.98));
   }
   .ui-form .wordmask-stage > .updates-block:last-of-type {
-    max-height: 56vh;
-    padding-bottom: 8px;
+    position: static;
+    max-height: none;
+    overflow: visible;
+    padding-bottom: 0;
+    border-radius: 14px;
+    background: transparent;
   }
   .wordmask-actions {
     position: sticky;
@@ -1032,6 +1079,11 @@ input[type="file"] { color: var(--muted); }
   .ui-form .wordmask-actions .primary,
   .ui-form .wordmask-actions .secondary {
     min-height: 46px;
+  }
+  .ui-form .wordmask-actions {
+    position: static;
+    background: transparent;
+    padding-top: 0;
   }
   .assistant-suggestion-card .grid-mini {
     grid-row: auto;

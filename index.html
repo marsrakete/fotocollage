@@ -380,8 +380,12 @@
               <canvas id="wordMaskCanvas" width="1500" height="1000"></canvas>
             </div>
 
-            <section class="updates-block">
-              <h3 id="wordMaskStepA">Schritt A: Zielgröße</h3>
+            <section class="updates-block wordmask-step-block" data-wordmask-step="a">
+              <button id="wordMaskStepAToggle" class="wordmask-step-toggle" type="button" aria-expanded="true" aria-controls="wordMaskStepAContent">
+                <span id="wordMaskStepA">Schritt A: Zielgröße</span>
+                <span class="wordmask-step-chevron" aria-hidden="true">▾</span>
+              </button>
+              <div id="wordMaskStepAContent" class="wordmask-step-content">
               <label class="field">
                 <span id="wordMaskPresetLabel">Format</span>
                 <select id="wordMaskPresetSelect">
@@ -402,10 +406,15 @@
                   <input id="wordMaskHeightInput" type="number" min="600" max="6000" step="10" value="1000" />
                 </label>
               </div>
+              </div>
             </section>
 
-            <section class="updates-block">
-              <h3 id="wordMaskStepB">Schritt B: Stanze</h3>
+            <section class="updates-block wordmask-step-block" data-wordmask-step="b">
+              <button id="wordMaskStepBToggle" class="wordmask-step-toggle" type="button" aria-expanded="true" aria-controls="wordMaskStepBContent">
+                <span id="wordMaskStepB">Schritt B: Stanze</span>
+                <span class="wordmask-step-chevron" aria-hidden="true">▾</span>
+              </button>
+              <div id="wordMaskStepBContent" class="wordmask-step-content">
               <div class="field">
                 <span id="wordMaskModeLabel">Auswahl</span>
                 <div class="wordmask-mode-toggle" id="wordMaskModeToggle">
@@ -468,10 +477,15 @@
                 <span id="wordMaskSpacingLabel">Zeichenabstand</span>
                 <input id="wordMaskSpacingInput" type="range" min="0" max="120" step="1" value="8" />
               </label>
+              </div>
             </section>
 
-            <section class="updates-block">
-              <h3 id="wordMaskStepC">Schritt C: Fotos + Untertitel</h3>
+            <section class="updates-block wordmask-step-block" data-wordmask-step="c">
+              <button id="wordMaskStepCToggle" class="wordmask-step-toggle" type="button" aria-expanded="true" aria-controls="wordMaskStepCContent">
+                <span id="wordMaskStepC">Schritt C: Fotos + Untertitel</span>
+                <span class="wordmask-step-chevron" aria-hidden="true">▾</span>
+              </button>
+              <div id="wordMaskStepCContent" class="wordmask-step-content">
               <div class="wordmask-tabs" id="wordMaskTabs">
                 <button id="wordMaskTabPhotos" class="secondary active" data-wordmask-tab="photos" type="button">Fotos</button>
                 <button id="wordMaskTabSubtitle" class="secondary" data-wordmask-tab="subtitle" type="button">Untertitel</button>
@@ -560,6 +574,7 @@
                   <button id="wordMaskShareButton" class="primary" type="button">Teilen</button>
                   <button id="wordMaskSaveButton" class="secondary" type="button">Speichern</button>
                 </div>
+              </div>
               </div>
             </section>
 

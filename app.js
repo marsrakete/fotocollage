@@ -44,9 +44,9 @@ const stencilPathCache = new Map();
 let stencilSvgLoadPromise = null;
 
 const DEFAULT_VERSION_INFO = Object.freeze({
-  appVersion: "1.3.95",
-  cacheVersion: "v182",
-  label: "FR-Tipps fuer Form-Collage sprachlich verbessert",
+  appVersion: "1.3.96",
+  cacheVersion: "v183",
+  label: "Form-Collage mobil: A-B-C Akkordeon und dynamische Breite",
 });
 
 const ZOOM_MIN = 0.35;
@@ -152,6 +152,7 @@ const state = {
     background: "#f5f5f3",
     outputFormat: "png",
     activeTab: "photos",
+    mobileOpenStep: "a",
     photos: [],
     reorderMode: false,
     reorderSourceIndex: null,
@@ -189,10 +190,14 @@ const els = {
   wordMaskStageTitle: document.getElementById("wordMaskStageTitle"),
   wordMaskIntro: document.getElementById("wordMaskIntro"),
   wordMaskStepA: document.getElementById("wordMaskStepA"),
+  wordMaskStepAToggle: document.getElementById("wordMaskStepAToggle"),
+  wordMaskStepAContent: document.getElementById("wordMaskStepAContent"),
   wordMaskPresetLabel: document.getElementById("wordMaskPresetLabel"),
   wordMaskWidthLabel: document.getElementById("wordMaskWidthLabel"),
   wordMaskHeightLabel: document.getElementById("wordMaskHeightLabel"),
   wordMaskStepB: document.getElementById("wordMaskStepB"),
+  wordMaskStepBToggle: document.getElementById("wordMaskStepBToggle"),
+  wordMaskStepBContent: document.getElementById("wordMaskStepBContent"),
   wordMaskWordLabel: document.getElementById("wordMaskWordLabel"),
   wordMaskFontLabel: document.getElementById("wordMaskFontLabel"),
   wordMaskSizeLabel: document.getElementById("wordMaskSizeLabel"),
@@ -200,6 +205,8 @@ const els = {
   wordMaskWordItalicLabel: document.getElementById("wordMaskWordItalicLabel"),
   wordMaskSpacingLabel: document.getElementById("wordMaskSpacingLabel"),
   wordMaskStepC: document.getElementById("wordMaskStepC"),
+  wordMaskStepCToggle: document.getElementById("wordMaskStepCToggle"),
+  wordMaskStepCContent: document.getElementById("wordMaskStepCContent"),
   wordMaskBackgroundLabel: document.getElementById("wordMaskBackgroundLabel"),
   wordMaskPhotosLabel: document.getElementById("wordMaskPhotosLabel"),
   wordMaskSubtitleFontLabel: document.getElementById("wordMaskSubtitleFontLabel"),
@@ -1256,6 +1263,36 @@ function updateWordMaskReorderUi() {
   }
 }
 
+function isWordMaskMobileAccordionActive() {
+  return state.uiMode === "form" && window.matchMedia("(max-width: 640px)").matches;
+}
+
+function applyWordMaskStepAccordion() {
+  const mobile = isWordMaskMobileAccordionActive();
+  const openStep = state.wordMask.mobileOpenStep || "a";
+  const steps = [
+    { id: "a", toggle: els.wordMaskStepAToggle, content: els.wordMaskStepAContent },
+    { id: "b", toggle: els.wordMaskStepBToggle, content: els.wordMaskStepBContent },
+    { id: "c", toggle: els.wordMaskStepCToggle, content: els.wordMaskStepCContent },
+  ];
+  steps.forEach((entry) => {
+    const open = !mobile || entry.id === openStep;
+    if (entry.content) {
+      entry.content.hidden = !open;
+    }
+    if (entry.toggle) {
+      entry.toggle.setAttribute("aria-expanded", String(open));
+      entry.toggle.classList.toggle("active", open);
+    }
+  });
+}
+
+function setWordMaskOpenStep(step) {
+  const next = step === "b" || step === "c" ? step : "a";
+  state.wordMask.mobileOpenStep = next;
+  applyWordMaskStepAccordion();
+}
+
 function setWordMaskTab(nextTab) {
   const tab = nextTab === "subtitle" || nextTab === "export" ? nextTab : "photos";
   state.wordMask.activeTab = tab;
@@ -1279,6 +1316,11 @@ function setWordMaskTab(nextTab) {
       entry.panel.hidden = !active;
     }
   });
+  if (isWordMaskMobileAccordionActive()) {
+    setWordMaskOpenStep("c");
+  } else {
+    applyWordMaskStepAccordion();
+  }
 }
 
 function isActiveFieldLockedByReorder() {
@@ -2630,6 +2672,7 @@ function setUiMode(mode, options = {}) {
         renderWordMaskPreview();
       }
     });
+    applyWordMaskStepAccordion();
   } else {
     state.wordMask.reorderMode = false;
     state.wordMask.reorderSourceIndex = null;
@@ -2637,6 +2680,7 @@ function setUiMode(mode, options = {}) {
     els.gridSummary.textContent = "\u2013";
     els.filledSummary.textContent = "\u2013";
     els.stepSummary.textContent = "\u2013";
+    applyWordMaskStepAccordion();
   }
   if (scrollToTop) {
     els.wizardRoot?.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -4077,6 +4121,7 @@ function openWordMaskStage() {
   state.wordMask.reorderSourceIndex = null;
   setWordMaskTab(state.wordMask.activeTab || "photos");
   setUiMode("form");
+  setWordMaskOpenStep("a");
 }
 
 function closeWordMaskStage() {
@@ -5710,6 +5755,15 @@ function wireControls() {
   els.wordMaskStartButton?.addEventListener("click", () => {
     openWordMaskStage();
   });
+  els.wordMaskStepAToggle?.addEventListener("click", () => {
+    setWordMaskOpenStep("a");
+  });
+  els.wordMaskStepBToggle?.addEventListener("click", () => {
+    setWordMaskOpenStep("b");
+  });
+  els.wordMaskStepCToggle?.addEventListener("click", () => {
+    setWordMaskOpenStep("c");
+  });
   const onWordMaskInputChange = () => {
     syncWordMaskStateFromInputs();
     updateWordMaskFreeSizeUi();
@@ -5838,6 +5892,7 @@ function wireControls() {
   });
   window.addEventListener("resize", () => {
     updateUploadUiForDevice();
+    applyWordMaskStepAccordion();
     if (state.activeStep >= 3) {
       renderPreview();
       renderExportPreview();
