@@ -1,5 +1,5 @@
 const CACHE_PREFIX = "fotocollage-cache";
-const CACHE_VERSION = "v192";
+const CACHE_VERSION = "v193";
 const CACHE_NAME = `${CACHE_PREFIX}-${CACHE_VERSION}`;
 const ASSETS = [
   "./",
@@ -34,6 +34,8 @@ const ASSETS = [
   "./manifest.json",
   "./version.json",
   "./README.md",
+  "./README.de.md",
+  "./README.en.md",
   "./preset-builder.html",
   "./icon.svg",
   "./icon-192.png",
@@ -64,7 +66,10 @@ self.addEventListener("fetch", (event) => {
   }
 
   const requestUrl = new URL(event.request.url);
-  if (requestUrl.pathname.endsWith("/version.json") || requestUrl.pathname.endsWith("/README.md")) {
+  if (
+    requestUrl.pathname.endsWith("/version.json")
+    || /\/README(\.de|\.en)?\.md$/i.test(requestUrl.pathname)
+  ) {
     event.respondWith(
       fetch(event.request)
         .then((response) => {
@@ -75,7 +80,14 @@ self.addEventListener("fetch", (event) => {
         .catch(() =>
           caches.match(event.request).then((cached) => {
             if (cached) return cached;
-            if (requestUrl.pathname.endsWith("/README.md")) return caches.match("./README.md");
+            if (/\/README(\.de|\.en)?\.md$/i.test(requestUrl.pathname)) {
+              return (
+                caches.match(event.request)
+                || caches.match("./README.en.md")
+                || caches.match("./README.de.md")
+                || caches.match("./README.md")
+              );
+            }
             return caches.match("./version.json");
           })
         )

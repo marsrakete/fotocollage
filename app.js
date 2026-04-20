@@ -44,9 +44,9 @@ const stencilPathCache = new Map();
 let stencilSvgLoadPromise = null;
 
 const DEFAULT_VERSION_INFO = Object.freeze({
-  appVersion: "1.4.05",
-  cacheVersion: "v192",
-  label: "Wort-Stanze Bildquellen robuster und Wasserzeichen-ReRender live verbessert",
+  appVersion: "1.4.06",
+  cacheVersion: "v193",
+  label: "Mehrsprachige README-Hilfe (DE/EN, FR-Fallback) integriert",
 });
 
 const ZOOM_MIN = 0.35;
@@ -121,7 +121,7 @@ const state = {
   gifDelaySeconds: 1,
   languagePreference: "auto",
   language: "de",
-  readmeText: "",
+  readmeTextByLocale: {},
   tipAutoShowEnabled: true,
   versionInfo: { ...DEFAULT_VERSION_INFO },
   serviceWorkerRegistration: null,
@@ -1253,8 +1253,11 @@ function translateStaticUi() {
   }
   renderWordMaskStencilOptions();
   updateWordMaskReorderUi();
-  if (els.helpDialog.open && !state.readmeText) {
-    els.readmeStatus.textContent = t("helpLoading");
+  if (els.helpDialog.open) {
+    if (!state.readmeTextByLocale[resolveReadmeLocale()]) {
+      els.readmeStatus.textContent = t("helpLoading");
+    }
+    void loadReadmeContent();
   }
   updateRestartLaunchVisibility();
   renderAssistantSuggestions();
@@ -1379,28 +1382,42 @@ function isActiveFieldLockedByReorder() {
 }
 
 async function loadReadmeContent() {
-  if (state.readmeText) {
+  const locale = resolveReadmeLocale();
+  const cachedReadme = state.readmeTextByLocale[locale];
+  if (cachedReadme) {
     els.readmeStatus.textContent = "";
-    els.readmeContent.innerHTML = renderMarkdownAsHtml(state.readmeText);
+    els.readmeContent.innerHTML = renderMarkdownAsHtml(cachedReadme);
     return;
   }
   els.readmeStatus.textContent = t("helpLoading");
   els.readmeContent.innerHTML = "";
+  const readmePath = resolveReadmePath(locale);
   try {
-    const response = await fetch("./README.md", { cache: "no-cache" });
+    let response = await fetch(readmePath, { cache: "no-cache" });
+    if (!response.ok && locale !== "en") {
+      response = await fetch("./README.en.md", { cache: "no-cache" });
+    }
     if (!response.ok) {
-      throw new Error("README unavailable");
+      throw new Error("README unavailable.");
     }
     const text = await response.text();
-    state.readmeText = text;
+    state.readmeTextByLocale[locale] = text;
     els.readmeStatus.textContent = "";
     els.readmeContent.innerHTML = renderMarkdownAsHtml(text);
   } catch {
     els.readmeStatus.textContent = t("helpFailed");
-    if (!state.readmeText) {
+    if (!state.readmeTextByLocale[locale]) {
       els.readmeContent.innerHTML = "";
     }
   }
+}
+
+function resolveReadmeLocale() {
+  return state.language === "de" ? "de" : "en";
+}
+
+function resolveReadmePath(locale) {
+  return locale === "de" ? "./README.de.md" : "./README.en.md";
 }
 
 function renderMarkdownAsHtml(markdown) {

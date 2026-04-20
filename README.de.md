@@ -1,6 +1,6 @@
 # Foto-Collage (PWA)
 
-Sprache: Deutsch | [English version](./README.en.md) | [Deutsche Version](./README.de.md)
+Sprache: Deutsch | [English version](./README.en.md)
 
 ![Foto-Collage Icon](./icon-192.png)
 

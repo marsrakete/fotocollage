@@ -1,5 +1,5 @@
 {
-  "appVersion": "1.4.05",
-  "cacheVersion": "v192",
-  "label": "Wort-Stanze Bildquellen robuster und Wasserzeichen-ReRender live verbessert"
+  "appVersion": "1.4.06",
+  "cacheVersion": "v193",
+  "label": "Mehrsprachige README-Hilfe (DE/EN, FR-Fallback) integriert"
 }
