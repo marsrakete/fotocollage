@@ -44,9 +44,9 @@ const stencilPathCache = new Map();
 let stencilSvgLoadPromise = null;
 
 const DEFAULT_VERSION_INFO = Object.freeze({
-  appVersion: "1.4.04",
-  cacheVersion: "v191",
-  label: "Home-Button in Modus-Auswahl umbenannt und lokalisiert",
+  appVersion: "1.4.05",
+  cacheVersion: "v192",
+  label: "Wort-Stanze Bildquellen robuster und Wasserzeichen-ReRender live verbessert",
 });
 
 const ZOOM_MIN = 0.35;
@@ -4734,6 +4734,34 @@ function endWordMaskSubtitleDrag(event) {
   els.wordMaskStage?.classList.remove("subtitle-dragging");
 }
 
+function getWordMaskDrawableSource(photo) {
+  if (!photo || !photo.objectUrl) return null;
+  if (!(photo.source instanceof HTMLImageElement)) {
+    photo.source = new Image();
+  }
+  const source = photo.source;
+  if (!source.src) {
+    source.src = photo.objectUrl;
+  }
+  const width = Number(source.naturalWidth || source.width || 0);
+  const height = Number(source.naturalHeight || source.height || 0);
+  if (width > 0 && height > 0) {
+    return source;
+  }
+  if (!photo.loadSubscribed) {
+    photo.loadSubscribed = true;
+    const onDone = () => {
+      photo.loadSubscribed = false;
+      if (state.uiMode === "form") {
+        renderWordMaskPreview();
+      }
+    };
+    source.addEventListener("load", onDone, { once: true });
+    source.addEventListener("error", onDone, { once: true });
+  }
+  return null;
+}
+
 function renderWordMaskPreview() {
   const ctx = getWordMaskCanvasContext();
   if (!ctx || !els.wordMaskCanvas) return;
@@ -4835,8 +4863,10 @@ function renderWordMaskPreview() {
       const photo = photos[i];
       const rect = photoRects[i];
       if (!rect) continue;
+      const source = getWordMaskDrawableSource(photo);
+      if (!source) continue;
       try {
-        drawBitmapCover(fillCtx, photo.source, rect.x, rect.y, rect.width, rect.height);
+        drawBitmapCover(fillCtx, source, rect.x, rect.y, rect.width, rect.height);
         drawnPhotos += 1;
       } catch {
         // Keep rendering remaining files.
@@ -5986,6 +6016,9 @@ function wireControls() {
     state.watermark = { ...state.watermark, ...updates };
     saveWatermarkSettings();
     renderExportPreview();
+    if (state.uiMode === "form") {
+      renderWordMaskPreview();
+    }
   };
   els.watermarkTextInput.addEventListener("input", () => watermarkHandler({ text: els.watermarkTextInput.value }));
   els.watermarkPositionSelect.addEventListener("change", () => watermarkHandler({ position: els.watermarkPositionSelect.value }));

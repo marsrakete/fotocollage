@@ -1,5 +1,5 @@
 {
-  "appVersion": "1.4.04",
-  "cacheVersion": "v191",
-  "label": "Home-Button in Modus-Auswahl umbenannt und lokalisiert"
+  "appVersion": "1.4.05",
+  "cacheVersion": "v192",
+  "label": "Wort-Stanze Bildquellen robuster und Wasserzeichen-ReRender live verbessert"
 }
