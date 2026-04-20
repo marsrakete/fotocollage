@@ -406,31 +406,6 @@ h1 { margin: 0; font-size: clamp(2.6rem, 5vw, 4.6rem); line-height: 1; }
   color: #eef8ff;
   font-weight: 700;
 }
-.wordmask-tabs .secondary.active::after {
-  position: absolute;
-  right: 10px;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 20px;
-  height: 20px;
-  border-radius: 999px;
-  border: 1px solid rgba(116, 192, 252, 0.65);
-  background: rgba(8, 17, 31, 0.68);
-  display: grid;
-  place-items: center;
-  font-size: 0.72rem;
-  line-height: 1;
-}
-.wordmask-tabs .secondary[data-wordmask-tab="photos"].active::after {
-  content: "🖼";
-}
-.wordmask-tabs .secondary[data-wordmask-tab="subtitle"].active::after {
-  content: "T";
-  font-weight: 800;
-}
-.wordmask-tabs .secondary[data-wordmask-tab="export"].active::after {
-  content: "⇪";
-}
 .wordmask-tab-panel {
   display: grid;
   gap: 10px;
@@ -455,6 +430,20 @@ h1 { margin: 0; font-size: clamp(2.6rem, 5vw, 4.6rem); line-height: 1; }
   font-size: 0.75rem;
   color: var(--muted);
   text-align: center;
+}
+.wordmask-photo-delete {
+  width: 100%;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 4px 6px;
+  background: rgba(255, 255, 255, 0.05);
+  color: #f4f7fb;
+  cursor: pointer;
+  font-size: 0.85rem;
+  line-height: 1;
+}
+.wordmask-photo-delete:hover {
+  background: rgba(255, 255, 255, 0.12);
 }
 .wordmask-photo-item.reorder-source {
   outline: 2px solid rgba(140, 233, 154, 0.86);
@@ -494,6 +483,9 @@ h1 { margin: 0; font-size: clamp(2.6rem, 5vw, 4.6rem); line-height: 1; }
   box-shadow: 0 0 0 1px rgba(255,255,255,0.16);
   touch-action: pinch-zoom pan-y;
   cursor: default;
+}
+body.wordmask-subtitle-drag {
+  overscroll-behavior: none;
 }
 .wordmask-actions {
   justify-content: flex-end;
@@ -1005,6 +997,8 @@ input[type="file"] { color: var(--muted); }
   .ui-form .wordmask-step-content {
     padding: 8px 10px 10px;
     gap: 8px;
+    min-width: 0;
+    overflow: hidden;
   }
   .ui-form .wordmask-stage {
     gap: 8px;
@@ -1015,16 +1009,21 @@ input[type="file"] { color: var(--muted); }
   }
   .ui-form .wordmask-tabs {
     gap: 6px;
+    min-width: 0;
   }
   .ui-form .wordmask-tabs .secondary {
     min-height: 44px;
     padding: 10px 12px;
+    white-space: normal;
+    line-height: 1.2;
+    min-width: 0;
   }
   .ui-form .wordmask-mode-toggle .secondary {
     min-height: 44px;
   }
   .ui-form .wordmask-order-actions {
     grid-template-columns: 1fr;
+    min-width: 0;
   }
   .ui-form .wordmask-photo-order {
     grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -1036,6 +1035,10 @@ input[type="file"] { color: var(--muted); }
   }
   .wordmask-preview-sticky {
     top: 4px;
+    z-index: 8;
+    background: #08111f;
+    padding: 6px 0 8px;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.28);
   }
   .wordmask-preview-wrap {
     --wordmask-preview-max-width: min(100%, calc((32vh) * var(--wordmask-canvas-ratio)));
@@ -1050,6 +1053,15 @@ input[type="file"] { color: var(--muted); }
   }
   .ui-form .wordmask-preview-wrap canvas {
     width: 100%;
+    touch-action: none;
+  }
+  .wordmask-stage.subtitle-dragging .wordmask-step-content,
+  .wordmask-stage.subtitle-dragging .updates-block {
+    pointer-events: none;
+  }
+  .wordmask-stage.subtitle-dragging .wordmask-preview-wrap,
+  .wordmask-stage.subtitle-dragging .wordmask-preview-wrap canvas {
+    pointer-events: auto;
   }
   .wordmask-stage > .updates-block:last-of-type {
     position: sticky;
@@ -1084,6 +1096,35 @@ input[type="file"] { color: var(--muted); }
     position: static;
     background: transparent;
     padding-top: 0;
+    width: 100%;
+    min-width: 0;
+  }
+  .ui-form #wordMaskStepCContent .field,
+  .ui-form #wordMaskStepCContent .wordmask-tab-panel,
+  .ui-form #wordMaskStepCContent .wordmask-tabs,
+  .ui-form #wordMaskStepCContent .settings-footer,
+  .ui-form #wordMaskStepCContent input[type="file"],
+  .ui-form #wordMaskStepCContent select,
+  .ui-form #wordMaskStepCContent button {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+  }
+  .ui-photo .collage-preview-wrap {
+    max-width: min(100%, 74vw);
+    margin: 0 auto;
+  }
+  .ui-photo .export-preview {
+    max-width: min(100%, 74vw);
+    margin: 0 auto;
+  }
+  .ui-photo .collage-preview {
+    width: 100%;
+    min-height: 220px;
+  }
+  .ui-photo .export-preview canvas {
+    width: 100%;
+    height: auto;
   }
   .assistant-suggestion-card .grid-mini {
     grid-row: auto;

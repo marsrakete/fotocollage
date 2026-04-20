@@ -44,9 +44,9 @@ const stencilPathCache = new Map();
 let stencilSvgLoadPromise = null;
 
 const DEFAULT_VERSION_INFO = Object.freeze({
-  appVersion: "1.3.96",
-  cacheVersion: "v183",
-  label: "Form-Collage mobil: A-B-C Akkordeon und dynamische Breite",
+  appVersion: "1.4.04",
+  cacheVersion: "v191",
+  label: "Home-Button in Modus-Auswahl umbenannt und lokalisiert",
 });
 
 const ZOOM_MIN = 0.35;
@@ -691,7 +691,50 @@ function updateTipsControls() {
 
 function updateRestartLaunchVisibility() {
   if (!els.restartLaunchContainer) return;
-  els.restartLaunchContainer.hidden = false;
+  els.restartLaunchContainer.hidden = state.uiMode === "launcher";
+}
+
+function getWordMaskPresetLabelById(presetId) {
+  if (presetId === "a4-portrait") return t("wordMaskPresetA4Portrait");
+  if (presetId === "a4-landscape") return t("wordMaskPresetA4Landscape");
+  if (presetId === "poster") return t("wordMaskPresetPoster");
+  if (presetId === "free") return t("wordMaskPresetFree");
+  return t("wordMaskPresetPostcard");
+}
+
+function updateHeroSummary() {
+  if (!els.gridSummary || !els.filledSummary || !els.stepSummary) return;
+  if (state.uiMode === "form") {
+    const modeLabel = state.wordMask.mode === "motif" ? t("wordMaskModeMotif") : t("wordMaskModeWord");
+    const presetId = String(state.wordMask.preset || "postcard");
+    const presetLabel = getWordMaskPresetLabelById(presetId);
+    const target = getWordMaskTargetSize();
+    const formatLabel = presetId === "free" ? `${presetLabel} ${target.width}x${target.height}` : presetLabel;
+    els.gridSummary.textContent = `${formatLabel} · ${modeLabel}`;
+    els.filledSummary.textContent = `${state.wordMask.photos.length} ${t("summaryPhotosLabel")}`;
+    if (isWordMaskMobileAccordionActive()) {
+      const open = state.wordMask.mobileOpenStep || "a";
+      els.stepSummary.textContent = open === "b" ? t("wordMaskStepB") : open === "c" ? t("wordMaskStepC") : t("wordMaskStepA");
+    } else {
+      els.stepSummary.textContent = t("wordMaskStepsDesktop");
+    }
+    return;
+  }
+  if (state.uiMode === "photo") {
+    const total = state.cells.length;
+    const filled = state.cells.filter((cell) => cell.bitmap).length;
+    const activePreset = PRESETS.find((preset) => preset.id === state.activePresetId);
+    els.gridSummary.textContent = activePreset
+      ? `${getPresetLabel(activePreset)} (${activePreset.slots.length} ${t("cells")})`
+      : "-";
+    els.filledSummary.textContent = `${filled} / ${total}`;
+    const totalSteps = Math.max(1, document.querySelectorAll(".step-chip").length);
+    els.stepSummary.textContent = `${state.activeStep} / ${totalSteps}`;
+    return;
+  }
+  els.gridSummary.textContent = "\u2013";
+  els.filledSummary.textContent = "\u2013";
+  els.stepSummary.textContent = "\u2013";
 }
 
 function getSuggestedFreeExportWidth() {
@@ -1269,14 +1312,14 @@ function isWordMaskMobileAccordionActive() {
 
 function applyWordMaskStepAccordion() {
   const mobile = isWordMaskMobileAccordionActive();
-  const openStep = state.wordMask.mobileOpenStep || "a";
+  const openStep = state.wordMask.mobileOpenStep || "";
   const steps = [
     { id: "a", toggle: els.wordMaskStepAToggle, content: els.wordMaskStepAContent },
     { id: "b", toggle: els.wordMaskStepBToggle, content: els.wordMaskStepBContent },
     { id: "c", toggle: els.wordMaskStepCToggle, content: els.wordMaskStepCContent },
   ];
   steps.forEach((entry) => {
-    const open = !mobile || entry.id === openStep;
+    const open = !mobile || (openStep !== "" && entry.id === openStep);
     if (entry.content) {
       entry.content.hidden = !open;
     }
@@ -1287,10 +1330,17 @@ function applyWordMaskStepAccordion() {
   });
 }
 
-function setWordMaskOpenStep(step) {
+function setWordMaskOpenStep(step, options = {}) {
+  const { toggle = false } = options;
   const next = step === "b" || step === "c" ? step : "a";
-  state.wordMask.mobileOpenStep = next;
+  const mobile = isWordMaskMobileAccordionActive();
+  if (mobile && toggle && state.wordMask.mobileOpenStep === next) {
+    state.wordMask.mobileOpenStep = "";
+  } else {
+    state.wordMask.mobileOpenStep = next;
+  }
   applyWordMaskStepAccordion();
+  updateHeroSummary();
 }
 
 function setWordMaskTab(nextTab) {
@@ -1320,6 +1370,7 @@ function setWordMaskTab(nextTab) {
     setWordMaskOpenStep("c");
   } else {
     applyWordMaskStepAccordion();
+    updateHeroSummary();
   }
 }
 
@@ -2336,9 +2387,9 @@ function buildAxis(totalSize, count, innerGap, outerGap) {
   return axis;
 }
 
-function buildLayoutRectsHexPack(width, height, layout) {
-  const outerGap = Math.max(0, Number(state.outerGap) || 0);
-  const innerGap = Math.max(0, Number(state.gap) || 0);
+function buildLayoutRectsHexPack(width, height, layout, options = {}) {
+  const outerGap = Math.max(0, Number(options.outerGap ?? state.outerGap) || 0);
+  const innerGap = Math.max(0, Number(options.innerGap ?? state.gap) || 0);
   const availWidth = Math.max(1, width - outerGap * 2);
   const availHeight = Math.max(1, height - outerGap * 2);
 
@@ -2392,12 +2443,12 @@ function buildLayoutRectsHexPack(width, height, layout) {
   });
 }
 
-function buildLayoutRects(width, height, layout) {
+function buildLayoutRects(width, height, layout, options = {}) {
   if (state.layoutMode === "hex-pack") {
-    return buildLayoutRectsHexPack(width, height, layout);
+    return buildLayoutRectsHexPack(width, height, layout, options);
   }
-  const innerGap = state.gap;
-  const outerGap = state.outerGap;
+  const innerGap = Math.max(0, Number(options.innerGap ?? state.gap) || 0);
+  const outerGap = Math.max(0, Number(options.outerGap ?? state.outerGap) || 0);
   const colAxis = buildAxis(width, layout.cols, innerGap, outerGap);
   const rowAxis = buildAxis(height, layout.rows, innerGap, outerGap);
 
@@ -2410,6 +2461,19 @@ function buildLayoutRects(width, height, layout) {
       + innerGap * (slot.h - 1);
     return { x, y, width: w, height: h };
   });
+}
+
+function getPreviewGapSettings(previewWidth, previewHeight) {
+  const exportTarget = getExportTargetSize();
+  const referenceWidth = Math.max(1, Number(exportTarget?.width) || 1);
+  const referenceHeight = Math.max(1, Number(exportTarget?.height) || 1);
+  const w = Math.max(1, Number(previewWidth) || 1);
+  const h = Math.max(1, Number(previewHeight) || 1);
+  const scale = clamp(Math.min(w / referenceWidth, h / referenceHeight), 0.01, 1);
+  return {
+    innerGap: Math.max(0, state.gap * scale),
+    outerGap: Math.max(0, state.outerGap * scale),
+  };
 }
 
 function getPresetSlotBaseShape(layout, index) {
@@ -2604,8 +2668,12 @@ async function restartWorkflow() {
   state.assistantRequestToken += 1;
   state.assistantFiles = [];
   state.assistantSuggestions = [];
+  state.hasLoadedPhotosEver = false;
   if (els.fileInput) {
     els.fileInput.value = "";
+  }
+  if (els.wordMaskPhotosInput) {
+    els.wordMaskPhotosInput.value = "";
   }
   if (els.assistantFileInput) {
     els.assistantFileInput.value = "";
@@ -2618,14 +2686,53 @@ async function restartWorkflow() {
   if (els.assistantDialog?.open) {
     els.assistantDialog.close();
   }
+  closeWordMaskPhotos();
+  state.wordMask.preset = "postcard";
+  state.wordMask.freeWidth = 1500;
+  state.wordMask.freeHeight = 1000;
+  state.wordMask.mode = "word";
+  state.wordMask.word = "DANKE";
+  state.wordMask.stencil = "word";
+  state.wordMask.fontFamily = "Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif";
+  state.wordMask.fontSize = 1300;
+  state.wordMask.letterSpacing = 8;
+  state.wordMask.bold = true;
+  state.wordMask.italic = false;
+  state.wordMask.subtitle = "";
+  state.wordMask.subtitleFontFamily = "'Times New Roman', Times, serif";
+  state.wordMask.subtitleSize = 56;
+  state.wordMask.subtitleColor = "#222222";
+  state.wordMask.subtitleBold = false;
+  state.wordMask.subtitleItalic = false;
+  state.wordMask.subtitleX = 0.5;
+  state.wordMask.subtitleY = 0.93;
+  state.wordMask.outputFormat = "png";
+  state.wordMask.activeTab = "photos";
+  state.wordMask.mobileOpenStep = "a";
+  state.wordMask.reorderMode = false;
+  state.wordMask.reorderSourceIndex = null;
+  state.wordMask.subtitleDrag = null;
+  state.wordMask.subtitleBounds = null;
+  state.wordMask.background = "#f5f5f3";
   resetSlotShapeOverrides(getActiveLayoutDefinition());
   applyGrid();
   for (let i = 0; i < state.cells.length; i += 1) {
     disposeCell(state.cells[i]);
     state.cells[i] = createEmptyCell();
   }
+  if (state.uiMode === "form") {
+    syncWordMaskInputsFromState();
+    updateWordMaskStencilUi();
+    setWordMaskTab("photos");
+    setWordMaskOpenStep("a");
+    renderWordMaskPhotoOrder();
+    renderWordMaskPreview();
+    updateHeroSummary();
+    return;
+  }
   setStep(1);
   renderAll();
+  updateHeroSummary();
 }
 
 function setUiMode(mode, options = {}) {
@@ -2651,20 +2758,34 @@ function setUiMode(mode, options = {}) {
     els.wordMaskStage.hidden = !isForm;
   }
   if (els.heroCard) {
-    els.heroCard.hidden = !isPhoto;
+    els.heroCard.hidden = !(isPhoto || isForm);
   }
   if (els.wizardRoot) {
     els.wizardRoot.classList.toggle("wordmask-open", isForm);
     els.wizardRoot.classList.toggle("launcher-open", isLauncher);
   }
+  updateRestartLaunchVisibility();
   if (isPhoto) {
+    void fillCellsFromWordMaskPhotos().then((loaded) => {
+      if (loaded > 0 && state.uiMode === "photo") {
+        state.hasLoadedPhotosEver = true;
+        renderAllWithoutExport();
+        if (state.activeStep >= 3) {
+          renderPreview();
+          renderExportPreview();
+        }
+        updateHeroSummary();
+      }
+    });
     setStep(state.activeStep || 1);
     renderAllWithoutExport();
   } else if (isForm) {
     state.wordMask.reorderMode = false;
     state.wordMask.reorderSourceIndex = null;
+    adoptCellPhotosIntoWordMaskPhotos();
     syncWordMaskInputsFromState();
     renderWordMaskPhotoOrder();
+    updateWordMaskPhotosStatus();
     updateWordMaskReorderUi();
     renderWordMaskPreview();
     void ensureSvgStencilsLoaded().then(() => {
@@ -2677,11 +2798,9 @@ function setUiMode(mode, options = {}) {
     state.wordMask.reorderMode = false;
     state.wordMask.reorderSourceIndex = null;
     updateWordMaskReorderUi();
-    els.gridSummary.textContent = "\u2013";
-    els.filledSummary.textContent = "\u2013";
-    els.stepSummary.textContent = "\u2013";
     applyWordMaskStepAccordion();
   }
+  updateHeroSummary();
   if (scrollToTop) {
     els.wizardRoot?.scrollIntoView({ behavior: "smooth", block: "start" });
   }
@@ -2711,6 +2830,7 @@ function setStep(step) {
   }
   updateHexTuningUi();
   syncEditor();
+  updateHeroSummary();
 }
 
 function applyGrid(options = {}) {
@@ -2793,11 +2913,6 @@ function renderStatus() {
     state.hasLoadedPhotosEver = true;
   }
   const complete = total > 0 && filled === total;
-  const activePreset = PRESETS.find((preset) => preset.id === state.activePresetId);
-  els.gridSummary.textContent = activePreset
-    ? `${getPresetLabel(activePreset)} (${activePreset.slots.length} ${t("cells")})`
-    : "-";
-  els.filledSummary.textContent = `${filled} / ${total}`;
   els.slotStatus.textContent = complete
     ? t("slotStatusReady")
     : format(t("slotStatusMissing"), { filled, total });
@@ -2805,6 +2920,7 @@ function renderStatus() {
   els.toStep4.disabled = false;
   updateUploadConstraints();
   updateRestartLaunchVisibility();
+  updateHeroSummary();
 }
 
 function getRemainingUploadSlots() {
@@ -2922,7 +3038,8 @@ function getCellFrameSize(index = state.selectedCell) {
   const layout = getActiveLayoutDefinition();
   const width = Math.max(1, els.collagePreview.clientWidth || 1);
   const height = Math.max(1, els.collagePreview.clientHeight || 1);
-  const rects = buildLayoutRects(width, height, layout);
+  const previewGapSettings = getPreviewGapSettings(width, height);
+  const rects = buildLayoutRects(width, height, layout, previewGapSettings);
   const rect = rects[index];
   if (rect) {
     return { width: Math.max(1, rect.width), height: Math.max(1, rect.height) };
@@ -3001,7 +3118,10 @@ function renderPreview() {
 
   const width = Math.max(1, els.collagePreview.clientWidth);
   const height = Math.max(1, els.collagePreview.clientHeight);
-  const rects = buildLayoutRects(width, height, layout);
+  const previewGapSettings = getPreviewGapSettings(width, height);
+  els.collagePreview.style.setProperty("--grid-gap", `${previewGapSettings.innerGap}px`);
+  els.collagePreview.style.setProperty("--outer-gap", `${previewGapSettings.outerGap}px`);
+  const rects = buildLayoutRects(width, height, layout, previewGapSettings);
   nodes.forEach((entry, index) => {
     const rect = rects[index];
     if (!rect) return;
@@ -3270,19 +3390,25 @@ function clearCellImage(index) {
 
 async function loadFiles(fileList) {
   const remaining = getRemainingUploadSlots();
-  if (remaining <= 0) return;
   const imageFiles = Array.from(fileList).filter((file) => file.type.startsWith("image/"));
-  const files = imageFiles.slice(0, remaining);
-  if (files.length === 0) return;
-  let insertIndex = state.cells.findIndex((cell) => !cell.bitmap);
-  if (insertIndex === -1) insertIndex = state.cells.length;
-  for (const file of files) {
-    if (insertIndex >= state.cells.length) break;
-    await setCellImage(insertIndex, file);
-    insertIndex += 1;
+  if (!imageFiles.length) return;
+  const filesForCells = remaining > 0 ? imageFiles.slice(0, remaining) : [];
+  if (filesForCells.length > 0) {
+    let insertIndex = state.cells.findIndex((cell) => !cell.bitmap);
+    if (insertIndex === -1) insertIndex = state.cells.length;
+    for (const file of filesForCells) {
+      if (insertIndex >= state.cells.length) break;
+      await setCellImage(insertIndex, file);
+      insertIndex += 1;
+    }
   }
+  await appendFilesToWordMaskPhotos(imageFiles);
+  updateWordMaskPhotosStatus();
+  renderWordMaskPhotoOrder();
   renderAll();
   if (hasCompleteGrid()) setStep(Math.max(state.activeStep, 3));
+  renderWordMaskPreview();
+  updateHeroSummary();
 }
 
 function getImageRenderMetrics(cell, frameWidth, frameHeight) {
@@ -4057,7 +4183,7 @@ function syncWordMaskStateFromInputs() {
   state.wordMask.freeWidth = clamp(Number(els.wordMaskWidthInput?.value) || state.wordMask.freeWidth, 600, 6000);
   state.wordMask.freeHeight = clamp(Number(els.wordMaskHeightInput?.value) || state.wordMask.freeHeight, 600, 6000);
   state.wordMask.mode = normalizeWordMaskMode(state.wordMask.mode);
-  state.wordMask.word = String(els.wordMaskWordInput?.value || state.wordMask.word);
+  state.wordMask.word = String(els.wordMaskWordInput?.value ?? "");
   if (state.wordMask.mode === "word") {
     state.wordMask.stencil = "word";
   }
@@ -4070,7 +4196,7 @@ function syncWordMaskStateFromInputs() {
   state.wordMask.letterSpacing = clamp(Number(els.wordMaskSpacingInput?.value) || state.wordMask.letterSpacing, 0, 120);
   state.wordMask.bold = Boolean(els.wordMaskWordBoldInput?.checked);
   state.wordMask.italic = Boolean(els.wordMaskWordItalicInput?.checked);
-  state.wordMask.subtitle = String(els.wordMaskSubtitleInput?.value || state.wordMask.subtitle);
+  state.wordMask.subtitle = String(els.wordMaskSubtitleInput?.value ?? "");
   state.wordMask.background = String(els.wordMaskBackgroundInput?.value || state.wordMask.background);
   state.wordMask.subtitleFontFamily = String(els.wordMaskSubtitleFontSelect?.value || state.wordMask.subtitleFontFamily);
   state.wordMask.subtitleSize = clamp(Number(els.wordMaskSubtitleSizeInput?.value) || state.wordMask.subtitleSize, 18, 140);
@@ -4129,24 +4255,141 @@ function closeWordMaskStage() {
   state.wordMask.reorderMode = false;
   state.wordMask.reorderSourceIndex = null;
   state.wordMask.subtitleDrag = null;
+  document.body.classList.remove("wordmask-subtitle-drag");
+  els.wordMaskStage.classList.remove("subtitle-dragging");
   updateWordMaskReorderUi();
   setUiMode("launcher");
 }
 
 function closeWordMaskPhotos() {
   for (const photo of state.wordMask.photos) {
+    if (photo?.source instanceof HTMLImageElement) {
+      photo.source.removeAttribute("src");
+      photo.source.src = "";
+    }
     if (photo?.source && "close" in photo.source) {
       photo.source.close();
     }
-    if (photo?.objectUrl) {
+    if (photo?.objectUrl && !photo?.borrowedFromCell) {
       URL.revokeObjectURL(photo.objectUrl);
     }
   }
   state.wordMask.photos = [];
   state.wordMask.reorderMode = false;
   state.wordMask.reorderSourceIndex = null;
+  state.wordMask.subtitleDrag = null;
+  state.wordMask.subtitleBounds = null;
+  if (els.wordMaskCanvas) {
+    const ctx = els.wordMaskCanvas.getContext("2d");
+    if (ctx) {
+      ctx.clearRect(0, 0, els.wordMaskCanvas.width, els.wordMaskCanvas.height);
+    }
+  }
   updateWordMaskReorderUi();
   renderWordMaskPhotoOrder();
+  updateWordMaskPhotosStatus();
+}
+
+async function appendFilesToWordMaskPhotos(fileList) {
+  const files = Array.from(fileList || []).filter((file) => file.type.startsWith("image/"));
+  const loadViaImageElement = (file) =>
+    new Promise((resolve, reject) => {
+      const objectUrl = URL.createObjectURL(file);
+      const image = new Image();
+      image.onload = () => {
+        resolve({ image, objectUrl, fileName: file.name });
+      };
+      image.onerror = () => {
+        URL.revokeObjectURL(objectUrl);
+        reject(new Error("Image decode failed"));
+      };
+      image.src = objectUrl;
+    });
+
+  let loadedCount = 0;
+  for (const file of files) {
+    try {
+      const loaded = await loadViaImageElement(file);
+      state.wordMask.photos.push({
+        source: loaded.image,
+        objectUrl: loaded.objectUrl,
+        fileName: loaded.fileName,
+        borrowedFromCell: false,
+      });
+      loadedCount += 1;
+    } catch {
+      // Ignore single-file decode errors and continue with remaining files.
+    }
+  }
+  return loadedCount;
+}
+
+async function appendFilesToPhotoCells(fileList) {
+  const files = Array.from(fileList || []).filter((file) => file.type.startsWith("image/"));
+  let insertIndex = state.cells.findIndex((cell) => !cell.bitmap);
+  if (insertIndex === -1) {
+    return 0;
+  }
+  let loadedCount = 0;
+  for (const file of files) {
+    if (insertIndex >= state.cells.length) break;
+    await setCellImage(insertIndex, file);
+    insertIndex += 1;
+    loadedCount += 1;
+  }
+  return loadedCount;
+}
+
+function updateWordMaskPhotosStatus() {
+  if (!els.wordMaskPhotosStatus) return;
+  els.wordMaskPhotosStatus.textContent = state.wordMask.photos.length
+    ? `${state.wordMask.photos.length} Foto(s) geladen.`
+    : "Keine Fotos geladen.";
+}
+
+function adoptCellPhotosIntoWordMaskPhotos() {
+  if (!Array.isArray(state.wordMask.photos) || state.wordMask.photos.length > 0) return 0;
+  const loadedCells = state.cells.filter((cell) => cell?.bitmap && cell?.objectUrl);
+  let adopted = 0;
+  for (const cell of loadedCells) {
+    const source = new Image();
+    source.src = cell.objectUrl;
+    state.wordMask.photos.push({
+      source,
+      objectUrl: cell.objectUrl,
+      fileName: cell.fileName || "",
+      borrowedFromCell: true,
+    });
+    adopted += 1;
+  }
+  return adopted;
+}
+
+async function fillCellsFromWordMaskPhotos() {
+  const filledCount = state.cells.filter((cell) => cell.bitmap).length;
+  if (filledCount > 0) return 0;
+  const photos = Array.isArray(state.wordMask.photos) ? state.wordMask.photos : [];
+  if (!photos.length) return 0;
+  let insertIndex = state.cells.findIndex((cell) => !cell.bitmap);
+  if (insertIndex < 0) return 0;
+  let loaded = 0;
+  for (const photo of photos) {
+    if (insertIndex >= state.cells.length) break;
+    if (!photo?.objectUrl) continue;
+    try {
+      const response = await fetch(photo.objectUrl);
+      if (!response.ok) continue;
+      const blob = await response.blob();
+      const fallbackName = photo.fileName && photo.fileName.trim() ? photo.fileName : `photo_${loaded + 1}.png`;
+      const file = new File([blob], fallbackName, { type: blob.type || "image/png" });
+      await setCellImage(insertIndex, file);
+      insertIndex += 1;
+      loaded += 1;
+    } catch {
+      // Best-effort sync only.
+    }
+  }
+  return loaded;
 }
 
 function drawBitmapCover(ctx, source, targetX, targetY, targetWidth, targetHeight) {
@@ -4434,8 +4677,18 @@ function isPointInsideRect(point, rect) {
 function startWordMaskSubtitleDrag(event) {
   if (!els.wordMaskCanvas || !state.wordMask.subtitleBounds) return;
   const pointer = getWordMaskPointerPosition(event);
-  if (!isPointInsideRect(pointer, state.wordMask.subtitleBounds)) return;
+  if (!pointer) return;
+  const isMobile = window.matchMedia("(max-width: 640px)").matches;
+  const hitPadding = isMobile ? 22 : 10;
+  const hitBounds = {
+    x: state.wordMask.subtitleBounds.x - hitPadding,
+    y: state.wordMask.subtitleBounds.y - hitPadding,
+    width: state.wordMask.subtitleBounds.width + hitPadding * 2,
+    height: state.wordMask.subtitleBounds.height + hitPadding * 2,
+  };
+  if (!isPointInsideRect(pointer, hitBounds)) return;
   event.preventDefault();
+  event.stopPropagation();
   const width = Math.max(1, els.wordMaskCanvas.width);
   const height = Math.max(1, els.wordMaskCanvas.height);
   const centerX = clamp(Number(state.wordMask.subtitleX) || 0.5, 0.01, 0.99) * width;
@@ -4450,6 +4703,8 @@ function startWordMaskSubtitleDrag(event) {
   } catch {
     // Pointer capture can fail on some browsers; dragging still works without it.
   }
+  document.body.classList.add("wordmask-subtitle-drag");
+  els.wordMaskStage?.classList.add("subtitle-dragging");
 }
 
 function moveWordMaskSubtitleDrag(event) {
@@ -4475,6 +4730,8 @@ function endWordMaskSubtitleDrag(event) {
   if (!drag || !els.wordMaskCanvas) return;
   if (event?.pointerId != null && event.pointerId !== drag.pointerId) return;
   state.wordMask.subtitleDrag = null;
+  document.body.classList.remove("wordmask-subtitle-drag");
+  els.wordMaskStage?.classList.remove("subtitle-dragging");
 }
 
 function renderWordMaskPreview() {
@@ -4508,7 +4765,7 @@ function renderWordMaskPreview() {
   maskCtx.clearRect(0, 0, maskRect.width, maskRect.height);
 
   const rawWord = String(state.wordMask.word || "").trim();
-  const word = rawWord || "DANKE";
+  const word = rawWord;
   const requestedWordSize = clamp(Number(state.wordMask.fontSize) || 1500, 10, 6000);
   let fitSize = 1200;
   const stencil = String(state.wordMask.stencil || "word");
@@ -4526,7 +4783,7 @@ function renderWordMaskPreview() {
   textCtx.lineJoin = "round";
 
   const spacing = clamp(Number(state.wordMask.letterSpacing) || 0, 0, 120);
-  if (stencil === "word") {
+  if (stencil === "word" && word) {
     for (let pass = 0; pass < 8; pass += 1) {
       textCtx.font = `${state.wordMask.italic ? "italic " : ""}${state.wordMask.bold ? "900" : "600"} ${fitSize}px ${state.wordMask.fontFamily}`;
       const metricsWidth = Math.max(1, measureSpacedText(textCtx, word, spacing));
@@ -4542,7 +4799,7 @@ function renderWordMaskPreview() {
     const finalWordSize = clamp(Math.round(fitSize * sizeFactor), 8, 6000);
     textCtx.font = `${state.wordMask.italic ? "italic " : ""}${state.wordMask.bold ? "900" : "600"} ${finalWordSize}px ${state.wordMask.fontFamily}`;
     drawSpacedText(textCtx, word, maskRect.width / 2, maskRect.height / 2, spacing);
-  } else {
+  } else if (stencil !== "word") {
     const shapeScale = clamp(requestedWordSize / 1200, 0.08, 6);
     const drewSvgStencil = drawSvgStencil(textCtx, maskRect.width, maskRect.height, stencil, shapeScale);
     if (!drewSvgStencil) {
@@ -4607,7 +4864,18 @@ function renderWordMaskPreview() {
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
     ctx.font = `600 ${Math.max(18, Math.round(width * 0.023))}px "Segoe UI", system-ui, sans-serif`;
-    ctx.fillText("Fotos laden für die Form-Collage", width / 2, maskRect.y + maskRect.height / 2);
+    const hint = stencil === "word" && !word
+      ? `${t("wordMaskHintLoadPhotos")} · ${t("wordMaskHintEnterWord")}`
+      : t("wordMaskHintLoadPhotos");
+    ctx.fillText(hint, width / 2, maskRect.y + maskRect.height / 2);
+    ctx.restore();
+  } else if (stencil === "word" && !word) {
+    ctx.save();
+    ctx.fillStyle = "#5f6368";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.font = `600 ${Math.max(18, Math.round(width * 0.022))}px "Segoe UI", system-ui, sans-serif`;
+    ctx.fillText(t("wordMaskHintEnterWord"), width / 2, maskRect.y + maskRect.height / 2);
     ctx.restore();
   }
 
@@ -4638,39 +4906,22 @@ function renderWordMaskPreview() {
   } else {
     state.wordMask.subtitleBounds = null;
   }
+  drawWatermark(ctx, width, height);
+  updateHeroSummary();
 }
 
 async function loadWordMaskFiles(fileList) {
-  closeWordMaskPhotos();
   const files = Array.from(fileList || []).filter((file) => file.type.startsWith("image/"));
-  const loadViaImageElement = (file) =>
-    new Promise((resolve, reject) => {
-      const objectUrl = URL.createObjectURL(file);
-      const image = new Image();
-      image.onload = () => {
-        resolve({ image, objectUrl });
-      };
-      image.onerror = () => {
-        URL.revokeObjectURL(objectUrl);
-        reject(new Error("Image decode failed"));
-      };
-      image.src = objectUrl;
-    });
-  for (const file of files) {
-    try {
-      const loaded = await loadViaImageElement(file);
-      state.wordMask.photos.push({ source: loaded.image, objectUrl: loaded.objectUrl, fileName: file.name });
-    } catch {
-      // Ignore single-file decode errors and continue with remaining files.
-    }
+  await appendFilesToWordMaskPhotos(files);
+  await appendFilesToPhotoCells(files);
+  updateWordMaskPhotosStatus();
+  if (state.cells.some((cell) => cell.bitmap)) {
+    state.hasLoadedPhotosEver = true;
   }
-  if (els.wordMaskPhotosStatus) {
-    els.wordMaskPhotosStatus.textContent = state.wordMask.photos.length
-      ? `${state.wordMask.photos.length} Foto(s) geladen.`
-      : "Keine Fotos geladen.";
-  }
+  renderAllWithoutExport();
   renderWordMaskPhotoOrder();
   renderWordMaskPreview();
+  updateHeroSummary();
 }
 
 function shuffleWordMaskPhotos() {
@@ -4683,6 +4934,7 @@ function shuffleWordMaskPhotos() {
   }
   renderWordMaskPhotoOrder();
   renderWordMaskPreview();
+  updateHeroSummary();
 }
 
 function handleWordMaskReorderTap(index) {
@@ -4709,13 +4961,55 @@ function handleWordMaskReorderTap(index) {
   updateWordMaskReorderUi();
   renderWordMaskPhotoOrder();
   renderWordMaskPreview();
+  updateHeroSummary();
+}
+
+function removeWordMaskPhoto(index) {
+  const photos = state.wordMask.photos;
+  if (!Array.isArray(photos) || index < 0 || index >= photos.length) return;
+  const [removed] = photos.splice(index, 1);
+  if (removed?.source instanceof HTMLImageElement) {
+    removed.source.removeAttribute("src");
+    removed.source.src = "";
+  }
+  if (removed?.source && "close" in removed.source) {
+    removed.source.close();
+  }
+  if (removed?.objectUrl && !removed?.borrowedFromCell) {
+    URL.revokeObjectURL(removed.objectUrl);
+  }
+
+  const removedName = String(removed?.fileName || "");
+  if (removedName) {
+    const matchIndex = state.cells.findIndex((cell) => cell.bitmap && String(cell.fileName || "") === removedName);
+    if (matchIndex >= 0) {
+      clearCellImage(matchIndex);
+    }
+  }
+  if (state.wordMask.reorderSourceIndex !== null) {
+    if (state.wordMask.reorderSourceIndex === index) {
+      state.wordMask.reorderSourceIndex = null;
+    } else if (state.wordMask.reorderSourceIndex > index) {
+      state.wordMask.reorderSourceIndex -= 1;
+    }
+  }
+  updateWordMaskPhotosStatus();
+  renderAllWithoutExport();
+  updateWordMaskReorderUi();
+  renderWordMaskPhotoOrder();
+  renderWordMaskPreview();
+  updateHeroSummary();
 }
 
 function renderWordMaskPhotoOrder() {
   if (!els.wordMaskPhotoOrder || !els.wordMaskPhotoOrderField) return;
   const photos = Array.isArray(state.wordMask.photos) ? state.wordMask.photos : [];
+  els.wordMaskPhotoOrder.querySelectorAll("img").forEach((img) => {
+    img.removeAttribute("src");
+    img.src = "";
+  });
   els.wordMaskPhotoOrder.innerHTML = "";
-  const showOrder = photos.length > 1;
+  const showOrder = photos.length > 0;
   els.wordMaskPhotoOrderField.hidden = !showOrder;
   if (!showOrder) return;
   photos.forEach((photo, index) => {
@@ -4728,7 +5022,18 @@ function renderWordMaskPhotoOrder() {
     image.alt = `Foto ${index + 1}`;
     const caption = document.createElement("span");
     caption.textContent = `#${index + 1}`;
-    item.append(image, caption);
+    const deleteButton = document.createElement("button");
+    deleteButton.type = "button";
+    deleteButton.className = "wordmask-photo-delete";
+    deleteButton.title = t("deleteCell");
+    deleteButton.setAttribute("aria-label", t("deleteCell"));
+    deleteButton.textContent = "🗑";
+    deleteButton.addEventListener("click", (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      removeWordMaskPhoto(index);
+    });
+    item.append(image, caption, deleteButton);
     item.addEventListener("click", () => {
       handleWordMaskReorderTap(index);
     });
@@ -5756,13 +6061,13 @@ function wireControls() {
     openWordMaskStage();
   });
   els.wordMaskStepAToggle?.addEventListener("click", () => {
-    setWordMaskOpenStep("a");
+    setWordMaskOpenStep("a", { toggle: true });
   });
   els.wordMaskStepBToggle?.addEventListener("click", () => {
-    setWordMaskOpenStep("b");
+    setWordMaskOpenStep("b", { toggle: true });
   });
   els.wordMaskStepCToggle?.addEventListener("click", () => {
-    setWordMaskOpenStep("c");
+    setWordMaskOpenStep("c", { toggle: true });
   });
   const onWordMaskInputChange = () => {
     syncWordMaskStateFromInputs();
