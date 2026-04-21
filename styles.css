@@ -454,6 +454,13 @@ h1 { margin: 0; font-size: clamp(2.6rem, 5vw, 4.6rem); line-height: 1; }
   outline-offset: -2px;
   background: rgba(140, 233, 154, 0.2);
 }
+.wordmask-photo-item.active {
+  border-color: rgba(116, 192, 252, 0.82);
+  background: rgba(116, 192, 252, 0.16);
+}
+.wordmask-photo-item.active span {
+  color: #d9efff;
+}
 .wordmask-free-size {
   display: grid;
   grid-template-columns: 1fr 1fr;

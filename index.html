@@ -511,6 +511,15 @@
                   <span id="wordMaskPhotoOrderLabel">Foto-Reihenfolge</span>
                   <div id="wordMaskPhotoOrder" class="wordmask-photo-order"></div>
                 </div>
+                <div class="field" id="wordMaskPhotoAdjustField" hidden>
+                  <span id="wordMaskActivePhotoLabel">Aktives Foto</span>
+                  <strong id="wordMaskActivePhotoValue">-</strong>
+                  <span id="wordMaskPhotoZoomLabel">Zoom</span>
+                  <input id="wordMaskPhotoZoomInput" type="range" min="0.35" max="4" step="0.01" value="1" />
+                  <strong id="wordMaskPhotoZoomValue">100%</strong>
+                  <button id="wordMaskPhotoZoomResetButton" class="secondary" type="button">Ausschnitt + Zoom zurücksetzen</button>
+                  <p id="wordMaskPhotoAdjustHint" class="settings-status">In der Vorschau ziehen für Ausschnitt, Pinch/Mausrad für Zoom.</p>
+                </div>
               </div>
               <div id="wordMaskPanelSubtitle" class="wordmask-tab-panel" data-wordmask-panel="subtitle" hidden>
                 <label class="field">
@@ -555,6 +564,10 @@
                   <label class="watermark-toggle">
                     <input id="wordMaskSubtitleItalicInput" type="checkbox" />
                     <span id="wordMaskSubtitleItalicLabel">Kursiv</span>
+                  </label>
+                  <label class="watermark-toggle">
+                    <input id="wordMaskSubtitleSmallCapsInput" type="checkbox" />
+                    <span id="wordMaskSubtitleSmallCapsLabel">Kapitälchen</span>
                   </label>
                 </div>
                 <label class="field">

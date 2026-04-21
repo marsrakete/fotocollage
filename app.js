@@ -44,9 +44,9 @@ const stencilPathCache = new Map();
 let stencilSvgLoadPromise = null;
 
 const DEFAULT_VERSION_INFO = Object.freeze({
-  appVersion: "1.4.09",
-  cacheVersion: "v196",
-  label: "Mobile Tap-Komfort verbessert: groessere Trefferflaechen fuer Kern-Buttons",
+  appVersion: "1.4.10",
+  cacheVersion: "v197",
+  label: "Form-Collage: Ausschnitt/Zoom pro Foto + Untertitel-Kapitaelchen",
 });
 
 const ZOOM_MIN = 0.35;
@@ -154,10 +154,16 @@ const state = {
     activeTab: "photos",
     mobileOpenStep: "a",
     photos: [],
+    activePhotoIndex: 0,
+    photoDrag: null,
+    photoPinch: null,
+    photoTouchPoints: new Map(),
     reorderMode: false,
     reorderSourceIndex: null,
     subtitleDrag: null,
     subtitleBounds: null,
+    photoRects: [],
+    subtitleSmallCaps: false,
   },
   isSyncingSlotShapeSelect: false,
   hasLoadedPhotosEver: false,
@@ -398,6 +404,14 @@ const els = {
   wordMaskPhotoOrderField: document.getElementById("wordMaskPhotoOrderField"),
   wordMaskPhotoOrderLabel: document.getElementById("wordMaskPhotoOrderLabel"),
   wordMaskPhotoOrder: document.getElementById("wordMaskPhotoOrder"),
+  wordMaskPhotoAdjustField: document.getElementById("wordMaskPhotoAdjustField"),
+  wordMaskActivePhotoLabel: document.getElementById("wordMaskActivePhotoLabel"),
+  wordMaskActivePhotoValue: document.getElementById("wordMaskActivePhotoValue"),
+  wordMaskPhotoZoomLabel: document.getElementById("wordMaskPhotoZoomLabel"),
+  wordMaskPhotoZoomInput: document.getElementById("wordMaskPhotoZoomInput"),
+  wordMaskPhotoZoomValue: document.getElementById("wordMaskPhotoZoomValue"),
+  wordMaskPhotoZoomResetButton: document.getElementById("wordMaskPhotoZoomResetButton"),
+  wordMaskPhotoAdjustHint: document.getElementById("wordMaskPhotoAdjustHint"),
   wordMaskBackgroundInput: document.getElementById("wordMaskBackgroundInput"),
   wordMaskSubtitleLabel: document.getElementById("wordMaskSubtitleLabel"),
   wordMaskSubtitleInput: document.getElementById("wordMaskSubtitleInput"),
@@ -405,6 +419,8 @@ const els = {
   wordMaskSubtitleSizeInput: document.getElementById("wordMaskSubtitleSizeInput"),
   wordMaskSubtitleBoldInput: document.getElementById("wordMaskSubtitleBoldInput"),
   wordMaskSubtitleItalicInput: document.getElementById("wordMaskSubtitleItalicInput"),
+  wordMaskSubtitleSmallCapsInput: document.getElementById("wordMaskSubtitleSmallCapsInput"),
+  wordMaskSubtitleSmallCapsLabel: document.getElementById("wordMaskSubtitleSmallCapsLabel"),
   wordMaskSubtitleColorInput: document.getElementById("wordMaskSubtitleColorInput"),
   wordMaskOutputFormatSelect: document.getElementById("wordMaskOutputFormatSelect"),
   wordMaskCanvas: document.getElementById("wordMaskCanvas"),
@@ -1062,11 +1078,16 @@ function translateStaticUi() {
   setText(els.wordMaskShufflePhotosButton, "wordMaskShufflePhotosButton");
   setText(els.wordMaskToggleReorderButton, "reorderModeEnable");
   setText(els.wordMaskPhotoOrderLabel, "wordMaskPhotoOrderLabel");
+  setText(els.wordMaskActivePhotoLabel, "wordMaskActivePhotoLabel");
+  setText(els.wordMaskPhotoZoomLabel, "wordMaskPhotoZoomLabel");
+  setText(els.wordMaskPhotoZoomResetButton, "wordMaskPhotoZoomResetButton");
+  setText(els.wordMaskPhotoAdjustHint, "wordMaskPhotoAdjustHint");
   setText(els.wordMaskSubtitleLabel, "wordMaskSubtitleLabel");
   setText(els.wordMaskSubtitleFontLabel, "wordMaskSubtitleFontLabel");
   setText(els.wordMaskSubtitleSizeLabel, "wordMaskSubtitleSizeLabel");
   setText(els.wordMaskSubtitleBoldLabel, "wordMaskSubtitleBoldLabel");
   setText(els.wordMaskSubtitleItalicLabel, "wordMaskSubtitleItalicLabel");
+  setText(els.wordMaskSubtitleSmallCapsLabel, "wordMaskSubtitleSmallCapsLabel");
   setText(els.wordMaskSubtitleColorLabel, "wordMaskSubtitleColorLabel");
   setText(els.wordMaskOutputFormatLabel, "wordMaskOutputFormatLabel");
   setText(els.wordMaskShareButton, "wordMaskShareButton");
@@ -1349,6 +1370,16 @@ function setWordMaskOpenStep(step, options = {}) {
 function setWordMaskTab(nextTab) {
   const tab = nextTab === "subtitle" || nextTab === "export" ? nextTab : "photos";
   state.wordMask.activeTab = tab;
+  if (tab !== "subtitle") {
+    state.wordMask.subtitleDrag = null;
+    document.body.classList.remove("wordmask-subtitle-drag");
+    els.wordMaskStage?.classList.remove("subtitle-dragging");
+  }
+  if (tab !== "photos") {
+    state.wordMask.photoDrag = null;
+    state.wordMask.photoPinch = null;
+    state.wordMask.photoTouchPoints.clear();
+  }
   const tabs = [
     { button: els.wordMaskTabPhotos, panel: els.wordMaskPanelPhotos, id: "photos" },
     { button: els.wordMaskTabSubtitle, panel: els.wordMaskPanelSubtitle, id: "subtitle" },
@@ -2721,6 +2752,7 @@ async function restartWorkflow() {
   state.wordMask.subtitleColor = "#222222";
   state.wordMask.subtitleBold = false;
   state.wordMask.subtitleItalic = false;
+  state.wordMask.subtitleSmallCaps = false;
   state.wordMask.subtitleX = 0.5;
   state.wordMask.subtitleY = 0.93;
   state.wordMask.outputFormat = "png";
@@ -2728,6 +2760,11 @@ async function restartWorkflow() {
   state.wordMask.mobileOpenStep = "a";
   state.wordMask.reorderMode = false;
   state.wordMask.reorderSourceIndex = null;
+  state.wordMask.activePhotoIndex = 0;
+  state.wordMask.photoDrag = null;
+  state.wordMask.photoPinch = null;
+  state.wordMask.photoTouchPoints = new Map();
+  state.wordMask.photoRects = [];
   state.wordMask.subtitleDrag = null;
   state.wordMask.subtitleBounds = null;
   state.wordMask.background = "#f5f5f3";
@@ -2803,6 +2840,7 @@ function setUiMode(mode, options = {}) {
     syncWordMaskInputsFromState();
     renderWordMaskPhotoOrder();
     updateWordMaskPhotosStatus();
+    syncWordMaskPhotoAdjustUi();
     updateWordMaskReorderUi();
     renderWordMaskPreview();
     void ensureSvgStencilsLoaded().then(() => {
@@ -4219,6 +4257,7 @@ function syncWordMaskStateFromInputs() {
   state.wordMask.subtitleSize = clamp(Number(els.wordMaskSubtitleSizeInput?.value) || state.wordMask.subtitleSize, 18, 140);
   state.wordMask.subtitleBold = Boolean(els.wordMaskSubtitleBoldInput?.checked);
   state.wordMask.subtitleItalic = Boolean(els.wordMaskSubtitleItalicInput?.checked);
+  state.wordMask.subtitleSmallCaps = Boolean(els.wordMaskSubtitleSmallCapsInput?.checked);
   state.wordMask.subtitleColor = String(els.wordMaskSubtitleColorInput?.value || state.wordMask.subtitleColor);
   state.wordMask.outputFormat = String(els.wordMaskOutputFormatSelect?.value || state.wordMask.outputFormat).toLowerCase();
   if (els.wordMaskSizeInput) els.wordMaskSizeInput.value = String(state.wordMask.fontSize);
@@ -4251,11 +4290,13 @@ function syncWordMaskInputsFromState() {
   if (els.wordMaskSubtitleSizeInput) els.wordMaskSubtitleSizeInput.value = String(state.wordMask.subtitleSize);
   if (els.wordMaskSubtitleBoldInput) els.wordMaskSubtitleBoldInput.checked = state.wordMask.subtitleBold;
   if (els.wordMaskSubtitleItalicInput) els.wordMaskSubtitleItalicInput.checked = state.wordMask.subtitleItalic;
+  if (els.wordMaskSubtitleSmallCapsInput) els.wordMaskSubtitleSmallCapsInput.checked = Boolean(state.wordMask.subtitleSmallCaps);
   if (els.wordMaskSubtitleColorInput) els.wordMaskSubtitleColorInput.value = state.wordMask.subtitleColor;
   if (els.wordMaskOutputFormatSelect) els.wordMaskOutputFormatSelect.value = state.wordMask.outputFormat;
   updateWordMaskFreeSizeUi();
   updateWordMaskStencilUi();
   updateWordMaskReorderUi();
+  syncWordMaskPhotoAdjustUi();
 }
 
 function openWordMaskStage() {
@@ -4327,12 +4368,12 @@ async function appendFilesToWordMaskPhotos(fileList) {
   for (const file of files) {
     try {
       const loaded = await loadViaImageElement(file);
-      state.wordMask.photos.push({
+      state.wordMask.photos.push(ensureWordMaskPhotoTransform({
         source: loaded.image,
         objectUrl: loaded.objectUrl,
         fileName: loaded.fileName,
         borrowedFromCell: false,
-      });
+      }));
       loadedCount += 1;
     } catch {
       // Ignore single-file decode errors and continue with remaining files.
@@ -4364,6 +4405,55 @@ function updateWordMaskPhotosStatus() {
     : "Keine Fotos geladen.";
 }
 
+function ensureWordMaskPhotoTransform(photo) {
+  if (!photo) return photo;
+  photo.zoom = clamp(Number(photo.zoom) || 1, ZOOM_MIN, ZOOM_MAX);
+  photo.focusX = clamp(Number(photo.focusX) || 0, -1, 1);
+  photo.focusY = clamp(Number(photo.focusY) || 0, -1, 1);
+  return photo;
+}
+
+function normalizeWordMaskActivePhotoIndex() {
+  const photos = Array.isArray(state.wordMask.photos) ? state.wordMask.photos : [];
+  if (!photos.length) {
+    state.wordMask.activePhotoIndex = -1;
+    return -1;
+  }
+  const next = clamp(Number(state.wordMask.activePhotoIndex) || 0, 0, photos.length - 1);
+  state.wordMask.activePhotoIndex = next;
+  return next;
+}
+
+function getActiveWordMaskPhoto() {
+  const index = normalizeWordMaskActivePhotoIndex();
+  if (index < 0) return null;
+  return ensureWordMaskPhotoTransform(state.wordMask.photos[index]);
+}
+
+function syncWordMaskPhotoAdjustUi() {
+  if (!els.wordMaskPhotoAdjustField) return;
+  const photos = Array.isArray(state.wordMask.photos) ? state.wordMask.photos : [];
+  const activeIndex = normalizeWordMaskActivePhotoIndex();
+  const hasActive = activeIndex >= 0 && activeIndex < photos.length;
+  els.wordMaskPhotoAdjustField.hidden = !photos.length;
+  if (els.wordMaskActivePhotoValue) {
+    els.wordMaskActivePhotoValue.textContent = hasActive ? `#${activeIndex + 1}` : "-";
+  }
+  if (els.wordMaskPhotoZoomInput) {
+    const activePhoto = hasActive ? ensureWordMaskPhotoTransform(photos[activeIndex]) : null;
+    const value = activePhoto ? activePhoto.zoom : 1;
+    els.wordMaskPhotoZoomInput.value = String(value);
+    els.wordMaskPhotoZoomInput.disabled = !hasActive;
+  }
+  if (els.wordMaskPhotoZoomValue) {
+    const activePhoto = hasActive ? ensureWordMaskPhotoTransform(photos[activeIndex]) : null;
+    els.wordMaskPhotoZoomValue.textContent = `${Math.round((activePhoto ? activePhoto.zoom : 1) * 100)}%`;
+  }
+  if (els.wordMaskPhotoZoomResetButton) {
+    els.wordMaskPhotoZoomResetButton.disabled = !hasActive;
+  }
+}
+
 function adoptCellPhotosIntoWordMaskPhotos() {
   if (!Array.isArray(state.wordMask.photos) || state.wordMask.photos.length > 0) return 0;
   const loadedCells = state.cells.filter((cell) => cell?.bitmap && cell?.objectUrl);
@@ -4371,12 +4461,12 @@ function adoptCellPhotosIntoWordMaskPhotos() {
   for (const cell of loadedCells) {
     const source = new Image();
     source.src = cell.objectUrl;
-    state.wordMask.photos.push({
+    state.wordMask.photos.push(ensureWordMaskPhotoTransform({
       source,
       objectUrl: cell.objectUrl,
       fileName: cell.fileName || "",
       borrowedFromCell: true,
-    });
+    }));
     adopted += 1;
   }
   return adopted;
@@ -4428,6 +4518,27 @@ function drawBitmapCover(ctx, source, targetX, targetY, targetWidth, targetHeigh
     sy = Math.max(0, Math.round((sourceHeight - sh) / 2));
   }
   ctx.drawImage(source, sx, sy, sw, sh, targetX, targetY, targetWidth, targetHeight);
+}
+
+function drawWordMaskPhotoTransformed(ctx, source, rect, photo) {
+  if (!ctx || !source || !rect || !photo) return;
+  const sourceWidth = Number(source.naturalWidth || source.width || 0);
+  const sourceHeight = Number(source.naturalHeight || source.height || 0);
+  if (!sourceWidth || !sourceHeight) return;
+  ensureWordMaskPhotoTransform(photo);
+  const coverScale = Math.max(rect.width / sourceWidth, rect.height / sourceHeight) * photo.zoom;
+  const drawWidth = sourceWidth * coverScale;
+  const drawHeight = sourceHeight * coverScale;
+  const panRangeX = Math.max(0, drawWidth - rect.width);
+  const panRangeY = Math.max(0, drawHeight - rect.height);
+  const drawX = rect.x + (rect.width - drawWidth) / 2 - photo.focusX * (panRangeX / 2);
+  const drawY = rect.y + (rect.height - drawHeight) / 2 - photo.focusY * (panRangeY / 2);
+  ctx.save();
+  ctx.beginPath();
+  ctx.rect(rect.x, rect.y, rect.width, rect.height);
+  ctx.clip();
+  ctx.drawImage(source, drawX, drawY, drawWidth, drawHeight);
+  ctx.restore();
 }
 
 function measureSpacedText(ctx, text, spacing) {
@@ -4691,9 +4802,16 @@ function isPointInsideRect(point, rect) {
   return point.x >= rect.x && point.x <= rect.x + rect.width && point.y >= rect.y && point.y <= rect.y + rect.height;
 }
 
-function startWordMaskSubtitleDrag(event) {
+function getWordMaskPhotoIndexAtPoint(point) {
+  const rects = Array.isArray(state.wordMask.photoRects) ? state.wordMask.photoRects : [];
+  for (let i = 0; i < rects.length; i += 1) {
+    if (isPointInsideRect(point, rects[i])) return i;
+  }
+  return -1;
+}
+
+function startWordMaskSubtitleDrag(event, pointer) {
   if (!els.wordMaskCanvas || !state.wordMask.subtitleBounds) return;
-  const pointer = getWordMaskPointerPosition(event);
   if (!pointer) return;
   const isMobile = window.matchMedia("(max-width: 640px)").matches;
   const hitPadding = isMobile ? 22 : 10;
@@ -4724,10 +4842,9 @@ function startWordMaskSubtitleDrag(event) {
   els.wordMaskStage?.classList.add("subtitle-dragging");
 }
 
-function moveWordMaskSubtitleDrag(event) {
+function moveWordMaskSubtitleDrag(event, pointer) {
   const drag = state.wordMask.subtitleDrag;
   if (!drag || !els.wordMaskCanvas || event.pointerId !== drag.pointerId) return;
-  const pointer = getWordMaskPointerPosition(event);
   if (!pointer) return;
   event.preventDefault();
   const canvasWidth = Math.max(1, els.wordMaskCanvas.width);
@@ -4749,6 +4866,146 @@ function endWordMaskSubtitleDrag(event) {
   state.wordMask.subtitleDrag = null;
   document.body.classList.remove("wordmask-subtitle-drag");
   els.wordMaskStage?.classList.remove("subtitle-dragging");
+}
+
+function startWordMaskPhotoPanDrag(event, pointer, index) {
+  const photo = state.wordMask.photos[index];
+  if (!photo || !pointer) return;
+  ensureWordMaskPhotoTransform(photo);
+  state.wordMask.activePhotoIndex = index;
+  state.wordMask.photoDrag = {
+    pointerId: event.pointerId,
+    photoIndex: index,
+    startX: pointer.x,
+    startY: pointer.y,
+    startFocusX: photo.focusX,
+    startFocusY: photo.focusY,
+  };
+  try {
+    els.wordMaskCanvas?.setPointerCapture(event.pointerId);
+  } catch {
+    // Ignore capture failure.
+  }
+}
+
+function moveWordMaskPhotoPanDrag(event, pointer) {
+  const drag = state.wordMask.photoDrag;
+  if (!drag || !pointer || event.pointerId !== drag.pointerId) return;
+  const rect = state.wordMask.photoRects?.[drag.photoIndex];
+  const photo = state.wordMask.photos?.[drag.photoIndex];
+  if (!rect || !photo) return;
+  ensureWordMaskPhotoTransform(photo);
+  const source = getWordMaskDrawableSource(photo);
+  if (!source) return;
+  const sourceWidth = Number(source.naturalWidth || source.width || 0);
+  const sourceHeight = Number(source.naturalHeight || source.height || 0);
+  if (!sourceWidth || !sourceHeight) return;
+  const coverScale = Math.max(rect.width / sourceWidth, rect.height / sourceHeight) * photo.zoom;
+  const drawWidth = sourceWidth * coverScale;
+  const drawHeight = sourceHeight * coverScale;
+  const panRangeX = Math.max(0, drawWidth - rect.width);
+  const panRangeY = Math.max(0, drawHeight - rect.height);
+  const deltaX = pointer.x - drag.startX;
+  const deltaY = pointer.y - drag.startY;
+  const focusDeltaX = panRangeX > 0 ? (-2 * deltaX) / panRangeX : 0;
+  const focusDeltaY = panRangeY > 0 ? (-2 * deltaY) / panRangeY : 0;
+  photo.focusX = clamp(drag.startFocusX + focusDeltaX, -1, 1);
+  photo.focusY = clamp(drag.startFocusY + focusDeltaY, -1, 1);
+  syncWordMaskPhotoAdjustUi();
+  renderWordMaskPreview();
+}
+
+function endWordMaskPhotoPanDrag(event) {
+  const drag = state.wordMask.photoDrag;
+  if (!drag) return;
+  if (event?.pointerId != null && event.pointerId !== drag.pointerId) return;
+  state.wordMask.photoDrag = null;
+}
+
+function updateWordMaskPhotoPinch(event, pointer) {
+  if (!pointer) return;
+  if (event.pointerType !== "touch") return;
+  state.wordMask.photoTouchPoints.set(event.pointerId, pointer);
+  const points = Array.from(state.wordMask.photoTouchPoints.values());
+  if (points.length < 2) return;
+  const [a, b] = points;
+  const distance = Math.hypot(b.x - a.x, b.y - a.y);
+  const center = { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 };
+  if (!state.wordMask.photoPinch) {
+    const hit = getWordMaskPhotoIndexAtPoint(center);
+    const activeIndex = hit >= 0 ? hit : normalizeWordMaskActivePhotoIndex();
+    if (activeIndex < 0) return;
+    const photo = getActiveWordMaskPhoto();
+    if (!photo) return;
+    state.wordMask.activePhotoIndex = activeIndex;
+    state.wordMask.photoPinch = {
+      photoIndex: activeIndex,
+      initialDistance: Math.max(1, distance),
+      initialZoom: photo.zoom,
+    };
+    syncWordMaskPhotoAdjustUi();
+    return;
+  }
+  const pinch = state.wordMask.photoPinch;
+  const photo = state.wordMask.photos?.[pinch.photoIndex];
+  if (!photo) return;
+  ensureWordMaskPhotoTransform(photo);
+  const ratio = distance / Math.max(1, pinch.initialDistance);
+  photo.zoom = clamp(pinch.initialZoom * ratio, ZOOM_MIN, ZOOM_MAX);
+  syncWordMaskPhotoAdjustUi();
+  renderWordMaskPreview();
+}
+
+function clearWordMaskPhotoTouch(event) {
+  if (event?.pointerId != null) {
+    state.wordMask.photoTouchPoints.delete(event.pointerId);
+  }
+  if (state.wordMask.photoTouchPoints.size < 2) {
+    state.wordMask.photoPinch = null;
+  }
+}
+
+function handleWordMaskCanvasPointerDown(event) {
+  const pointer = getWordMaskPointerPosition(event);
+  if (!pointer) return;
+  if (state.wordMask.activeTab === "subtitle") {
+    startWordMaskSubtitleDrag(event, pointer);
+    return;
+  }
+  if (state.wordMask.activeTab !== "photos") return;
+  updateWordMaskPhotoPinch(event, pointer);
+  if (state.wordMask.photoPinch) {
+    event.preventDefault();
+    return;
+  }
+  const hitIndex = getWordMaskPhotoIndexAtPoint(pointer);
+  if (hitIndex < 0) return;
+  state.wordMask.activePhotoIndex = hitIndex;
+  syncWordMaskPhotoAdjustUi();
+  renderWordMaskPhotoOrder();
+  startWordMaskPhotoPanDrag(event, pointer, hitIndex);
+  event.preventDefault();
+}
+
+function handleWordMaskCanvasPointerMove(event) {
+  const pointer = getWordMaskPointerPosition(event);
+  if (state.wordMask.activeTab === "subtitle") {
+    moveWordMaskSubtitleDrag(event, pointer);
+    return;
+  }
+  if (state.wordMask.activeTab !== "photos") return;
+  updateWordMaskPhotoPinch(event, pointer);
+  if (state.wordMask.photoPinch) {
+    event.preventDefault();
+    return;
+  }
+  moveWordMaskPhotoPanDrag(event, pointer);
+}
+
+function handleWordMaskCanvasPointerEnd(event) {
+  endWordMaskSubtitleDrag(event);
+  endWordMaskPhotoPanDrag(event);
+  clearWordMaskPhotoTouch(event);
 }
 
 function getWordMaskDrawableSource(photo) {
@@ -4873,17 +5130,21 @@ function renderWordMaskPreview() {
   fillCtx.imageSmoothingQuality = "high";
 
   const photos = state.wordMask.photos;
+  normalizeWordMaskActivePhotoIndex();
   let drawnPhotos = 0;
+  state.wordMask.photoRects = [];
   if (photos.length) {
     const photoRects = getWordMaskPhotoRects(photos.length, maskRect.width, maskRect.height);
+    state.wordMask.photoRects = photoRects;
     for (let i = 0; i < photos.length; i += 1) {
       const photo = photos[i];
       const rect = photoRects[i];
       if (!rect) continue;
+      ensureWordMaskPhotoTransform(photo);
       const source = getWordMaskDrawableSource(photo);
       if (!source) continue;
       try {
-        drawBitmapCover(fillCtx, source, rect.x, rect.y, rect.width, rect.height);
+        drawWordMaskPhotoTransformed(fillCtx, source, rect, photo);
         drawnPhotos += 1;
       } catch {
         // Keep rendering remaining files.
@@ -4937,6 +5198,7 @@ function renderWordMaskPreview() {
     ctx.textAlign = "left";
     ctx.textBaseline = "middle";
     const subtitleSize = clamp(Number(state.wordMask.subtitleSize) || 56, 12, 220);
+    ctx.fontVariantCaps = state.wordMask.subtitleSmallCaps ? "small-caps" : "normal";
     ctx.font = `${state.wordMask.subtitleItalic ? "italic " : ""}${state.wordMask.subtitleBold ? "700" : "500"} ${subtitleSize}px ${state.wordMask.subtitleFontFamily}`;
     const maxWidth = Math.max(1, width - 16);
     const measuredWidth = Math.min(maxWidth, Math.max(1, ctx.measureText(subtitle).width));
@@ -4954,12 +5216,14 @@ function renderWordMaskPreview() {
     state.wordMask.subtitleBounds = null;
   }
   drawWatermark(ctx, width, height);
+  syncWordMaskPhotoAdjustUi();
   updateHeroSummary();
 }
 
 async function loadWordMaskFiles(fileList) {
   const files = Array.from(fileList || []).filter((file) => file.type.startsWith("image/"));
   await appendFilesToWordMaskPhotos(files);
+  normalizeWordMaskActivePhotoIndex();
   await appendFilesToPhotoCells(files);
   updateWordMaskPhotosStatus();
   if (state.cells.some((cell) => cell.bitmap)) {
@@ -4979,7 +5243,9 @@ function shuffleWordMaskPhotos() {
     state.wordMask.photos[i] = state.wordMask.photos[j];
     state.wordMask.photos[j] = tmp;
   }
+  normalizeWordMaskActivePhotoIndex();
   renderWordMaskPhotoOrder();
+  syncWordMaskPhotoAdjustUi();
   renderWordMaskPreview();
   updateHeroSummary();
 }
@@ -5007,6 +5273,7 @@ function handleWordMaskReorderTap(index) {
   state.wordMask.reorderSourceIndex = null;
   updateWordMaskReorderUi();
   renderWordMaskPhotoOrder();
+  syncWordMaskPhotoAdjustUi();
   renderWordMaskPreview();
   updateHeroSummary();
 }
@@ -5040,10 +5307,12 @@ function removeWordMaskPhoto(index) {
       state.wordMask.reorderSourceIndex -= 1;
     }
   }
+  normalizeWordMaskActivePhotoIndex();
   updateWordMaskPhotosStatus();
   renderAllWithoutExport();
   updateWordMaskReorderUi();
   renderWordMaskPhotoOrder();
+  syncWordMaskPhotoAdjustUi();
   renderWordMaskPreview();
   updateHeroSummary();
 }
@@ -5051,6 +5320,7 @@ function removeWordMaskPhoto(index) {
 function renderWordMaskPhotoOrder() {
   if (!els.wordMaskPhotoOrder || !els.wordMaskPhotoOrderField) return;
   const photos = Array.isArray(state.wordMask.photos) ? state.wordMask.photos : [];
+  const activePhotoIndex = normalizeWordMaskActivePhotoIndex();
   els.wordMaskPhotoOrder.querySelectorAll("img").forEach((img) => {
     img.removeAttribute("src");
     img.src = "";
@@ -5064,6 +5334,7 @@ function renderWordMaskPhotoOrder() {
     item.className = "wordmask-photo-item";
     item.dataset.photoIndex = String(index);
     item.classList.toggle("reorder-source", state.wordMask.reorderMode && state.wordMask.reorderSourceIndex === index);
+    item.classList.toggle("active", index === activePhotoIndex);
     const image = document.createElement("img");
     image.src = photo?.objectUrl || photo?.source?.src || "";
     image.alt = `Foto ${index + 1}`;
@@ -5082,10 +5353,18 @@ function renderWordMaskPhotoOrder() {
     });
     item.append(image, caption, deleteButton);
     item.addEventListener("click", () => {
-      handleWordMaskReorderTap(index);
+      if (state.wordMask.reorderMode) {
+        handleWordMaskReorderTap(index);
+        return;
+      }
+      state.wordMask.activePhotoIndex = index;
+      syncWordMaskPhotoAdjustUi();
+      renderWordMaskPhotoOrder();
+      renderWordMaskPreview();
     });
     els.wordMaskPhotoOrder.append(item);
   });
+  syncWordMaskPhotoAdjustUi();
 }
 
 async function buildWordMaskPayload() {
@@ -6166,19 +6445,38 @@ function wireControls() {
   els.wordMaskSubtitleSizeInput?.addEventListener("input", onWordMaskInputChange);
   els.wordMaskSubtitleBoldInput?.addEventListener("change", onWordMaskInputChange);
   els.wordMaskSubtitleItalicInput?.addEventListener("change", onWordMaskInputChange);
+  els.wordMaskSubtitleSmallCapsInput?.addEventListener("change", onWordMaskInputChange);
   els.wordMaskSubtitleColorInput?.addEventListener("input", onWordMaskInputChange);
   els.wordMaskOutputFormatSelect?.addEventListener("change", onWordMaskInputChange);
-  els.wordMaskCanvas?.addEventListener("pointerdown", (event) => {
-    startWordMaskSubtitleDrag(event);
+  els.wordMaskCanvas?.addEventListener("pointerdown", handleWordMaskCanvasPointerDown);
+  els.wordMaskCanvas?.addEventListener("pointermove", handleWordMaskCanvasPointerMove);
+  els.wordMaskCanvas?.addEventListener("pointerup", handleWordMaskCanvasPointerEnd);
+  els.wordMaskCanvas?.addEventListener("pointercancel", handleWordMaskCanvasPointerEnd);
+  els.wordMaskCanvas?.addEventListener("wheel", (event) => {
+    if (state.wordMask.activeTab !== "photos") return;
+    const activePhoto = getActiveWordMaskPhoto();
+    if (!activePhoto) return;
+    event.preventDefault();
+    const factor = event.deltaY < 0 ? 1.06 : 0.94;
+    activePhoto.zoom = clamp(activePhoto.zoom * factor, ZOOM_MIN, ZOOM_MAX);
+    syncWordMaskPhotoAdjustUi();
+    renderWordMaskPreview();
+  }, { passive: false });
+  els.wordMaskPhotoZoomInput?.addEventListener("input", () => {
+    const activePhoto = getActiveWordMaskPhoto();
+    if (!activePhoto) return;
+    activePhoto.zoom = clamp(Number(els.wordMaskPhotoZoomInput.value) || 1, ZOOM_MIN, ZOOM_MAX);
+    syncWordMaskPhotoAdjustUi();
+    renderWordMaskPreview();
   });
-  els.wordMaskCanvas?.addEventListener("pointermove", (event) => {
-    moveWordMaskSubtitleDrag(event);
-  });
-  els.wordMaskCanvas?.addEventListener("pointerup", (event) => {
-    endWordMaskSubtitleDrag(event);
-  });
-  els.wordMaskCanvas?.addEventListener("pointercancel", (event) => {
-    endWordMaskSubtitleDrag(event);
+  els.wordMaskPhotoZoomResetButton?.addEventListener("click", () => {
+    const activePhoto = getActiveWordMaskPhoto();
+    if (!activePhoto) return;
+    activePhoto.zoom = 1;
+    activePhoto.focusX = 0;
+    activePhoto.focusY = 0;
+    syncWordMaskPhotoAdjustUi();
+    renderWordMaskPreview();
   });
   els.wordMaskPhotosInput?.addEventListener("change", () => {
     void loadWordMaskFiles(els.wordMaskPhotosInput.files);
