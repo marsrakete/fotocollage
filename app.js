@@ -44,9 +44,9 @@ const stencilPathCache = new Map();
 let stencilSvgLoadPromise = null;
 
 const DEFAULT_VERSION_INFO = Object.freeze({
-  appVersion: "1.4.06",
-  cacheVersion: "v193",
-  label: "Mehrsprachige README-Hilfe (DE/EN, FR-Fallback) integriert",
+  appVersion: "1.4.09",
+  cacheVersion: "v196",
+  label: "Mobile Tap-Komfort verbessert: groessere Trefferflaechen fuer Kern-Buttons",
 });
 
 const ZOOM_MIN = 0.35;
