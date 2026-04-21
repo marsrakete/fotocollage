@@ -44,9 +44,9 @@ const stencilPathCache = new Map();
 let stencilSvgLoadPromise = null;
 
 const DEFAULT_VERSION_INFO = Object.freeze({
-  appVersion: "1.4.10",
-  cacheVersion: "v197",
-  label: "Form-Collage: Ausschnitt/Zoom pro Foto + Untertitel-Kapitaelchen",
+  appVersion: "1.4.14",
+  cacheVersion: "v201",
+  label: "Untertitel-Kapitaelchen verfeinert, Stanze in Schritt B positionierbar",
 });
 
 const ZOOM_MIN = 0.35;
@@ -141,6 +141,8 @@ const state = {
     letterSpacing: 8,
     bold: true,
     italic: false,
+    shapeX: 0.5,
+    shapeY: 0.5,
     subtitle: "",
     subtitleFontFamily: "'Times New Roman', Times, serif",
     subtitleSize: 56,
@@ -384,6 +386,13 @@ const els = {
   wordMaskShapeSizeLabel: document.getElementById("wordMaskShapeSizeLabel"),
   wordMaskShapeSizeInput: document.getElementById("wordMaskShapeSizeInput"),
   wordMaskShapeSizeValue: document.getElementById("wordMaskShapeSizeValue"),
+  wordMaskPositionXLabel: document.getElementById("wordMaskPositionXLabel"),
+  wordMaskPositionXInput: document.getElementById("wordMaskPositionXInput"),
+  wordMaskPositionXValue: document.getElementById("wordMaskPositionXValue"),
+  wordMaskPositionYLabel: document.getElementById("wordMaskPositionYLabel"),
+  wordMaskPositionYInput: document.getElementById("wordMaskPositionYInput"),
+  wordMaskPositionYValue: document.getElementById("wordMaskPositionYValue"),
+  wordMaskPositionResetButton: document.getElementById("wordMaskPositionResetButton"),
   wordMaskFontSelect: document.getElementById("wordMaskFontSelect"),
   wordMaskSizeInput: document.getElementById("wordMaskSizeInput"),
   wordMaskSpacingInput: document.getElementById("wordMaskSpacingInput"),
@@ -1063,6 +1072,9 @@ function translateStaticUi() {
   setText(els.wordMaskModeMotifButton, "wordMaskModeMotif");
   setText(els.wordMaskStencilLabel, "wordMaskStencilLabel");
   setText(els.wordMaskShapeSizeLabel, "wordMaskShapeSizeLabel");
+  setText(els.wordMaskPositionXLabel, "wordMaskPositionXLabel");
+  setText(els.wordMaskPositionYLabel, "wordMaskPositionYLabel");
+  setText(els.wordMaskPositionResetButton, "wordMaskPositionResetButton");
   setText(els.wordMaskWordLabel, "wordMaskWordLabel");
   setText(els.wordMaskFontLabel, "wordMaskFontLabel");
   setText(els.wordMaskSizeLabel, "wordMaskSizeLabel");
@@ -2743,6 +2755,8 @@ async function restartWorkflow() {
   state.wordMask.stencil = "word";
   state.wordMask.fontFamily = "Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif";
   state.wordMask.fontSize = 1300;
+  state.wordMask.shapeX = 0.5;
+  state.wordMask.shapeY = 0.5;
   state.wordMask.letterSpacing = 8;
   state.wordMask.bold = true;
   state.wordMask.italic = false;
@@ -4248,6 +4262,8 @@ function syncWordMaskStateFromInputs() {
     ? Number(els.wordMaskSizeInput?.value)
     : Number(els.wordMaskShapeSizeInput?.value);
   state.wordMask.fontSize = clamp(sizeInputValue || state.wordMask.fontSize, 10, 6000);
+  state.wordMask.shapeX = clamp((Number(els.wordMaskPositionXInput?.value) || Math.round(state.wordMask.shapeX * 100)) / 100, 0, 1);
+  state.wordMask.shapeY = clamp((Number(els.wordMaskPositionYInput?.value) || Math.round(state.wordMask.shapeY * 100)) / 100, 0, 1);
   state.wordMask.letterSpacing = clamp(Number(els.wordMaskSpacingInput?.value) || state.wordMask.letterSpacing, 0, 120);
   state.wordMask.bold = Boolean(els.wordMaskWordBoldInput?.checked);
   state.wordMask.italic = Boolean(els.wordMaskWordItalicInput?.checked);
@@ -4263,6 +4279,7 @@ function syncWordMaskStateFromInputs() {
   if (els.wordMaskSizeInput) els.wordMaskSizeInput.value = String(state.wordMask.fontSize);
   if (els.wordMaskShapeSizeInput) els.wordMaskShapeSizeInput.value = String(state.wordMask.fontSize);
   if (els.wordMaskShapeSizeValue) els.wordMaskShapeSizeValue.textContent = String(state.wordMask.fontSize);
+  syncWordMaskShapePositionUi();
 }
 
 function syncWordMaskInputsFromState() {
@@ -4281,6 +4298,7 @@ function syncWordMaskInputsFromState() {
   if (els.wordMaskSizeInput) els.wordMaskSizeInput.value = String(state.wordMask.fontSize);
   if (els.wordMaskShapeSizeInput) els.wordMaskShapeSizeInput.value = String(state.wordMask.fontSize);
   if (els.wordMaskShapeSizeValue) els.wordMaskShapeSizeValue.textContent = String(state.wordMask.fontSize);
+  syncWordMaskShapePositionUi();
   if (els.wordMaskSpacingInput) els.wordMaskSpacingInput.value = String(state.wordMask.letterSpacing);
   if (els.wordMaskWordBoldInput) els.wordMaskWordBoldInput.checked = state.wordMask.bold;
   if (els.wordMaskWordItalicInput) els.wordMaskWordItalicInput.checked = state.wordMask.italic;
@@ -4454,6 +4472,31 @@ function syncWordMaskPhotoAdjustUi() {
   }
 }
 
+function syncWordMaskShapePositionUi() {
+  const shapeX = clamp(Number(state.wordMask.shapeX) || 0.5, 0, 1);
+  const shapeY = clamp(Number(state.wordMask.shapeY) || 0.5, 0, 1);
+  state.wordMask.shapeX = shapeX;
+  state.wordMask.shapeY = shapeY;
+  if (els.wordMaskPositionXInput) els.wordMaskPositionXInput.value = String(Math.round(shapeX * 100));
+  if (els.wordMaskPositionYInput) els.wordMaskPositionYInput.value = String(Math.round(shapeY * 100));
+  if (els.wordMaskPositionXValue) els.wordMaskPositionXValue.textContent = `${Math.round(shapeX * 100)}%`;
+  if (els.wordMaskPositionYValue) els.wordMaskPositionYValue.textContent = `${Math.round(shapeY * 100)}%`;
+}
+
+function getSmallCapsScaleForFontFamily(fontFamily) {
+  const family = String(fontFamily || "").toLowerCase();
+  if (family.includes("script") || family.includes("hand") || family.includes("corsiva") || family.includes("roundhand")) {
+    return 0.88;
+  }
+  if (family.includes("times") || family.includes("georgia") || family.includes("palatino") || family.includes("bodoni") || family.includes("didot")) {
+    return 0.8;
+  }
+  if (family.includes("impact") || family.includes("haettenschweiler") || family.includes("arial black") || family.includes("franklin gothic")) {
+    return 0.78;
+  }
+  return 0.82;
+}
+
 function adoptCellPhotosIntoWordMaskPhotos() {
   if (!Array.isArray(state.wordMask.photos) || state.wordMask.photos.length > 0) return 0;
   const loadedCells = state.cells.filter((cell) => cell?.bitmap && cell?.objectUrl);
@@ -4541,31 +4584,109 @@ function drawWordMaskPhotoTransformed(ctx, source, rect, photo) {
   ctx.restore();
 }
 
-function measureSpacedText(ctx, text, spacing) {
-  const chars = Array.from(text || "");
-  if (!chars.length) return 0;
+function isLowercaseLetter(char) {
+  return typeof char === "string" && char.length > 0 && char.toLowerCase() === char && char.toUpperCase() !== char;
+}
+
+function buildCanvasFont({ italic = false, weight = "600", size = 16, family = "sans-serif" }) {
+  return `${italic ? "italic " : ""}${weight} ${Math.max(1, size)}px ${family}`;
+}
+
+function buildSmallCapsGlyphRuns(text, baseSize, options = {}) {
+  const {
+    smallCaps = false,
+    smallCapsScale = 0.74,
+  } = options;
+  return Array.from(text || "").map((char) => {
+    if (smallCaps && isLowercaseLetter(char)) {
+      return {
+        char: char.toUpperCase(),
+        size: Math.max(1, Math.round(baseSize * smallCapsScale)),
+      };
+    }
+    return {
+      char: smallCaps ? char.toUpperCase() : char,
+      size: baseSize,
+    };
+  });
+}
+
+function measureGlyphRuns(ctx, glyphRuns, options = {}) {
+  const {
+    italic = false,
+    weight = "600",
+    family = "sans-serif",
+    spacing = 0,
+  } = options;
+  if (!glyphRuns.length) return 0;
   let width = 0;
-  for (let i = 0; i < chars.length; i += 1) {
-    width += ctx.measureText(chars[i]).width;
-    if (i < chars.length - 1) width += spacing;
-  }
+  glyphRuns.forEach((glyph, index) => {
+    ctx.font = buildCanvasFont({ italic, weight, size: glyph.size, family });
+    width += ctx.measureText(glyph.char).width;
+    if (index < glyphRuns.length - 1) width += spacing;
+  });
   return width;
 }
 
-function drawSpacedText(ctx, text, centerX, centerY, spacing) {
-  const chars = Array.from(text || "");
-  if (!chars.length) return;
+function getGlyphRunVerticalMetrics(ctx, glyphRuns, options = {}) {
+  const {
+    italic = false,
+    weight = "600",
+    family = "sans-serif",
+  } = options;
+  let maxAscent = 0;
+  let maxDescent = 0;
+  glyphRuns.forEach((glyph) => {
+    ctx.font = buildCanvasFont({ italic, weight, size: glyph.size, family });
+    const metrics = ctx.measureText(glyph.char || "M");
+    const ascent = Number(metrics.actualBoundingBoxAscent) || glyph.size * 0.72;
+    const descent = Number(metrics.actualBoundingBoxDescent) || glyph.size * 0.18;
+    maxAscent = Math.max(maxAscent, ascent);
+    maxDescent = Math.max(maxDescent, descent);
+  });
+  if (!maxAscent && !maxDescent) {
+    const fallbackSize = Math.max(...glyphRuns.map((glyph) => glyph.size), 16);
+    maxAscent = fallbackSize * 0.72;
+    maxDescent = fallbackSize * 0.18;
+  }
+  return { maxAscent, maxDescent };
+}
+
+function drawGlyphRuns(ctx, glyphRuns, centerX, centerY, options = {}) {
+  const {
+    italic = false,
+    weight = "600",
+    family = "sans-serif",
+    spacing = 0,
+  } = options;
+  if (!glyphRuns.length) return;
   const previousAlign = ctx.textAlign;
-  const totalWidth = measureSpacedText(ctx, text, spacing);
+  const previousBaseline = ctx.textBaseline;
+  const totalWidth = measureGlyphRuns(ctx, glyphRuns, { italic, weight, family, spacing });
+  const { maxAscent, maxDescent } = getGlyphRunVerticalMetrics(ctx, glyphRuns, { italic, weight, family });
+  const baselineY = centerY + (maxAscent - maxDescent) / 2;
   let x = centerX - totalWidth / 2;
   ctx.textAlign = "left";
-  for (let i = 0; i < chars.length; i += 1) {
-    const char = chars[i];
-    const w = ctx.measureText(char).width;
-    ctx.fillText(char, x, centerY);
-    x += w + spacing;
-  }
+  ctx.textBaseline = "alphabetic";
+  glyphRuns.forEach((glyph, index) => {
+    ctx.font = buildCanvasFont({ italic, weight, size: glyph.size, family });
+    const glyphWidth = ctx.measureText(glyph.char).width;
+    ctx.fillText(glyph.char, x, baselineY);
+    x += glyphWidth;
+    if (index < glyphRuns.length - 1) x += spacing;
+  });
   ctx.textAlign = previousAlign;
+  ctx.textBaseline = previousBaseline;
+}
+
+function measureStyledText(ctx, text, options = {}) {
+  const glyphRuns = buildSmallCapsGlyphRuns(text, options.size || 16, options);
+  return measureGlyphRuns(ctx, glyphRuns, options);
+}
+
+function drawStyledText(ctx, text, centerX, centerY, options = {}) {
+  const glyphRuns = buildSmallCapsGlyphRuns(text, options.size || 16, options);
+  drawGlyphRuns(ctx, glyphRuns, centerX, centerY, options);
 }
 
 function parseSvgViewBox(viewBoxValue) {
@@ -4634,7 +4755,7 @@ function ensureSvgStencilsLoaded() {
   return stencilSvgLoadPromise;
 }
 
-function drawSvgStencil(ctx, width, height, stencilId, scale = 1) {
+function drawSvgStencil(ctx, width, height, stencilId, scale = 1, centerX = width / 2, centerY = height / 2) {
   const stencilDef = stencilPathCache.get(stencilId);
   if (!stencilDef || !stencilDef.image || !stencilDef.viewBox) {
     return false;
@@ -4646,16 +4767,16 @@ function drawSvgStencil(ctx, width, height, stencilId, scale = 1) {
   if (!Number.isFinite(drawWidth) || !Number.isFinite(drawHeight) || drawWidth <= 0 || drawHeight <= 0) {
     return false;
   }
-  const x = Math.round((width - drawWidth) / 2);
-  const y = Math.round((height - drawHeight) / 2);
+  const x = Math.round(centerX - drawWidth / 2);
+  const y = Math.round(centerY - drawHeight / 2);
   ctx.drawImage(stencilDef.image, x, y, drawWidth, drawHeight);
   return true;
 }
 
-function drawHeartStencil(ctx, width, height, scale = 1) {
+function drawHeartStencil(ctx, width, height, scale = 1, centerX = width / 2, centerY = height / 2) {
   const size = Math.min(width, height) * 0.42 * scale;
-  const x = width / 2;
-  const y = height / 2;
+  const x = centerX;
+  const y = centerY;
   ctx.beginPath();
   ctx.moveTo(x, y + size * 0.9);
   ctx.bezierCurveTo(x - size * 1.1, y + size * 0.28, x - size * 1.05, y - size * 0.58, x, y - size * 0.15);
@@ -4664,10 +4785,8 @@ function drawHeartStencil(ctx, width, height, scale = 1) {
   ctx.fill();
 }
 
-function drawFlowerStencil(ctx, width, height, scale = 1) {
+function drawFlowerStencil(ctx, width, height, scale = 1, centerX = width / 2, centerY = height / 2) {
   const radius = Math.min(width, height) * 0.16 * scale;
-  const centerX = width / 2;
-  const centerY = height / 2;
   const petalOffset = radius * 1.25;
   for (let i = 0; i < 8; i += 1) {
     const angle = (Math.PI * 2 * i) / 8;
@@ -4682,9 +4801,9 @@ function drawFlowerStencil(ctx, width, height, scale = 1) {
   ctx.fill();
 }
 
-function drawStarStencil(ctx, width, height, scale = 1) {
-  const cx = width / 2;
-  const cy = height / 2;
+function drawStarStencil(ctx, width, height, scale = 1, centerX = width / 2, centerY = height / 2) {
+  const cx = centerX;
+  const cy = centerY;
   const outer = Math.min(width, height) * 0.34 * scale;
   const inner = outer * 0.45;
   ctx.beginPath();
@@ -4700,9 +4819,9 @@ function drawStarStencil(ctx, width, height, scale = 1) {
   ctx.fill();
 }
 
-function drawCloverStencil(ctx, width, height, scale = 1) {
-  const cx = width / 2;
-  const cy = height / 2;
+function drawCloverStencil(ctx, width, height, scale = 1, centerX = width / 2, centerY = height / 2) {
+  const cx = centerX;
+  const cy = centerY;
   const radius = Math.min(width, height) * 0.125 * scale;
   const offset = radius * 1.35;
   const drawLeaf = (x, y) => {
@@ -4726,9 +4845,9 @@ function drawCloverStencil(ctx, width, height, scale = 1) {
   ctx.stroke();
 }
 
-function drawLightningStencil(ctx, width, height, scale = 1) {
-  const cx = width / 2;
-  const cy = height / 2;
+function drawLightningStencil(ctx, width, height, scale = 1, centerX = width / 2, centerY = height / 2) {
+  const cx = centerX;
+  const cy = centerY;
   const w = Math.min(width, height) * 0.5 * scale;
   const h = Math.min(width, height) * 0.75 * scale;
   ctx.beginPath();
@@ -5071,6 +5190,8 @@ function renderWordMaskPreview() {
   const requestedWordSize = clamp(Number(state.wordMask.fontSize) || 1500, 10, 6000);
   let fitSize = 1200;
   const stencil = String(state.wordMask.stencil || "word");
+  const shapeCenterX = clamp(Number(state.wordMask.shapeX) || 0.5, 0, 1) * maskRect.width;
+  const shapeCenterY = clamp(Number(state.wordMask.shapeY) || 0.5, 0, 1) * maskRect.height;
 
   // Layer 1: Text alpha mask.
   const textCanvas = document.createElement("canvas");
@@ -5085,10 +5206,16 @@ function renderWordMaskPreview() {
   textCtx.lineJoin = "round";
 
   const spacing = clamp(Number(state.wordMask.letterSpacing) || 0, 0, 120);
+  const wordWeight = state.wordMask.bold ? "900" : "600";
   if (stencil === "word" && word) {
     for (let pass = 0; pass < 8; pass += 1) {
-      textCtx.font = `${state.wordMask.italic ? "italic " : ""}${state.wordMask.bold ? "900" : "600"} ${fitSize}px ${state.wordMask.fontFamily}`;
-      const metricsWidth = Math.max(1, measureSpacedText(textCtx, word, spacing));
+      const metricsWidth = Math.max(1, measureStyledText(textCtx, word, {
+        size: fitSize,
+        italic: state.wordMask.italic,
+        weight: wordWeight,
+        family: state.wordMask.fontFamily,
+        spacing,
+      }));
       if (metricsWidth <= maskRect.width * 0.92 && fitSize <= maskRect.height * 0.9) {
         break;
       }
@@ -5099,22 +5226,27 @@ function renderWordMaskPreview() {
     }
     const sizeFactor = requestedWordSize / 1200;
     const finalWordSize = clamp(Math.round(fitSize * sizeFactor), 8, 6000);
-    textCtx.font = `${state.wordMask.italic ? "italic " : ""}${state.wordMask.bold ? "900" : "600"} ${finalWordSize}px ${state.wordMask.fontFamily}`;
-    drawSpacedText(textCtx, word, maskRect.width / 2, maskRect.height / 2, spacing);
+    drawStyledText(textCtx, word, shapeCenterX, shapeCenterY, {
+      size: finalWordSize,
+      italic: state.wordMask.italic,
+      weight: wordWeight,
+      family: state.wordMask.fontFamily,
+      spacing,
+    });
   } else if (stencil !== "word") {
     const shapeScale = clamp(requestedWordSize / 1200, 0.08, 6);
-    const drewSvgStencil = drawSvgStencil(textCtx, maskRect.width, maskRect.height, stencil, shapeScale);
+    const drewSvgStencil = drawSvgStencil(textCtx, maskRect.width, maskRect.height, stencil, shapeScale, shapeCenterX, shapeCenterY);
     if (!drewSvgStencil) {
       if (stencil === "heart") {
-        drawHeartStencil(textCtx, maskRect.width, maskRect.height, shapeScale);
+        drawHeartStencil(textCtx, maskRect.width, maskRect.height, shapeScale, shapeCenterX, shapeCenterY);
       } else if (stencil === "flower") {
-        drawFlowerStencil(textCtx, maskRect.width, maskRect.height, shapeScale);
+        drawFlowerStencil(textCtx, maskRect.width, maskRect.height, shapeScale, shapeCenterX, shapeCenterY);
       } else if (stencil === "clover") {
-        drawCloverStencil(textCtx, maskRect.width, maskRect.height, shapeScale);
+        drawCloverStencil(textCtx, maskRect.width, maskRect.height, shapeScale, shapeCenterX, shapeCenterY);
       } else if (stencil === "lightning") {
-        drawLightningStencil(textCtx, maskRect.width, maskRect.height, shapeScale);
+        drawLightningStencil(textCtx, maskRect.width, maskRect.height, shapeScale, shapeCenterX, shapeCenterY);
       } else {
-        drawFlowerStencil(textCtx, maskRect.width, maskRect.height, shapeScale);
+        drawFlowerStencil(textCtx, maskRect.width, maskRect.height, shapeScale, shapeCenterX, shapeCenterY);
       }
     }
   }
@@ -5195,13 +5327,19 @@ function renderWordMaskPreview() {
     const subtitleY = subtitleYNorm * height;
     ctx.save();
     ctx.fillStyle = state.wordMask.subtitleColor || "#222222";
-    ctx.textAlign = "left";
-    ctx.textBaseline = "middle";
     const subtitleSize = clamp(Number(state.wordMask.subtitleSize) || 56, 12, 220);
-    ctx.fontVariantCaps = state.wordMask.subtitleSmallCaps ? "small-caps" : "normal";
-    ctx.font = `${state.wordMask.subtitleItalic ? "italic " : ""}${state.wordMask.subtitleBold ? "700" : "500"} ${subtitleSize}px ${state.wordMask.subtitleFontFamily}`;
+    const subtitleWeight = state.wordMask.subtitleBold ? "700" : "500";
+    const subtitleSmallCapsScale = getSmallCapsScaleForFontFamily(state.wordMask.subtitleFontFamily);
     const maxWidth = Math.max(1, width - 16);
-    const measuredWidth = Math.min(maxWidth, Math.max(1, ctx.measureText(subtitle).width));
+    const measuredWidth = Math.min(maxWidth, Math.max(1, measureStyledText(ctx, subtitle, {
+      size: subtitleSize,
+      italic: state.wordMask.subtitleItalic,
+      weight: subtitleWeight,
+      family: state.wordMask.subtitleFontFamily,
+      spacing: 0,
+      smallCaps: Boolean(state.wordMask.subtitleSmallCaps),
+      smallCapsScale: subtitleSmallCapsScale,
+    })));
     const textLeft = clamp(subtitleX - measuredWidth / 2, 8, Math.max(8, width - 8 - measuredWidth));
     const textTop = subtitleY - subtitleSize / 2;
     state.wordMask.subtitleBounds = {
@@ -5210,7 +5348,15 @@ function renderWordMaskPreview() {
       width: measuredWidth + 20,
       height: subtitleSize + 16,
     };
-    ctx.fillText(subtitle, textLeft, subtitleY, maxWidth);
+    drawStyledText(ctx, subtitle, textLeft + measuredWidth / 2, subtitleY, {
+      size: subtitleSize,
+      italic: state.wordMask.subtitleItalic,
+      weight: subtitleWeight,
+      family: state.wordMask.subtitleFontFamily,
+      spacing: 0,
+      smallCaps: Boolean(state.wordMask.subtitleSmallCaps),
+      smallCapsScale: subtitleSmallCapsScale,
+    });
     ctx.restore();
   } else {
     state.wordMask.subtitleBounds = null;
@@ -6436,6 +6582,8 @@ function wireControls() {
   els.wordMaskFontSelect?.addEventListener("change", onWordMaskInputChange);
   els.wordMaskSizeInput?.addEventListener("input", onWordMaskInputChange);
   els.wordMaskShapeSizeInput?.addEventListener("input", onWordMaskInputChange);
+  els.wordMaskPositionXInput?.addEventListener("input", onWordMaskInputChange);
+  els.wordMaskPositionYInput?.addEventListener("input", onWordMaskInputChange);
   els.wordMaskSpacingInput?.addEventListener("input", onWordMaskInputChange);
   els.wordMaskWordBoldInput?.addEventListener("change", onWordMaskInputChange);
   els.wordMaskWordItalicInput?.addEventListener("change", onWordMaskInputChange);
@@ -6448,6 +6596,12 @@ function wireControls() {
   els.wordMaskSubtitleSmallCapsInput?.addEventListener("change", onWordMaskInputChange);
   els.wordMaskSubtitleColorInput?.addEventListener("input", onWordMaskInputChange);
   els.wordMaskOutputFormatSelect?.addEventListener("change", onWordMaskInputChange);
+  els.wordMaskPositionResetButton?.addEventListener("click", () => {
+    state.wordMask.shapeX = 0.5;
+    state.wordMask.shapeY = 0.5;
+    syncWordMaskShapePositionUi();
+    renderWordMaskPreview();
+  });
   els.wordMaskCanvas?.addEventListener("pointerdown", handleWordMaskCanvasPointerDown);
   els.wordMaskCanvas?.addEventListener("pointermove", handleWordMaskCanvasPointerMove);
   els.wordMaskCanvas?.addEventListener("pointerup", handleWordMaskCanvasPointerEnd);
