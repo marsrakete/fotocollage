@@ -1,5 +1,5 @@
 const CACHE_PREFIX = "fotocollage-cache";
-const CACHE_VERSION = "v201";
+const CACHE_VERSION = "v203";
 const CACHE_NAME = `${CACHE_PREFIX}-${CACHE_VERSION}`;
 const ASSETS = [
   "./",
@@ -37,6 +37,9 @@ const ASSETS = [
   "./README.de.md",
   "./README.en.md",
   "./preset-builder.html",
+  "./assets/kofi-button.svg",
+  "./assets/previews/mode-photo-collage.png",
+  "./assets/previews/mode-form-collage.png",
   "./icon.svg",
   "./icon-192.png",
   "./icon-512.png",

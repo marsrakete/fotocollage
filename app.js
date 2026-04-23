@@ -44,9 +44,9 @@ const stencilPathCache = new Map();
 let stencilSvgLoadPromise = null;
 
 const DEFAULT_VERSION_INFO = Object.freeze({
-  appVersion: "1.4.14",
-  cacheVersion: "v201",
-  label: "Untertitel-Kapitaelchen verfeinert, Stanze in Schritt B positionierbar",
+  appVersion: "1.4.16",
+  cacheVersion: "v203",
+  label: "Ko-Fi Support-Button lokal eingebunden und offline-tauglich gemacht",
 });
 
 const ZOOM_MIN = 0.35;
@@ -363,6 +363,8 @@ const els = {
   tipsTitle: document.getElementById("tipsTitle"),
   tipsResetButton: document.getElementById("tipsResetButton"),
   tipsStatus: document.getElementById("tipsStatus"),
+  supportTitle: document.getElementById("supportTitle"),
+  supportIntro: document.getElementById("supportIntro"),
   assistantDialog: document.getElementById("assistantDialog"),
   assistantForm: document.getElementById("assistantForm"),
   assistantTitle: document.getElementById("assistantTitle"),
@@ -1166,6 +1168,8 @@ function translateStaticUi() {
   setText(els.helpTitle, "helpTitle");
   setText(els.updatesTitle, "updatesTitle");
   setText(els.languageLabel, "languageLabel");
+  setText(els.supportTitle, "supportTitle");
+  setText(els.supportIntro, "supportIntro");
   setText(els.checkForUpdatesButton, "checkForUpdates");
   setText(els.reloadAppButton, "reload");
   setText(els.toStep2, "toPhotos");

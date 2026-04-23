@@ -510,6 +510,18 @@ body.touch-upload-mode #wordMaskSaveButton {
 .settings-stack { display: grid; gap: 10px; }
 .updates-block { border: 1px solid var(--border); border-radius: 18px; background: rgba(255,255,255,0.03); padding: 14px; display: grid; gap: 10px; }
 .updates-block h3 { margin: 0; font-size: 1rem; }
+.kofi-link {
+  display: inline-flex;
+  justify-self: start;
+  align-items: center;
+  max-width: 100%;
+  border-radius: 12px;
+}
+.kofi-link img {
+  display: block;
+  max-width: 100%;
+  width: auto;
+}
 .settings-status { margin: 0; color: var(--muted); line-height: 1.5; }
 .settings-status.loading {
   display: inline-flex;
@@ -960,6 +972,14 @@ input[type="file"] { color: var(--muted); }
   .assistant-panel { width: calc(100vw - 4px); width: calc(100dvw - 4px); max-width: calc(100vw - 4px); max-width: calc(100dvw - 4px); padding: 12px; }
   .wordmask-panel { width: calc(100vw - 4px); width: calc(100dvw - 4px); max-width: calc(100vw - 4px); max-width: calc(100dvw - 4px); padding: 12px; }
   .confirm-panel { width: calc(100vw - 4px); width: calc(100dvw - 4px); max-width: calc(100vw - 4px); max-width: calc(100dvw - 4px); padding: 12px; }
+  .kofi-link {
+    width: 100%;
+    justify-content: flex-start;
+  }
+  .kofi-link img {
+    max-width: min(100%, 230px);
+    height: auto !important;
+  }
   .step1-action-cards { grid-template-columns: 1fr; }
   .ui-photo .progress {
     padding: 4px;
