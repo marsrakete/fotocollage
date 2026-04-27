@@ -247,6 +247,7 @@
                   <button class="secondary" id="toggleReorderMode" type="button">Sortieren</button>
                   <button class="secondary" id="replaceCell">Bild ersetzen</button>
                   <button class="secondary" id="deleteCell">Bild löschen</button>
+                  <button class="secondary control-wide" id="openCropDialogButton">Bildausschnitt wählen</button>
                   <button class="secondary control-wide" id="resetFocus">Ausschnitt zurücksetzen</button>
                 </div>
                 <label class="field zoom-field">
@@ -824,6 +825,31 @@
         <p id="safeAreaDialogBody" class="dialog-copy"></p>
         <div class="settings-footer">
           <button id="safeAreaDialogClose" class="secondary" value="cancel" type="submit">Schließen</button>
+        </div>
+      </form>
+    </dialog>
+
+    <dialog id="cropDialog" class="settings-dialog">
+      <form id="cropForm" method="dialog" class="settings-panel crop-panel">
+        <div class="dialog-head">
+          <h2 id="cropDialogTitle">Bildausschnitt</h2>
+          <button class="secondary icon-only" value="cancel" aria-label="Schließen" type="submit">✕</button>
+        </div>
+        <p id="cropDialogInfo" class="dialog-copy">Ziehe direkt im Bild fuer den Ausschnitt, Pinch oder Mausrad fuer Zoom.</p>
+        <div class="crop-frame" id="cropFrame">
+          <img id="cropImage" alt="" />
+        </div>
+        <label class="field zoom-field">
+          <span id="cropZoomLabel">Zoom</span>
+          <input id="cropZoomInput" type="range" min="0.35" max="4" step="0.05" value="1" />
+          <strong><span id="cropZoomValue">100</span> %</strong>
+        </label>
+        <div class="crop-actions">
+          <button id="cropAutoFitButton" class="secondary" type="button">Automatisch einpassen</button>
+          <button id="cropResetButton" class="secondary" type="button">Ausschnitt zurücksetzen</button>
+        </div>
+        <div class="settings-footer">
+          <button id="cropDoneButton" class="primary" value="cancel" type="submit">Fertig</button>
         </div>
       </form>
     </dialog>

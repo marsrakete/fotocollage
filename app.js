@@ -44,9 +44,9 @@ const stencilPathCache = new Map();
 let stencilSvgLoadPromise = null;
 
 const DEFAULT_VERSION_INFO = Object.freeze({
-  appVersion: "1.4.16",
-  cacheVersion: "v203",
-  label: "Ko-Fi Support-Button lokal eingebunden und offline-tauglich gemacht",
+  appVersion: "1.4.18",
+  cacheVersion: "v205",
+  label: "Bildausschnitt als Dialog in Schritt 3 verschoben, mobile Vorschau verkleinert",
 });
 
 const ZOOM_MIN = 0.35;
@@ -266,6 +266,15 @@ const els = {
   slotStatus: document.getElementById("slotStatus"),
   fileInput: document.getElementById("fileInput"),
   dropZone: document.getElementById("dropZone"),
+  step2Adjuster: document.getElementById("step2Adjuster"),
+  step2AdjustTitle: document.getElementById("step2AdjustTitle"),
+  step2AdjustInfo: document.getElementById("step2AdjustInfo"),
+  step2ActiveCellInfo: document.getElementById("step2ActiveCellInfo"),
+  step2ZoomLabel: document.getElementById("step2ZoomLabel"),
+  step2ZoomInput: document.getElementById("step2ZoomInput"),
+  step2ZoomValue: document.getElementById("step2ZoomValue"),
+  step2ResetFocus: document.getElementById("step2ResetFocus"),
+  step2ResetZoom: document.getElementById("step2ResetZoom"),
   collagePreview: document.getElementById("collagePreview"),
   editorFrame: document.getElementById("editorFrame"),
   editorImage: document.getElementById("editorImage"),
@@ -284,6 +293,7 @@ const els = {
   zoomValue: document.getElementById("zoomValue"),
   zoomLabel: document.getElementById("zoomLabel"),
   resetZoom: document.getElementById("resetZoom"),
+  openCropDialogButton: document.getElementById("openCropDialogButton"),
   slotShapeField: document.getElementById("slotShapeField"),
   slotShapeLabel: document.getElementById("slotShapeLabel"),
   slotShapeSelect: document.getElementById("slotShapeSelect"),
@@ -444,6 +454,18 @@ const els = {
   confirmCloseButton: document.getElementById("confirmCloseButton"),
   confirmCancelButton: document.getElementById("confirmCancelButton"),
   confirmAcceptButton: document.getElementById("confirmAcceptButton"),
+  cropDialog: document.getElementById("cropDialog"),
+  cropForm: document.getElementById("cropForm"),
+  cropDialogTitle: document.getElementById("cropDialogTitle"),
+  cropDialogInfo: document.getElementById("cropDialogInfo"),
+  cropFrame: document.getElementById("cropFrame"),
+  cropImage: document.getElementById("cropImage"),
+  cropZoomLabel: document.getElementById("cropZoomLabel"),
+  cropZoomInput: document.getElementById("cropZoomInput"),
+  cropZoomValue: document.getElementById("cropZoomValue"),
+  cropAutoFitButton: document.getElementById("cropAutoFitButton"),
+  cropResetButton: document.getElementById("cropResetButton"),
+  cropDoneButton: document.getElementById("cropDoneButton"),
   settingsTitle: document.getElementById("settingsTitle"),
   settingsIntro: document.getElementById("settingsIntro"),
   updatesTitle: document.getElementById("updatesTitle"),
@@ -1115,11 +1137,17 @@ function translateStaticUi() {
   setText(els.step1Desc, "step1Desc");
   setText(els.step2Title, "step2Title");
   setText(els.step2Desc, "step2Desc");
+  setText(els.step2AdjustTitle, "step2AdjustTitle");
+  setText(els.step2AdjustInfo, "step2AdjustInfo");
+  setText(els.step2ZoomLabel, "zoomLabel");
+  setText(els.step2ResetFocus, "resetFocus");
+  setText(els.step2ResetZoom, "resetZoom");
   updateUploadUiForDevice();
   setText(els.step3Title, "step3Title");
   setText(els.step3Desc, "step3Desc");
   setText(els.activeCellTitle, "activeCellTitle");
   setText(els.dragHint, "dragHint");
+  setText(els.openCropDialogButton, "openCropDialogButton");
   setText(els.step4Title, "step4Title");
   setText(els.step4Desc, "step4Desc");
   setText(els.layoutModeLabel, "layoutModeLabel");
@@ -1162,6 +1190,12 @@ function translateStaticUi() {
   setText(els.confirmCancelButton, "confirmCancel");
   setText(els.confirmAcceptButton, "confirmContinue");
   els.confirmCloseButton?.setAttribute("aria-label", t("close"));
+  setText(els.cropDialogTitle, "cropDialogTitle");
+  setText(els.cropDialogInfo, "cropDialogInfo");
+  setText(els.cropZoomLabel, "zoomLabel");
+  setText(els.cropAutoFitButton, "cropAutoFitButton");
+  setText(els.cropResetButton, "resetFocus");
+  setText(els.cropDoneButton, "cropDoneButton");
   setText(els.tipsTitle, "tipsTitle");
   setText(els.tipsResetButton, "tipsResetButton");
   updateTipsControls();
@@ -2996,6 +3030,34 @@ function renderStatus() {
   updateHeroSummary();
 }
 
+function renderStep2Adjuster() {
+  if (!els.step2Adjuster || !els.step2ActiveCellInfo || !els.step2ZoomInput || !els.step2ZoomValue) return;
+  const total = state.cells.length;
+  const hasAnyPhoto = state.cells.some((cell) => Boolean(cell.bitmap));
+  const selectedIndex = clamp(Number(state.selectedCell) || 0, 0, Math.max(0, total - 1));
+  const cell = state.cells[selectedIndex];
+  const hasBitmap = Boolean(cell?.bitmap);
+  els.step2Adjuster.hidden = !hasAnyPhoto;
+  if (!hasAnyPhoto) {
+    els.step2ActiveCellInfo.textContent = t("step2AdjustEmpty");
+    els.step2ZoomInput.value = "1";
+    els.step2ZoomInput.disabled = true;
+    els.step2ZoomValue.textContent = "100";
+    if (els.step2ResetFocus) els.step2ResetFocus.disabled = true;
+    if (els.step2ResetZoom) els.step2ResetZoom.disabled = true;
+    return;
+  }
+  els.step2ActiveCellInfo.textContent = hasBitmap
+    ? `${selectedIndex + 1}. ${t("field")}: ${cell.fileName}`
+    : `${selectedIndex + 1}. ${t("fieldEmpty")}`;
+  const zoom = hasBitmap ? clamp(Number(cell.zoom) || 1, ZOOM_MIN, ZOOM_MAX) : 1;
+  els.step2ZoomInput.value = String(zoom);
+  els.step2ZoomInput.disabled = !hasBitmap;
+  els.step2ZoomValue.textContent = String(Math.round(zoom * 100));
+  if (els.step2ResetFocus) els.step2ResetFocus.disabled = !hasBitmap;
+  if (els.step2ResetZoom) els.step2ResetZoom.disabled = !hasBitmap;
+}
+
 function getRemainingUploadSlots() {
   const emptyCount = state.cells.filter((cell) => !cell.bitmap).length;
   return Math.max(0, emptyCount);
@@ -3019,6 +3081,7 @@ function renderSlots() {
     node.querySelector(".slot-index").textContent = `#${index + 1}`;
     node.draggable = false;
     node.dataset.index = String(index);
+    node.classList.toggle("selected", index === state.selectedCell);
     if (cell.bitmap) {
       node.classList.remove("empty");
       img.src = cell.objectUrl;
@@ -3125,6 +3188,8 @@ function renderPreview() {
   const ratio = getLayoutAspectRatio(layout);
   const safeRatio = Number.isFinite(ratio) && ratio > 0 ? ratio : (layout.rows / layout.cols);
   els.collagePreview.style.aspectRatio = `${1 / safeRatio}`;
+  els.collagePreview.style.setProperty("--preview-height-ratio", String(safeRatio));
+  els.collagePreview.parentElement?.style.setProperty("--preview-height-ratio", String(safeRatio));
   els.collagePreview.style.setProperty("--grid-gap", `${state.gap}px`);
   els.collagePreview.style.setProperty("--outer-gap", `${state.outerGap}px`);
   els.collagePreview.style.setProperty("--active-outline-color", getActiveOutlineColor(state.background));
@@ -3215,6 +3280,99 @@ function renderPreview() {
   });
 }
 
+function isCropDialogOpen() {
+  return Boolean(els.cropDialog?.open);
+}
+
+function getContainZoomForCell(cell, frameWidth, frameHeight) {
+  if (!cell?.bitmap) return 1;
+  const rotation = normalizeRotation(cell.rotation || 0);
+  const isQuarterTurn = rotation % 180 !== 0;
+  const rotatedSourceWidth = isQuarterTurn ? cell.height : cell.width;
+  const rotatedSourceHeight = isQuarterTurn ? cell.width : cell.height;
+  const coverScale = Math.max(frameWidth / rotatedSourceWidth, frameHeight / rotatedSourceHeight);
+  const containScale = Math.min(frameWidth / rotatedSourceWidth, frameHeight / rotatedSourceHeight);
+  if (!Number.isFinite(coverScale) || coverScale <= 0 || !Number.isFinite(containScale) || containScale <= 0) {
+    return 1;
+  }
+  return clamp(containScale / coverScale, ZOOM_MIN, 1);
+}
+
+function renderCropDialog() {
+  if (!isCropDialogOpen() || !els.cropFrame || !els.cropImage || !els.cropZoomInput || !els.cropZoomValue) return;
+  const cell = state.cells[state.selectedCell];
+  if (!cell?.bitmap) {
+    els.cropImage.removeAttribute("src");
+    els.cropZoomInput.disabled = true;
+    els.cropZoomValue.textContent = "100";
+    els.cropAutoFitButton.disabled = true;
+    els.cropResetButton.disabled = true;
+    return;
+  }
+  els.cropImage.src = cell.objectUrl;
+  els.cropImage.alt = cell.fileName;
+  const frameSize = getCellFrameSize(state.selectedCell);
+  if (frameSize.width > 0 && frameSize.height > 0) {
+    els.cropFrame.style.aspectRatio = `${frameSize.width} / ${frameSize.height}`;
+  }
+  els.cropZoomInput.disabled = false;
+  els.cropZoomInput.value = String(cell.zoom || 1);
+  els.cropZoomValue.textContent = String(Math.round((cell.zoom || 1) * 100));
+  els.cropAutoFitButton.disabled = false;
+  els.cropResetButton.disabled = false;
+  requestAnimationFrame(() => {
+    if (!isCropDialogOpen() || !cell?.bitmap) return;
+    applyImagePlacement(els.cropImage, els.cropFrame, cell);
+  });
+}
+
+function openCropDialog() {
+  const cell = state.cells[state.selectedCell];
+  if (!cell?.bitmap || !els.cropDialog) return;
+  els.cropDialog.showModal();
+  state.touchPoints.clear();
+  state.pinch = null;
+  renderCropDialog();
+}
+
+function closeCropDialog() {
+  state.touchPoints.clear();
+  state.pinch = null;
+  stopDrag();
+}
+
+function handleCropDialogPointerDown(event) {
+  const cell = state.cells[state.selectedCell];
+  if (!cell?.bitmap || !els.cropFrame) return;
+  if (event.pointerType !== "touch") {
+    startDrag(event, state.selectedCell, els.cropFrame);
+    return;
+  }
+  state.touchPoints.set(event.pointerId, { x: event.clientX, y: event.clientY });
+  if (state.touchPoints.size === 1) {
+    startDrag(event, state.selectedCell, els.cropFrame);
+    return;
+  }
+  if (state.touchPoints.size >= 2) {
+    stopDrag();
+    const points = Array.from(state.touchPoints.values());
+    state.pinch = {
+      startDistance: distance(points[0], points[1]),
+      startZoom: cell.zoom || 1,
+      index: state.selectedCell,
+    };
+  }
+}
+
+function handleCropDialogWheel(event) {
+  const cell = state.cells[state.selectedCell];
+  if (!cell?.bitmap) return;
+  event.preventDefault();
+  const delta = -event.deltaY;
+  const factor = 1 + delta * 0.0015;
+  setCellZoom(state.selectedCell, (cell.zoom || 1) * factor);
+}
+
 function syncEditor() {
   const cell = state.cells[state.selectedCell];
   if (!cell) return;
@@ -3240,6 +3398,9 @@ function syncEditor() {
   }
   if (els.deleteCell) {
     els.deleteCell.disabled = controlsLocked || !cell.bitmap;
+  }
+  if (els.openCropDialogButton) {
+    els.openCropDialogButton.disabled = controlsLocked || !cell.bitmap;
   }
   if (els.flipHorizontalButton) {
     els.flipHorizontalButton.disabled = controlsLocked || !cell.bitmap;
@@ -3415,6 +3576,7 @@ function renderAll() {
   updatePresetActive();
   renderSlots();
   renderStatus();
+  renderStep2Adjuster();
   renderPreview();
   syncEditor();
   renderExportPreview();
@@ -3867,6 +4029,7 @@ function setCellZoom(index, nextZoom) {
   cell.zoom = clamp(nextZoom, ZOOM_MIN, ZOOM_MAX);
   syncEditor();
   renderPreview();
+  renderCropDialog();
   renderExportPreview();
 }
 
@@ -3903,6 +4066,8 @@ function handlePreviewWheel(event, index) {
   event.preventDefault();
   if (state.selectedCell !== index) {
     state.selectedCell = index;
+    renderSlots();
+    renderStep2Adjuster();
     syncEditor();
     renderPreview();
   }
@@ -3927,6 +4092,8 @@ function handlePreviewPointerDown(event, index, node) {
   }
   if (state.selectedCell !== index) {
     state.selectedCell = index;
+    renderSlots();
+    renderStep2Adjuster();
     syncEditor();
     renderPreview();
   }
@@ -4021,6 +4188,7 @@ function onDragMove(event) {
   }
   syncEditor();
   renderPreview();
+  renderCropDialog();
   renderExportPreview();
 }
 
@@ -6335,6 +6503,44 @@ function wireControls() {
     if (isActiveFieldLockedByReorder()) return;
     setCellZoom(state.selectedCell, 1);
   });
+  els.openCropDialogButton?.addEventListener("click", () => {
+    if (isActiveFieldLockedByReorder()) return;
+    openCropDialog();
+  });
+  els.cropForm?.addEventListener("submit", (event) => {
+    event.preventDefault();
+    els.cropDialog?.close();
+  });
+  els.cropDialog?.addEventListener("close", () => {
+    closeCropDialog();
+  });
+  els.cropFrame?.addEventListener("pointerdown", handleCropDialogPointerDown);
+  els.cropFrame?.addEventListener("wheel", handleCropDialogWheel, { passive: false });
+  els.cropZoomInput?.addEventListener("input", () => {
+    setCellZoom(state.selectedCell, Number(els.cropZoomInput.value) || 1);
+  });
+  els.cropResetButton?.addEventListener("click", () => {
+    const cell = state.cells[state.selectedCell];
+    if (!cell?.bitmap) return;
+    cell.focusX = 0;
+    cell.focusY = 0;
+    syncEditor();
+    renderPreview();
+    renderCropDialog();
+    renderExportPreview();
+  });
+  els.cropAutoFitButton?.addEventListener("click", () => {
+    const cell = state.cells[state.selectedCell];
+    if (!cell?.bitmap || !els.cropFrame) return;
+    const rect = els.cropFrame.getBoundingClientRect();
+    cell.zoom = getContainZoomForCell(cell, Math.max(1, rect.width), Math.max(1, rect.height));
+    cell.focusX = 0;
+    cell.focusY = 0;
+    syncEditor();
+    renderPreview();
+    renderCropDialog();
+    renderExportPreview();
+  });
   els.slotShapeSelect?.addEventListener("change", () => {
     if (isActiveFieldLockedByReorder()) return;
     if (state.isSyncingSlotShapeSelect) return;
@@ -6720,6 +6926,7 @@ function renderAllWithoutExport() {
   updateHexTuningUi();
   renderSlots();
   renderStatus();
+  renderStep2Adjuster();
   syncEditor();
 }
 
