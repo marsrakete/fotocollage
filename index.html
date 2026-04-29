@@ -2,863 +2,392 @@
 <html lang="de">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#101828" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#131313" />
     <meta
       name="description"
-      content="In wenigen Schritten zur fertigen Collage: Vorlage wählen, Fotos laden, Ausschnitte feinjustieren und als PNG, JPG, PDF oder animiertes GIF speichern."
+      content="Threadline Studio ist ein mehrsprachiger PWA-Bildeditor fuer den Browser mit Canvas-Effekten, Projekt-Backup, Export und mobiler Bedienung."
     />
     <meta property="og:type" content="website" />
-    <meta property="og:site_name" content="Marsrakete" />
-    <meta property="og:title" content="Foto-Collage" />
+    <meta property="og:title" content="Threadline Studio" />
     <meta
       property="og:description"
-      content="In wenigen Schritten zur fertigen Collage: Vorlage wählen, Fotos laden, Ausschnitte feinjustieren und als PNG, JPG, PDF oder animiertes GIF speichern."
+      content="Lade Bilder, kombiniere Effekte, speichere Projekte lokal und exportiere alles direkt im Browser."
     />
-    <meta property="og:url" content="https://marsrakete.github.io/fotocollage/" />
-    <meta property="og:image" content="https://marsrakete.github.io/fotocollage/og-image.jpg" />
-    <meta property="og:image:width" content="1200" />
-    <meta property="og:image:height" content="630" />
-    <meta property="og:image:alt" content="Vorschau der Foto-Collagen-App" />
-    <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="Foto-Collage" />
-    <meta
-      name="twitter:description"
-      content="In wenigen Schritten zur fertigen Collage: Vorlage wählen, Fotos laden, Ausschnitte feinjustieren und als PNG, JPG, PDF oder animiertes GIF speichern."
-    />
-    <meta name="twitter:image" content="https://marsrakete.github.io/fotocollage/og-image.jpg" />
-    <link rel="manifest" href="./manifest.json" />
+    <link rel="manifest" href="./manifest.webmanifest" />
     <link rel="icon" href="./icon.svg" type="image/svg+xml" />
     <link rel="icon" href="./icon-192.png" sizes="192x192" type="image/png" />
-    <link rel="icon" href="./icon-512.png" sizes="512x512" type="image/png" />
     <link rel="apple-touch-icon" href="./icon-192.png" />
-    <title>Foto-Collage</title>
+    <title>Threadline Studio</title>
     <link rel="stylesheet" href="./styles.css" />
   </head>
   <body>
-    <div class="shell">
+    <div class="app-shell">
       <header class="hero">
         <div class="hero-copy">
-          <p class="eyebrow" id="heroEyebrow">Marsrakete</p>
-          <div class="hero-title-row">
-            <h1 id="appTitle">Foto-Collage</h1>
-            <div class="hero-actions">
-              <button id="homeButton" class="secondary settings-button" type="button" aria-label="Startseite öffnen">
-                <span aria-hidden="true">⌂</span>
-                <span id="homeButtonLabel">Startseite</span>
-              </button>
-              <button id="settingsButton" class="secondary settings-button" type="button" aria-label="Einstellungen">
-                <span aria-hidden="true">⚙</span>
-                <span id="settingsButtonLabel">Einstellungen</span>
-              </button>
-              <button id="helpButton" class="secondary settings-button" type="button" aria-label="Hilfe öffnen">
-                <span aria-hidden="true">?</span>
-                <span id="helpButtonLabel">Hilfe</span>
-              </button>
+          <p class="eyebrow" data-i18n="heroEyebrow">Threadline</p>
+          <div class="title-row">
+            <div>
+              <h1 data-i18n="appTitle">Threadline Studio</h1>
+              <p class="lede" data-i18n="heroLede">
+                Browserbasierte Bildbearbeitung ohne KI. Effekte, Zuschnitt, Export, Teilen und Projekt-Backup in einer mobilen PWA.
+              </p>
+            </div>
+            <div class="header-actions">
+              <button class="secondary" id="installButton" type="button" hidden data-i18n="installApp">App installieren</button>
+              <button class="secondary" id="openReadmeButton" type="button" data-i18n="openReadme">README</button>
+              <button class="secondary" id="settingsButton" type="button" data-i18n="settings">Einstellungen</button>
             </div>
           </div>
-          <p class="lede" id="heroLede">Erstelle Foto-Collagen im 4-Schritt-Modus oder Form-Collagen mit Wort/Motiv-Stanze und Untertitel. Alles direkt im Browser als PNG, JPG, PDF oder animiertes GIF.</p>
-        </div>
-        <div class="hero-card" id="heroCard">
-          <div class="hero-stat">
-            <span id="gridSummary">2 x 2</span>
-            <small>Raster</small>
-          </div>
-          <div class="hero-stat">
-            <span id="filledSummary">0 / 4</span>
-            <small>Fotos</small>
-          </div>
-          <div class="hero-stat">
-            <span id="stepSummary">1 / 4</span>
-            <small>Schritt</small>
-          </div>
+          <p class="hero-meta" id="autosaveBadge" data-i18n="autosaveReady">Autosave aktiv</p>
         </div>
       </header>
 
       <main class="workspace">
-        <section class="wizard" id="wizardRoot">
-          <section class="mode-selector" id="modeSelector">
-            <div class="panel-head compact">
-              <h2 id="modeSelectorTitle">Was möchtest du erstellen?</h2>
-              <p id="modeSelectorDesc">Wähle den Modus und starte direkt mit der passenden Oberfläche.</p>
+        <div class="canvas-wrap">
+          <section class="stage">
+            <div class="stage-toolbar">
+              <input id="imageInput" type="file" accept="image/*" hidden />
             </div>
-            <div class="mode-selector-grid">
-              <button class="mode-card" id="photoCollageStartButton" type="button">
-                <span class="mode-card-preview" aria-hidden="true">
-                  <img src="./assets/previews/mode-photo-collage.png" alt="" />
-                </span>
-                <strong id="photoModeTitle">Foto-Collage</strong>
-                <small id="photoModeDesc">Klassische Collage mit 4 Schritten</small>
-                <span class="mode-card-action">Modus starten</span>
-              </button>
-              <button class="mode-card" id="wordMaskStartButton" type="button">
-                <span class="mode-card-preview" aria-hidden="true">
-                  <img src="./assets/previews/mode-form-collage.png" alt="" />
-                </span>
-                <strong id="wordMaskModeTitle">Form-Collage</strong>
-                <small id="wordMaskLaunchHint">Erstelle eine Form-Collage mit Wort oder Motiv und eigenem Untertitel.</small>
-                <span class="mode-card-action">Modus starten</span>
-              </button>
+
+            <div class="canvas-frame" id="canvasFrame">
+              <canvas id="previewCanvas" width="1200" height="900" aria-label="Bildvorschau"></canvas>
+              <div class="canvas-overlay" id="emptyState">
+                <strong data-i18n="emptyTitle">Ein Bild fehlt noch</strong>
+                <p id="emptyBodyText" data-i18n="emptyBody">Ziehe ein Bild in die App oder nutze den Lade-Button.</p>
+              </div>
             </div>
           </section>
+        </div>
 
-          <div class="wizard-top-actions" id="globalTopActions">
-            <div class="restart-launch" id="restartLaunchContainer">
-              <button class="secondary" id="restartButton" type="button">Neustart</button>
-              <p id="restartLaunchHint">Setzt Vorlage, Fotos und Texte zurück. Abstand, Randabstand und Hintergrund bleiben erhalten.</p>
-            </div>
-          </div>
-
-          <div class="photo-mode-area" id="photoModeArea" hidden>
-            <div class="progress">
-              <button class="step-chip active" data-step-target="1" id="stepChip1">1. Vorlage</button>
-              <button class="step-chip" data-step-target="2" id="stepChip2">2. Fotos</button>
-              <button class="step-chip" data-step-target="3" id="stepChip3">3. Feinschliff</button>
-              <button class="step-chip" data-step-target="4" id="stepChip4">4. Export</button>
-            </div>
-
-            <section class="step-panel active" data-step="1">
-            <div class="panel-head">
-              <h2 id="step1Title">Schritt 1: Collage-Vorlage</h2>
-              <p id="step1Desc">Wähle ein Raster oder passe Zeilen und Spalten flexibel an.</p>
-            </div>
-
-            <div class="step1-action-cards">
-              <div class="assistant-launch">
-                <button class="primary" id="assistantStartButton" type="button">Assistent starten</button>
-                <p id="assistantLaunchHint">Lade mehrere Fotos und erhalte passende Vorlagenvorschläge.</p>
+        <aside class="side-panels">
+          <details class="panel collapsible project-panel" open>
+            <summary class="panel-summary">
+              <div class="panel-head">
+                <h2 data-i18n="projectTitle">Projekt</h2>
+                <p data-i18n="projectIntro">Bild laden, Projekt sichern, laden oder den Stand zuruecksetzen.</p>
               </div>
+            </summary>
+            <div class="panel-body">
+              <div class="button-row project-actions">
+                <label class="secondary faux-button" for="imageInput" data-i18n="loadImage">Bild laden</label>
+                <button class="secondary" id="downloadBackupButton" type="button" data-i18n="saveProject">Projekt speichern</button>
+                <label class="secondary faux-button" for="backupInput" data-i18n="loadProject">Projekt laden</label>
+                <button class="secondary" id="clearProjectButton" type="button" data-i18n="clearProject">Projekt loeschen</button>
+              </div>
+              <input id="backupInput" type="file" accept="application/json,.json" hidden />
             </div>
+          </details>
 
-            <div class="preset-grid" id="presetGrid"></div>
-
-            <div class="form-grid">
+          <details class="panel collapsible" open>
+            <summary class="panel-summary">
+              <div class="panel-head">
+                <h2 data-i18n="transformTitle">Ausschnitt</h2>
+                <p data-i18n="transformIntro">Drehen, spiegeln, zoomen und Fokus justieren.</p>
+              </div>
+            </summary>
+            <div class="panel-body">
+            <div class="field-grid">
               <label class="field">
-                <span id="layoutModeLabel">Anordnung</span>
-                <select id="layoutModeSelect">
-                  <option value="grid">Raster (Standard)</option>
-                  <option value="hex-pack">Hex-Pack (kompakt)</option>
-                </select>
-                <div id="layoutModeSuggestion" class="layout-mode-suggestion" hidden>
-                  <span id="layoutModeSuggestionText">Hexagon erkannt. Hex-Pack reduziert Leerräume.</span>
-                  <button id="layoutModeSuggestionApply" class="secondary" type="button">Hex-Pack nutzen</button>
-                </div>
+                <span data-i18n="zoom">Zoom</span>
+                <input id="zoomInput" type="range" min="0.5" max="3" step="0.01" value="1" />
+                <strong id="zoomValue">1.00x</strong>
               </label>
               <label class="field">
-                <span id="gapLabel">Abstand</span>
-                <input id="gapInput" type="range" min="0" max="40" value="12" />
-                <strong><span id="gapValue">12</span> px</strong>
+                <span data-i18n="panX">X-Verschiebung</span>
+                <input id="panXInput" type="range" min="-1" max="1" step="0.01" value="0" />
+                <strong id="panXValue">0%</strong>
               </label>
               <label class="field">
-                <span id="outerGapLabel">Randabstand</span>
-                <input id="outerGapInput" type="range" min="0" max="80" step="1" value="12" />
-                <strong><span id="outerGapValue">12</span> px</strong>
+                <span data-i18n="panY">Y-Verschiebung</span>
+                <input id="panYInput" type="range" min="-1" max="1" step="0.01" value="0" />
+                <strong id="panYValue">0%</strong>
               </label>
               <label class="field">
-                <span>Hintergrund</span>
-                <input id="backgroundInput" type="color" value="#101828" />
+                <span data-i18n="rotation">Drehung</span>
+                <input id="rotationInput" type="range" min="-180" max="180" step="1" value="0" />
+                <strong id="rotationValue">0°</strong>
               </label>
             </div>
-            <div class="step-actions">
-              <button class="primary" id="toStep2">Weiter zu den Fotos</button>
+            <div class="button-row">
+              <button class="secondary" id="rotateLeftButton" type="button" data-i18n="rotateLeft">90° links</button>
+              <button class="secondary" id="rotateRightButton" type="button" data-i18n="rotateRight">90° rechts</button>
+              <button class="secondary" id="flipXButton" type="button" data-i18n="flipHorizontal">Horizontal spiegeln</button>
+              <button class="secondary" id="flipYButton" type="button" data-i18n="flipVertical">Vertikal spiegeln</button>
             </div>
-            </section>
-
-            <section class="step-panel" data-step="2">
-            <div class="panel-head">
-              <h2 id="step2Title">Schritt 2: Fotos laden</h2>
-              <p id="step2Desc">
-                Lade genau so viele Fotos, wie das Raster benötigt.
-                Fehlende Plätze bleiben markiert.
-              </p>
+            <div class="button-row">
+              <button class="secondary" id="resetImageButton" type="button" data-i18n="resetImage">Bild zuruecksetzen</button>
+              <button class="secondary" id="fitButton" type="button" data-i18n="fitToFrame">Einpassen</button>
+              <button class="secondary" id="centerButton" type="button" data-i18n="centerImage">Zentrieren</button>
             </div>
+            </div>
+          </details>
 
-            <div class="upload-zone" id="dropZone">
-              <input id="fileInput" type="file" accept="image/*" multiple />
-              <div>
-                <strong id="uploadTitle">Fotos auswählen</strong>
-                <p id="uploadDesc">Alle Bilder werden der Reihe nach in die freien Felder gesetzt.</p>
+          <details class="panel collapsible" open>
+            <summary class="panel-summary">
+              <div class="panel-head">
+                <h2 data-i18n="correctionTitle">Korrektur</h2>
+                <p data-i18n="correctionIntro">Basiswerte fuer Licht, Farbe und Schaerfe.</p>
               </div>
+            </summary>
+            <div class="panel-body">
+              <div class="field-grid" id="correctionFields"></div>
             </div>
+          </details>
 
-            <div class="slot-status" id="slotStatus"></div>
-            <div class="slot-grid" id="slotGrid"></div>
-
-            <div class="step-actions">
-              <button class="secondary" data-prev-step="1">Zurück</button>
-              <button class="primary" id="toStep3">Weiter zum Feinschliff</button>
-            </div>
-            </section>
-
-            <section class="step-panel" data-step="3">
-            <div class="panel-head">
-              <h2 id="step3Title">Schritt 3: Feinschliff</h2>
-              <p id="step3Desc">
-                Bearbeite direkt in der Vorschau. Zum Umordnen nutze den Button Sortieren.
-              </p>
-            </div>
-
-            <div class="hex-tuning" id="hexTuningPanel" hidden>
-              <strong id="hexTuningTitle">Hex-Layout Feinabstand</strong>
-              <div class="hex-tuning-grid">
-                <label class="field">
-                  <span id="hexStepXLabel">Hex X-Abstand</span>
-                  <input id="hexStepXInput" type="range" min="0.60" max="1.20" step="0.01" value="0.86" />
-                  <strong><span id="hexStepXValue">0.86</span></strong>
-                </label>
-                <label class="field">
-                  <span id="hexStepYLabel">Hex Y-Abstand</span>
-                  <input id="hexStepYInput" type="range" min="0.60" max="1.40" step="0.01" value="1.00" />
-                  <strong><span id="hexStepYValue">1.00</span></strong>
-                </label>
-                <label class="field">
-                  <span id="hexScaleXLabel">Hex Feldgröße X</span>
-                  <input id="hexScaleXInput" type="range" min="0.60" max="1.20" step="0.01" value="1.00" />
-                  <strong><span id="hexScaleXValue">1.00</span></strong>
-                </label>
-                <label class="field">
-                  <span id="hexScaleYLabel">Hex Feldgröße Y</span>
-                  <input id="hexScaleYInput" type="range" min="0.60" max="1.20" step="0.01" value="1.00" />
-                  <strong><span id="hexScaleYValue">1.00</span></strong>
-                </label>
+          <details class="panel collapsible" open>
+            <summary class="panel-summary">
+              <div class="panel-head">
+                <h2 data-i18n="styleTitle">Stil</h2>
+                <p data-i18n="styleIntro">Looks fuer Graustufen, Vintage, Duotone und Raster.</p>
               </div>
-              <button class="secondary" id="resetHexLayoutButton" type="button">Hex-Layout zurücksetzen</button>
-            </div>
-
-            <div class="editor-layout">
-              <div class="collage-preview-wrap">
-                <div class="collage-preview" id="collagePreview"></div>
-              </div>
-
-              <aside class="editor-panel">
-                <div class="panel-head compact">
-                  <h3 id="activeCellTitle">Aktives Feld</h3>
-                  <p id="activeCellInfo">Wähle ein Feld aus der Collage.</p>
-                </div>
-                <div class="editor-frame" id="editorFrame">
-                  <p class="editor-info" id="dragHint">Direkt in der Vorschau verschieben, zoomen und anpassen</p>
-                </div>
-                <div class="editor-controls">
-                  <button class="secondary" id="prevCell">Vorheriges Feld</button>
-                  <button class="secondary" id="nextCell">Nächstes Feld</button>
-                  <button class="secondary" id="flipHorizontalButton">Horizontal spiegeln</button>
-                  <button class="secondary" id="flipVerticalButton">Vertikal spiegeln</button>
-                  <button class="secondary" id="rotateLeftButton">90° nach links drehen</button>
-                  <button class="secondary" id="toggleReorderMode" type="button">Sortieren</button>
-                  <button class="secondary" id="replaceCell">Bild ersetzen</button>
-                  <button class="secondary" id="deleteCell">Bild löschen</button>
-                  <button class="secondary control-wide" id="openCropDialogButton">Bildausschnitt wählen</button>
-                  <button class="secondary control-wide" id="resetFocus">Ausschnitt zurücksetzen</button>
-                </div>
-                <label class="field zoom-field">
-                  <span id="zoomLabel">Zoom</span>
-                  <input id="zoomInput" type="range" min="0.35" max="4" step="0.05" value="1" />
-                  <strong><span id="zoomValue">100</span> %</strong>
-                </label>
-                <button class="secondary control-wide" id="resetZoom" type="button">Zoom zurücksetzen</button>
-                <label class="field" id="slotShapeField" hidden>
-                  <span id="slotShapeLabel">Form</span>
-                  <select id="slotShapeSelect">
-                    <option value="rect">Quadrat</option>
-                    <option value="rounded-rect">Abgerundet</option>
-                    <option value="circle">Kreis</option>
-                    <option value="diamond">Raute</option>
-                    <option value="hexagon">Sechseck</option>
-                  </select>
-                </label>
-                <div class="field text-editor-field">
-                  <strong id="textEditorTitle">Text</strong>
-                  <label>
-                    <span id="textLabel">Text</span>
-                    <textarea id="textInput" rows="3" placeholder="Text im Feld platzieren"></textarea>
-                  </label>
-                  <label>
-                    <span id="textSizeLabel">Schriftgröße</span>
-                    <input id="textSizeInput" type="range" min="12" max="160" step="1" value="48" />
-                    <strong><span id="textSizeValue">48</span> px</strong>
-                  </label>
-                  <label>
-                    <span id="textFontLabel">Schriftart</span>
-                    <select id="textFontSelect">
-                      <option value="Segoe UI, system-ui, sans-serif">Segoe UI</option>
-                      <option value="Arial, Helvetica, sans-serif">Arial</option>
-                      <option value="'Times New Roman', Times, serif">Times New Roman</option>
-                      <option value="'Courier New', Courier, monospace">Courier New</option>
-                      <option value="Georgia, serif">Georgia</option>
-                    </select>
-                  </label>
-                  <div class="text-toggle-row">
-                    <label><input id="textBoldInput" type="checkbox" /> <span id="textBoldLabel">Fett</span></label>
-                    <label><input id="textItalicInput" type="checkbox" /> <span id="textItalicLabel">Kursiv</span></label>
-                  </div>
-                  <label>
-                    <span id="textColorLabel">Textfarbe</span>
-                    <input id="textColorInput" type="color" value="#ffffff" />
-                  </label>
-                  <button class="secondary" id="resetTextPosition" type="button">Textposition zurücksetzen</button>
-                  <p class="settings-status warning-text" id="textWarning" hidden></p>
-                </div>
-                <input id="replaceInput" type="file" accept="image/*" hidden />
-              </aside>
-            </div>
-
-            <div class="step-actions">
-              <button class="secondary" data-prev-step="2">Zurück</button>
-              <button class="primary" id="toStep4">Weiter zum Export</button>
-            </div>
-            </section>
-
-            <section class="step-panel" data-step="4">
-            <div class="panel-head">
-              <h2 id="step4Title">Schritt 4: Export</h2>
-              <p id="step4Desc">
-                Die Collage wird in hoher Auflösung gerendert und kann geteilt
-                oder in mehreren Formaten gespeichert werden.
-              </p>
-            </div>
-
-            <div class="export-layout">
-              <div class="export-card">
-                <div class="field">
-                  <span id="exportPresetLabel">Export-Preset</span>
-                  <div id="exportPresetGrid" class="export-preset-grid"></div>
-                  <select id="exportPresetSelect" class="export-preset-select" aria-label="Export-Preset"></select>
-                </div>
-                <label class="field">
-                  <span id="exportFormatLabel">Exportformat</span>
-                  <select id="exportFormatSelect">
-                    <option value="png">PNG</option>
-                    <option value="jpeg">JPEG</option>
-                    <option value="pdf">PDF</option>
-                    <option value="gif">GIF (animiert)</option>
-                  </select>
-                </label>
-                <label class="field" id="gifDelayField" hidden>
-                  <span id="gifDelayLabel">Sekunden zwischen Frames</span>
-                  <input id="gifDelayInput" type="range" min="0.1" max="10" step="0.1" value="1.0" />
-                  <strong><span id="gifDelayValue">1.0</span> s</strong>
-                </label>
-                <label class="field">
-                  <span id="exportWidthLabel">Exportbreite</span>
-                  <input id="exportWidthInput" type="range" min="100" max="6000" step="10" value="1200" />
-                  <strong><span id="exportWidthValue">1200</span> px</strong>
-                </label>
-                <p class="helper" id="exportHelp">
-                  Der Export skaliert das gewählte Raster samt Zwischenräumen
-                  und verwendet die aktuellen Ausschnitte.
-                </p>
-                <div class="safe-area-info" id="safeAreaInfo" hidden>
-                  <span class="settings-status" id="safeAreaInfoText">Safe Area aktiv für dieses Social-Preset.</span>
-                  <button class="secondary icon-only" id="safeAreaHelpButton" type="button" aria-label="Safe-Area-Hilfe">?</button>
-                </div>
-                <button class="secondary" id="autoFitSafeAreaButton" type="button" hidden>
-                  Passe die Collage automatisch an die Zielgröße an
-                </button>
-                <p class="settings-status warning-text export-warning" id="exportWarning" hidden></p>
-                <div class="export-actions">
-                  <button class="primary" id="shareButton">Teilen</button>
-                  <button class="secondary" id="downloadButton" hidden>Als PNG speichern</button>
-                </div>
-                <p class="settings-status export-status" id="exportStatus" hidden></p>
-              </div>
-
-              <div class="export-preview">
-                <canvas id="exportCanvas" width="1200" height="1200"></canvas>
-              </div>
-            </div>
-
-            <div class="step-actions">
-              <button class="secondary" data-prev-step="3">Zurück</button>
-            </div>
-            </section>
-          </div>
-
-          <section class="wordmask-stage" id="wordMaskStage" hidden>
-            <div class="panel-head">
-              <h2 id="wordMaskStageTitle">Form-Collage</h2>
-              <p id="wordMaskIntro">Schritt A: Zielgröße wählen. Schritt B: Wort oder Motiv festlegen. Schritt C: Fotos laden, Untertitel gestalten, exportieren.</p>
-            </div>
-            <div class="wordmask-preview-wrap wordmask-preview-sticky">
-              <canvas id="wordMaskCanvas" width="1500" height="1000"></canvas>
-            </div>
-
-            <section class="updates-block wordmask-step-block" data-wordmask-step="a">
-              <button id="wordMaskStepAToggle" class="wordmask-step-toggle" type="button" aria-expanded="true" aria-controls="wordMaskStepAContent">
-                <span id="wordMaskStepA">Schritt A: Zielgröße</span>
-                <span class="wordmask-step-chevron" aria-hidden="true">▾</span>
-              </button>
-              <div id="wordMaskStepAContent" class="wordmask-step-content">
+            </summary>
+            <div class="panel-body">
+            <div class="field-grid" id="styleFields"></div>
+            <div class="color-inline">
               <label class="field">
-                <span id="wordMaskPresetLabel">Format</span>
-                <select id="wordMaskPresetSelect">
-                  <option value="postcard">Postkarte</option>
-                  <option value="a4-portrait">DIN A4 Hoch</option>
-                  <option value="a4-landscape">DIN A4 Quer</option>
-                  <option value="poster">Poster 2:3</option>
-                  <option value="free">Frei</option>
+                <span data-i18n="duotoneDark">Duotone dunkel</span>
+                <input id="duotoneDarkInput" type="color" value="#111111" />
+              </label>
+              <label class="field">
+                <span data-i18n="duotoneLight">Duotone hell</span>
+                <input id="duotoneLightInput" type="color" value="#f8d48f" />
+              </label>
+              <label class="field">
+                <span data-i18n="overlayColor">Overlay-Farbe</span>
+                <input id="overlayColorInput" type="color" value="#ff6a3d" />
+              </label>
+            </div>
+            <div class="focus-block">
+              <div class="focus-block-head">
+                <h3 data-i18n="styleColorFocusTitle">Farbfokus</h3>
+                <p data-i18n="styleColorFocusIntro">Zwei Zielfarben koennen stehen bleiben, der Rest wird schwarzweiss.</p>
+              </div>
+              <div class="field-grid compact-grid" id="colorFocusFields"></div>
+              <div class="color-inline focus-color-inline">
+                <label class="field">
+                  <span data-i18n="focusColorOne">Zielfarbe 1</span>
+                  <input id="focusColorInput" type="color" value="#ff3b30" />
+                </label>
+                <label class="field">
+                  <span data-i18n="focusColorTwo">Zielfarbe 2</span>
+                  <input id="focusColor2Input" type="color" value="#ffd400" />
+                </label>
+              </div>
+              <div class="button-row focus-actions">
+                <button class="secondary" id="focusColorPickerButton" type="button" data-i18n="focusColorPickerOne">Pipette 1</button>
+                <button class="secondary" id="focusColor2PickerButton" type="button" data-i18n="focusColorPickerTwo">Pipette 2</button>
+              </div>
+            </div>
+            </div>
+          </details>
+
+          <details class="panel collapsible" open>
+            <summary class="panel-summary">
+              <div class="panel-head">
+                <h2 data-i18n="fxTitle">Verfremdung</h2>
+                <p data-i18n="fxIntro">Pixelate, Glitch, Relief, Konturen und Zeichnungslooks.</p>
+              </div>
+            </summary>
+            <div class="panel-body">
+              <div class="field-grid" id="fxFields"></div>
+            </div>
+          </details>
+
+          <details class="panel collapsible" open>
+            <summary class="panel-summary">
+              <div class="panel-head">
+                <h2 data-i18n="morphTitle">Morphologie</h2>
+                <p data-i18n="morphIntro">Kanten, Dilatation, Erosion und strukturierte Operatoren.</p>
+              </div>
+            </summary>
+            <div class="panel-body">
+              <div class="field-grid" id="morphologyFields"></div>
+            </div>
+          </details>
+
+          <details class="panel collapsible" open>
+            <summary class="panel-summary">
+              <div class="panel-head">
+                <h2 data-i18n="patternTitle">Muster</h2>
+                <p data-i18n="patternIntro">Streifen, Raster, Schraffur, Wellen und grafische Overlays.</p>
+              </div>
+            </summary>
+            <div class="panel-body">
+              <div class="field-grid" id="patternFields"></div>
+            </div>
+          </details>
+
+          <details class="panel collapsible" open>
+            <summary class="panel-summary">
+              <div class="panel-head">
+                <h2 data-i18n="materialTitle">Material</h2>
+                <p data-i18n="materialIntro">Glas, Papier, Metall, Stoff und andere Oberflaechen-Looks.</p>
+              </div>
+            </summary>
+            <div class="panel-body">
+              <div class="field-grid" id="materialFields"></div>
+            </div>
+          </details>
+
+          <details class="panel collapsible" open>
+            <summary class="panel-summary">
+              <div class="panel-head">
+                <h2 data-i18n="atmosphereTitle">Stoerung</h2>
+                <p data-i18n="atmosphereIntro">Signalfehler, Licht, Staub, Nebel und Atmosphaere.</p>
+              </div>
+            </summary>
+            <div class="panel-body">
+              <div class="field-grid" id="atmosphereFields"></div>
+            </div>
+          </details>
+
+          <details class="panel collapsible" open>
+            <summary class="panel-summary">
+              <div class="panel-head">
+                <h2 data-i18n="artTitle">Kunst</h2>
+                <p data-i18n="artIntro">Rasterzerfall, Collage, Facetten und traumartige Bildbrueche.</p>
+              </div>
+            </summary>
+            <div class="panel-body">
+              <div class="field-grid" id="artFields"></div>
+            </div>
+          </details>
+
+          <details class="panel collapsible export-panel" open>
+            <summary class="panel-summary">
+              <div class="panel-head">
+                <h2 data-i18n="exportTitle">Export</h2>
+                <p data-i18n="exportIntro">Verschiedene Formate, PDF-Ausgabe und direkte Share-Option.</p>
+              </div>
+            </summary>
+            <div class="panel-body">
+            <div class="field-grid compact-grid">
+              <label class="field">
+                <span data-i18n="exportFormat">Format</span>
+                <select id="exportFormatSelect">
+                  <option value="png">PNG</option>
+                  <option value="jpeg">JPEG</option>
+                  <option value="webp">WebP</option>
+                  <option value="pdf">PDF</option>
                 </select>
               </label>
-              <div id="wordMaskFreeSizeRow" class="wordmask-free-size" hidden>
-                <label class="field">
-                  <span id="wordMaskWidthLabel">Breite</span>
-                  <input id="wordMaskWidthInput" type="number" min="600" max="6000" step="10" value="1500" />
-                </label>
-                <label class="field">
-                  <span id="wordMaskHeightLabel">Höhe</span>
-                  <input id="wordMaskHeightInput" type="number" min="600" max="6000" step="10" value="1000" />
-                </label>
-              </div>
-              </div>
-            </section>
-
-            <section class="updates-block wordmask-step-block" data-wordmask-step="b">
-              <button id="wordMaskStepBToggle" class="wordmask-step-toggle" type="button" aria-expanded="true" aria-controls="wordMaskStepBContent">
-                <span id="wordMaskStepB">Schritt B: Stanze</span>
-                <span class="wordmask-step-chevron" aria-hidden="true">▾</span>
-              </button>
-              <div id="wordMaskStepBContent" class="wordmask-step-content">
-              <div class="field">
-                <span id="wordMaskModeLabel">Auswahl</span>
-                <div class="wordmask-mode-toggle" id="wordMaskModeToggle">
-                  <button id="wordMaskModeWordButton" class="secondary" type="button">Wort</button>
-                  <button id="wordMaskModeMotifButton" class="secondary" type="button">Motive</button>
-                </div>
-              </div>
-              <div class="field" id="wordMaskMotifField" hidden>
-                <span id="wordMaskStencilLabel">Motiv</span>
-                <div class="wordmask-motif-grid" id="wordMaskMotifGrid"></div>
-              </div>
-              <label class="field" id="wordMaskShapeSizeField" hidden>
-                <span id="wordMaskShapeSizeLabel">Stanzen-Größe</span>
-                <input id="wordMaskShapeSizeInput" type="range" min="10" max="6000" step="5" value="1300" />
-                <strong><span id="wordMaskShapeSizeValue">1300</span> px</strong>
+              <label class="field">
+                <span data-i18n="exportSize">Breite</span>
+                <select id="exportWidthSelect">
+                  <option value="1600">1600 px</option>
+                  <option value="2400" selected>2400 px</option>
+                  <option value="3200">3200 px</option>
+                  <option value="4000">4000 px</option>
+                </select>
               </label>
-              <label class="field" id="wordMaskWordField">
-                <span id="wordMaskWordLabel">Wort</span>
-                <input id="wordMaskWordInput" type="text" maxlength="32" value="DANKE" />
+              <label class="field">
+                <span data-i18n="quality">Qualitaet</span>
+                <input id="qualityInput" type="range" min="0.4" max="1" step="0.01" value="0.92" />
+                <strong id="qualityValue">92%</strong>
               </label>
-              <div class="wordmask-row" id="wordMaskWordStyleRow">
-                <label class="field">
-                  <span id="wordMaskFontLabel">Schriftart</span>
-                  <select id="wordMaskFontSelect">
-                    <option value="Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif">Impact</option>
-                    <option value="'Arial Black', Arial, Helvetica, sans-serif">Arial Black</option>
-                    <option value="'Franklin Gothic Heavy', 'Arial Narrow Bold', Arial, sans-serif">Franklin Gothic Heavy</option>
-                    <option value="Haettenschweiler, 'Arial Narrow Bold', sans-serif">Haettenschweiler</option>
-                    <option value="'Rockwell Extra Bold', 'Arial Black', serif">Rockwell Extra Bold</option>
-                    <option value="'Copperplate Gothic Bold', 'Arial Black', serif">Copperplate Bold</option>
-                    <option value="'Bodoni MT Black', Didot, serif">Bodoni Black</option>
-                    <option value="Arial, Helvetica, sans-serif">Arial</option>
-                    <option value="Segoe UI, system-ui, sans-serif">Segoe UI</option>
-                    <option value="'Times New Roman', Times, serif">Times New Roman</option>
-                    <option value="'Courier New', Courier, monospace">Courier New</option>
-                    <option value="Georgia, serif">Georgia</option>
-                    <option value="'Trebuchet MS', 'Segoe UI', sans-serif">Trebuchet MS</option>
-                    <option value="Verdana, Geneva, sans-serif">Verdana</option>
-                    <option value="'Gill Sans', 'Gill Sans MT', Calibri, sans-serif">Gill Sans</option>
-                    <option value="'Palatino Linotype', Palatino, serif">Palatino</option>
-                    <option value="'Lucida Handwriting', 'Brush Script MT', cursive">Handwriting</option>
-                  </select>
-                </label>
-                <label class="field">
-                  <span id="wordMaskSizeLabel">Schriftgröße</span>
-                  <input id="wordMaskSizeInput" type="range" min="10" max="6000" step="5" value="1300" />
-                </label>
-              </div>
-              <div class="wordmask-row" id="wordMaskWordToggleRow">
-                <label class="watermark-toggle">
-                  <input id="wordMaskWordBoldInput" type="checkbox" checked />
-                  <span id="wordMaskWordBoldLabel">Fett</span>
-                </label>
-                <label class="watermark-toggle">
-                  <input id="wordMaskWordItalicInput" type="checkbox" />
-                  <span id="wordMaskWordItalicLabel">Kursiv</span>
-                </label>
-              </div>
-              <label class="field" id="wordMaskSpacingField">
-                <span id="wordMaskSpacingLabel">Zeichenabstand</span>
-                <input id="wordMaskSpacingInput" type="range" min="0" max="120" step="1" value="8" />
-              </label>
-              <div class="wordmask-row">
-                <label class="field">
-                  <span id="wordMaskPositionXLabel">Position X</span>
-                  <input id="wordMaskPositionXInput" type="range" min="0" max="100" step="1" value="50" />
-                  <strong id="wordMaskPositionXValue">50%</strong>
-                </label>
-                <label class="field">
-                  <span id="wordMaskPositionYLabel">Position Y</span>
-                  <input id="wordMaskPositionYInput" type="range" min="0" max="100" step="1" value="50" />
-                  <strong id="wordMaskPositionYValue">50%</strong>
-                </label>
-              </div>
-              <button id="wordMaskPositionResetButton" class="secondary" type="button">Position zurücksetzen</button>
-              </div>
-            </section>
-
-            <section class="updates-block wordmask-step-block" data-wordmask-step="c">
-              <button id="wordMaskStepCToggle" class="wordmask-step-toggle" type="button" aria-expanded="true" aria-controls="wordMaskStepCContent">
-                <span id="wordMaskStepC">Schritt C: Fotos + Untertitel</span>
-                <span class="wordmask-step-chevron" aria-hidden="true">▾</span>
-              </button>
-              <div id="wordMaskStepCContent" class="wordmask-step-content">
-              <div class="wordmask-tabs" id="wordMaskTabs">
-                <button id="wordMaskTabPhotos" class="secondary active" data-wordmask-tab="photos" type="button">Fotos</button>
-                <button id="wordMaskTabSubtitle" class="secondary" data-wordmask-tab="subtitle" type="button">Untertitel</button>
-                <button id="wordMaskTabExport" class="secondary" data-wordmask-tab="export" type="button">Export</button>
-              </div>
-              <div id="wordMaskPanelPhotos" class="wordmask-tab-panel" data-wordmask-panel="photos">
-                <label class="field">
-                  <span id="wordMaskBackgroundLabel">Hintergrundfarbe</span>
-                  <input id="wordMaskBackgroundInput" type="color" value="#f5f5f3" />
-                </label>
-                <label class="field">
-                  <span id="wordMaskPhotosLabel">Fotos laden</span>
-                  <input id="wordMaskPhotosInput" type="file" accept="image/*" multiple />
-                </label>
-                <div class="wordmask-order-actions">
-                  <button id="wordMaskShufflePhotosButton" class="secondary" type="button">Bilder zufällig neu platzieren</button>
-                  <button id="wordMaskToggleReorderButton" class="secondary" type="button">Sortieren</button>
-                </div>
-                <p class="settings-status" id="wordMaskPhotosStatus"></p>
-                <p class="settings-status" id="wordMaskReorderHint" hidden></p>
-                <div class="field" id="wordMaskPhotoOrderField" hidden>
-                  <span id="wordMaskPhotoOrderLabel">Foto-Reihenfolge</span>
-                  <div id="wordMaskPhotoOrder" class="wordmask-photo-order"></div>
-                </div>
-                <div class="field" id="wordMaskPhotoAdjustField" hidden>
-                  <span id="wordMaskActivePhotoLabel">Aktives Foto</span>
-                  <strong id="wordMaskActivePhotoValue">-</strong>
-                  <span id="wordMaskPhotoZoomLabel">Zoom</span>
-                  <input id="wordMaskPhotoZoomInput" type="range" min="0.35" max="4" step="0.01" value="1" />
-                  <strong id="wordMaskPhotoZoomValue">100%</strong>
-                  <button id="wordMaskPhotoZoomResetButton" class="secondary" type="button">Ausschnitt + Zoom zurücksetzen</button>
-                  <p id="wordMaskPhotoAdjustHint" class="settings-status">In der Vorschau ziehen für Ausschnitt, Pinch/Mausrad für Zoom.</p>
-                </div>
-              </div>
-              <div id="wordMaskPanelSubtitle" class="wordmask-tab-panel" data-wordmask-panel="subtitle" hidden>
-                <label class="field">
-                  <span id="wordMaskSubtitleLabel">Untertitel (frei bewegbar)</span>
-                  <input id="wordMaskSubtitleInput" type="text" maxlength="120" placeholder="Für ein erfolgreiches Jahr" />
-                </label>
-                <div class="wordmask-row">
-                  <label class="field">
-                    <span id="wordMaskSubtitleFontLabel">Schriftart</span>
-                    <select id="wordMaskSubtitleFontSelect">
-                      <option value="Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif">Impact</option>
-                      <option value="'Arial Black', Arial, Helvetica, sans-serif">Arial Black</option>
-                      <option value="'Franklin Gothic Heavy', 'Arial Narrow Bold', Arial, sans-serif">Franklin Gothic Heavy</option>
-                      <option value="Haettenschweiler, 'Arial Narrow Bold', sans-serif">Haettenschweiler</option>
-                      <option value="'Brush Script MT', 'Segoe Script', cursive">Brush Script</option>
-                      <option value="'Segoe Script', 'Lucida Handwriting', cursive">Segoe Script</option>
-                      <option value="'Monotype Corsiva', 'Times New Roman', cursive">Monotype Corsiva</option>
-                      <option value="'Snell Roundhand', 'Brush Script MT', cursive">Snell Roundhand</option>
-                      <option value="'Times New Roman', Times, serif">Times New Roman</option>
-                      <option value="Georgia, serif">Georgia</option>
-                      <option value="Arial, Helvetica, sans-serif">Arial</option>
-                      <option value="Segoe UI, system-ui, sans-serif">Segoe UI</option>
-                      <option value="'Courier New', Courier, monospace">Courier New</option>
-                      <option value="'Trebuchet MS', 'Segoe UI', sans-serif">Trebuchet MS</option>
-                      <option value="Verdana, Geneva, sans-serif">Verdana</option>
-                      <option value="'Gill Sans', 'Gill Sans MT', Calibri, sans-serif">Gill Sans</option>
-                      <option value="'Palatino Linotype', Palatino, serif">Palatino</option>
-                      <option value="'Lucida Handwriting', 'Brush Script MT', cursive">Handwriting</option>
-                      <option value="'Comic Sans MS', 'Comic Sans', cursive">Comic Sans</option>
-                    </select>
-                  </label>
-                  <label class="field">
-                    <span id="wordMaskSubtitleSizeLabel">Schriftgröße</span>
-                    <input id="wordMaskSubtitleSizeInput" type="range" min="18" max="140" step="1" value="56" />
-                  </label>
-                </div>
-                <div class="wordmask-row">
-                  <label class="watermark-toggle">
-                    <input id="wordMaskSubtitleBoldInput" type="checkbox" />
-                    <span id="wordMaskSubtitleBoldLabel">Fett</span>
-                  </label>
-                  <label class="watermark-toggle">
-                    <input id="wordMaskSubtitleItalicInput" type="checkbox" />
-                    <span id="wordMaskSubtitleItalicLabel">Kursiv</span>
-                  </label>
-                  <label class="watermark-toggle">
-                    <input id="wordMaskSubtitleSmallCapsInput" type="checkbox" />
-                    <span id="wordMaskSubtitleSmallCapsLabel">Kapitälchen</span>
-                  </label>
-                </div>
-                <label class="field">
-                  <span id="wordMaskSubtitleColorLabel">Textfarbe</span>
-                  <input id="wordMaskSubtitleColorInput" type="color" value="#222222" />
-                </label>
-              </div>
-              <div id="wordMaskPanelExport" class="wordmask-tab-panel" data-wordmask-panel="export" hidden>
-                <label class="field">
-                  <span id="wordMaskOutputFormatLabel">Exportformat</span>
-                  <select id="wordMaskOutputFormatSelect">
-                    <option value="png">PNG</option>
-                    <option value="jpeg">JPEG</option>
-                    <option value="pdf">PDF</option>
-                  </select>
-                </label>
-                <div class="settings-footer wordmask-actions">
-                  <button id="wordMaskShareButton" class="primary" type="button">Teilen</button>
-                  <button id="wordMaskSaveButton" class="secondary" type="button">Speichern</button>
-                </div>
-              </div>
-              </div>
-            </section>
-
-          </section>
-        </section>
+            </div>
+            <div class="button-row">
+              <button class="primary" id="exportButton" type="button" data-i18n="exportNow" disabled>Exportieren</button>
+              <button class="secondary" id="shareImageButton" type="button" data-i18n="shareImage" disabled>Bild teilen</button>
+            </div>
+            </div>
+          </details>
+        </aside>
       </main>
+
     </div>
 
-    <template id="slotTemplate">
-      <div class="slot" role="button" tabindex="0">
-        <span class="slot-index"></span>
-        <img alt="" />
-        <span class="slot-label">Leer</span>
-      </div>
-    </template>
-
-    <template id="previewCellTemplate">
-      <div class="preview-cell" role="button" tabindex="0">
-        <span class="cell-index"></span>
-        <img alt="" />
-        <span class="empty-note">Bild fehlt</span>
-      </div>
-    </template>
-
-    <dialog id="settingsDialog" class="settings-dialog">
-      <form id="settingsForm" method="dialog" class="settings-panel">
+    <dialog id="settingsDialog" class="dialog">
+      <form method="dialog" class="dialog-card">
         <div class="dialog-head">
-          <h2 id="settingsTitle">Einstellungen</h2>
-          <button class="secondary icon-only" value="cancel" aria-label="Schließen" type="submit">✕</button>
+          <div>
+            <h2 data-i18n="settingsTitle">Einstellungen</h2>
+            <p data-i18n="settingsIntro">Sprache, Backup, Updates und Projektverwaltung.</p>
+          </div>
+          <button class="icon-button" value="cancel" aria-label="Close">×</button>
         </div>
-        <p id="settingsIntro" class="dialog-copy">Sprache, Version und Aktualisierung der App.</p>
-        <label class="field">
-          <span id="languageLabel">Sprache</span>
-          <select id="languageSelect">
-            <option value="auto">Automatisch</option>
-            <option value="de">Deutsch</option>
-            <option value="en">English</option>
-            <option value="fr">Français</option>
-          </select>
-        </label>
-        <section class="updates-block">
-          <h3 id="updatesTitle">Updates</h3>
-          <p id="versionLabel" class="version-label"></p>
-          <div class="settings-stack">
-            <button id="checkForUpdatesButton" class="secondary" type="button">Auf Update prüfen</button>
-            <p id="updateCheckStatus" class="settings-status" hidden></p>
-            <button id="reloadAppButton" class="primary" type="button" hidden>Neu laden</button>
-          </div>
-        </section>
-        <section class="updates-block">
-          <h3 id="tipsTitle">Tipps</h3>
-          <div class="settings-stack">
-            <button id="tipsResetButton" class="secondary" type="button">Tipps wieder anzeigen</button>
-            <p id="tipsStatus" class="settings-status" hidden></p>
-          </div>
-        </section>
-        <section class="updates-block">
-          <h3 id="supportTitle">Support</h3>
-          <p id="supportIntro" class="settings-status">Wenn dir die App hilft, kannst du das Projekt auf Ko-Fi unterstuetzen.</p>
-          <a
-            id="kofiLink"
-            class="kofi-link"
-            href="https://ko-fi.com/U7U01OC260"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <img
-              height="36"
-              style="border: 0; height: 36px;"
-              src="./assets/kofi-button.svg"
-              border="0"
-              alt="Support this app on Ko-Fi"
-            />
-          </a>
-        </section>
-        <section class="updates-block">
-          <h3 id="watermarkTitle">Wasserzeichen</h3>
+
+        <div class="dialog-body">
           <label class="field">
-            <span id="watermarkTextLabel">Text</span>
-            <input id="watermarkTextInput" type="text" maxlength="140" />
-          </label>
-          <label class="field">
-            <span id="watermarkPositionLabel">Position</span>
-            <select id="watermarkPositionSelect">
-              <option value="top-left">Links oben</option>
-              <option value="top-right">Rechts oben</option>
-              <option value="bottom-left">Links unten</option>
-              <option value="bottom-right">Rechts unten</option>
-              <option value="center">Mittig</option>
+            <span data-i18n="language">Sprache</span>
+            <select id="languageSelect">
+              <option value="auto">Automatisch</option>
+              <option value="de">Deutsch</option>
+              <option value="en">English</option>
+              <option value="fr">Francais</option>
             </select>
           </label>
-          <label class="field">
-            <span id="watermarkFontLabel">Schriftart</span>
-            <select id="watermarkFontSelect">
-              <option value="Segoe UI, system-ui, sans-serif">Segoe UI</option>
-              <option value="Arial, Helvetica, sans-serif">Arial</option>
-              <option value="'Times New Roman', Times, serif">Times New Roman</option>
-              <option value="'Courier New', Courier, monospace">Courier New</option>
-              <option value="Georgia, serif">Georgia</option>
-            </select>
-          </label>
-          <label class="field">
-            <span id="watermarkColorLabel">Textfarbe</span>
-            <input id="watermarkColorInput" type="color" value="#ffffff" />
-          </label>
-          <label class="field">
-            <span id="watermarkSizeLabel">Schriftgröße</span>
-            <input id="watermarkSizeInput" type="range" min="12" max="160" step="1" value="32" />
-            <strong><span id="watermarkSizeValue">32</span> px</strong>
-          </label>
-          <label class="watermark-toggle">
-            <input id="watermarkEnabledInput" type="checkbox" />
-            <span id="watermarkEnabledLabel">Immer im Export anzeigen</span>
-          </label>
-        </section>
-        <section class="updates-block">
-          <h3 id="exifTitle">EXIF-Metadaten</h3>
-          <label class="watermark-toggle">
-            <input id="exifEnabledInput" type="checkbox" />
-            <span id="exifEnabledLabel">EXIF Felder schreiben</span>
-          </label>
-          <p id="exifUserCommentHint" class="settings-status">UserComment wird aus dem Wasserzeichen-Text uebernommen.</p>
-          <p id="exifJpegOnlyHint" class="settings-status">EXIF wird beim JPEG-Export geschrieben.</p>
-          <label class="field">
-            <span id="exifArtistLabel">Autor</span>
-            <input id="exifArtistInput" type="text" maxlength="120" />
-          </label>
-          <label class="field">
-            <span id="exifCopyrightLabel">Copyright</span>
-            <input id="exifCopyrightInput" type="text" maxlength="180" />
-          </label>
-          <label class="field">
-            <span id="exifDescriptionLabel">Bildbeschreibung</span>
-            <input id="exifDescriptionInput" type="text" maxlength="200" />
-          </label>
-          <label class="field">
-            <span id="exifSoftwareLabel">Software</span>
-            <input id="exifSoftwareInput" type="text" maxlength="120" />
-          </label>
-        </section>
-        <div class="settings-footer">
-          <button class="secondary" value="cancel" type="submit">Schließen</button>
+
+          <div class="settings-group">
+            <strong data-i18n="appearance">Darstellung</strong>
+            <div class="button-row">
+              <button class="secondary" id="themeToggleButton" type="button" data-i18n="darkModeButton">Darkmode</button>
+            </div>
+            <p id="themeStatusNote"></p>
+          </div>
+
+          <div class="settings-group">
+            <strong data-i18n="projectStorage">Projekt</strong>
+            <p id="projectMetaText" data-i18n="projectMetaFallback">Noch kein Bild geladen.</p>
+          </div>
+
+          <div class="settings-group">
+            <strong data-i18n="versioning">Versionierung</strong>
+            <p id="versionText"></p>
+            <div class="button-row">
+              <button class="secondary" id="checkUpdateButton" type="button" data-i18n="checkUpdates">Auf Updates pruefen</button>
+            </div>
+            <p id="updateCheckStatus" class="dialog-status" hidden></p>
+            <button class="primary" id="reloadAppButton" type="button" hidden data-i18n="reloadApp">Neu laden</button>
+          </div>
+
+          <div class="settings-group">
+            <strong>Ko-Fi</strong>
+            <a
+              class="kofi-link settings-kofi-link"
+              href="https://ko-fi.com/"
+              target="_blank"
+              rel="noreferrer"
+              aria-label="Ko-Fi"
+            >
+              <img src="./assets/kofi-button.svg" alt="Ko-Fi" />
+            </a>
+          </div>
         </div>
       </form>
     </dialog>
 
-    <dialog id="helpDialog" class="settings-dialog">
-      <form id="helpForm" method="dialog" class="settings-panel help-panel">
+    <dialog id="helpDialog" class="dialog">
+      <form method="dialog" class="dialog-card help-dialog-card">
         <div class="dialog-head">
-          <h2 id="helpTitle">Hilfe</h2>
-          <button class="secondary icon-only" value="cancel" aria-label="Schließen" type="submit">✕</button>
+          <div>
+            <h2 data-i18n="helpTitle">README</h2>
+            <p id="readmeStatus" class="dialog-status"></p>
+          </div>
+          <button class="icon-button" value="cancel" aria-label="Close">×</button>
         </div>
-        <p id="readmeStatus" class="settings-status"></p>
         <div id="readmeContent" class="help-content"></div>
-        <div class="settings-footer">
-          <button class="secondary" value="cancel" type="submit">Schließen</button>
-        </div>
       </form>
     </dialog>
 
-    <dialog id="tipDialog" class="settings-dialog">
-      <form id="tipForm" method="dialog" class="settings-panel">
+    <dialog id="confirmDialog" class="dialog">
+      <form method="dialog" class="dialog-card confirm-dialog-card">
         <div class="dialog-head">
-          <h2 id="tipDialogTitle">Tipp des Tages</h2>
-          <button class="secondary icon-only" value="cancel" aria-label="Schließen" type="submit">✕</button>
+          <div>
+            <h2 id="confirmDialogTitle">Bitte bestaetigen</h2>
+            <p id="confirmDialogMessage" class="dialog-status"></p>
+          </div>
+          <button class="icon-button" value="cancel" aria-label="Close">×</button>
         </div>
-        <p id="tipDialogText" class="dialog-copy"></p>
-        <label class="watermark-toggle">
-          <input id="tipDisableInput" type="checkbox" />
-          <span id="tipDisableLabel">Nicht mehr anzeigen</span>
-        </label>
-        <div class="settings-stack">
-          <button id="nextTipButton" class="secondary" type="button">Noch ein Tipp</button>
-          <button class="primary" type="submit">Schließen</button>
+        <div class="button-row">
+          <button class="secondary" id="confirmCancelButton" value="cancel" type="submit">Abbrechen</button>
+          <button class="primary" id="confirmAcceptButton" value="confirm" type="submit">Bestaetigen</button>
         </div>
       </form>
     </dialog>
 
-    <dialog id="assistantDialog" class="settings-dialog assistant-dialog">
-      <form id="assistantForm" method="dialog" class="settings-panel assistant-panel">
-        <div class="dialog-head">
-          <h2 id="assistantTitle">Batch-Assistent</h2>
-          <button class="secondary icon-only" value="cancel" aria-label="Schließen" type="submit">✕</button>
-        </div>
-        <p id="assistantIntro" class="dialog-copy">
-          Fotos laden, Vorlagenvorschläge ansehen und direkt mit dem Feinschliff starten.
-        </p>
-        <label class="field">
-          <span id="assistantFilesLabel">Fotos laden</span>
-          <input id="assistantFileInput" type="file" accept="image/*" multiple />
-        </label>
-        <p id="assistantStatus" class="settings-status"></p>
-        <div id="assistantSuggestions" class="assistant-suggestions"></div>
-        <div class="settings-footer">
-          <button class="secondary" value="cancel" type="submit">Schließen</button>
-        </div>
-      </form>
-    </dialog>
-
-    <dialog id="confirmDialog" class="settings-dialog">
-      <form id="confirmForm" method="dialog" class="settings-panel confirm-panel">
-        <div class="dialog-head">
-          <h2 id="confirmDialogTitle">Bitte bestätigen</h2>
-          <button id="confirmCloseButton" class="secondary icon-only" value="cancel" aria-label="Schließen" type="submit">✕</button>
-        </div>
-        <p id="confirmDialogMessage" class="dialog-copy"></p>
-        <div class="settings-footer">
-          <button id="confirmCancelButton" class="secondary" value="cancel" type="submit">Abbrechen</button>
-          <button id="confirmAcceptButton" class="primary" value="confirm" type="submit">Bestätigen</button>
-        </div>
-      </form>
-    </dialog>
-
-    <dialog id="safeAreaDialog" class="settings-dialog">
-      <form id="safeAreaForm" method="dialog" class="settings-panel confirm-panel">
-        <div class="dialog-head">
-          <h2 id="safeAreaDialogTitle">Safe Area</h2>
-          <button class="secondary icon-only" value="cancel" aria-label="Schließen" type="submit">✕</button>
-        </div>
-        <p id="safeAreaDialogBody" class="dialog-copy"></p>
-        <div class="settings-footer">
-          <button id="safeAreaDialogClose" class="secondary" value="cancel" type="submit">Schließen</button>
-        </div>
-      </form>
-    </dialog>
-
-    <dialog id="cropDialog" class="settings-dialog">
-      <form id="cropForm" method="dialog" class="settings-panel crop-panel">
-        <div class="dialog-head">
-          <h2 id="cropDialogTitle">Bildausschnitt</h2>
-          <button class="secondary icon-only" value="cancel" aria-label="Schließen" type="submit">✕</button>
-        </div>
-        <p id="cropDialogInfo" class="dialog-copy">Ziehe direkt im Bild fuer den Ausschnitt, Pinch oder Mausrad fuer Zoom.</p>
-        <div class="crop-frame" id="cropFrame">
-          <img id="cropImage" alt="" />
-        </div>
-        <label class="field zoom-field">
-          <span id="cropZoomLabel">Zoom</span>
-          <input id="cropZoomInput" type="range" min="0.35" max="4" step="0.05" value="1" />
-          <strong><span id="cropZoomValue">100</span> %</strong>
-        </label>
-        <div class="crop-actions">
-          <button id="cropAutoFitButton" class="secondary" type="button">Automatisch einpassen</button>
-          <button id="cropResetButton" class="secondary" type="button">Ausschnitt zurücksetzen</button>
-        </div>
-        <div class="settings-footer">
-          <button id="cropDoneButton" class="primary" value="cancel" type="submit">Fertig</button>
-        </div>
-      </form>
-    </dialog>
-
-    <script src="./config/templates.config.js"></script>
-    <script src="./config/export.config.js"></script>
     <script src="./config/i18n.config.js"></script>
-    <script src="./config/tips.config.js"></script>
-    <script src="./config/stencils.config.js"></script>
-    <script type="module" src="./app.js"></script>
+    <script src="./app.js"></script>
   </body>
 </html>
