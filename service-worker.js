@@ -1,6 +1,14 @@
 const CACHE_PREFIX = "fotocollage-cache";
-const CACHE_VERSION = "v216";
+const CACHE_VERSION = "v221";
 const CACHE_NAME = `${CACHE_PREFIX}-${CACHE_VERSION}`;
+const APP_SHELL_PATTERNS = [
+  /\/$/,
+  /\/index\.html$/i,
+  /\/app\.js$/i,
+  /\/styles\.css$/i,
+  /\/manifest\.json$/i,
+  /\/config\/.+\.js$/i,
+];
 const ASSETS = [
   "./",
   "./index.html",
@@ -66,7 +74,23 @@ const ASSETS = [
 ];
 
 self.addEventListener("install", (event) => {
-  event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(ASSETS)));
+  event.waitUntil((async () => {
+    const cache = await caches.open(CACHE_NAME);
+    const requests = ASSETS.map((asset) => new Request(asset, { cache: "no-cache" }));
+    await Promise.allSettled(
+      requests.map(async (request) => {
+        try {
+          const response = await fetch(request);
+          if (!response || !response.ok) {
+            throw new Error(`Failed to fetch ${request.url} (${response?.status || "no-status"})`);
+          }
+          await cache.put(request, response);
+        } catch (error) {
+          console.warn("[service-worker] cache install skipped", request.url, error);
+        }
+      })
+    );
+  })());
   self.skipWaiting();
 });
 
@@ -95,6 +119,8 @@ self.addEventListener("fetch", (event) => {
   }
 
   const requestUrl = new URL(event.request.url);
+  const isNavigationRequest = event.request.mode === "navigate";
+  const isAppShellRequest = APP_SHELL_PATTERNS.some((pattern) => pattern.test(requestUrl.pathname));
   if (
     requestUrl.pathname.endsWith("/version.json")
     || /\/README(\.de|\.en)?\.md$/i.test(requestUrl.pathname)
@@ -124,6 +150,29 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
+  if (isAppShellRequest) {
+    event.respondWith(
+      fetch(event.request)
+        .then((response) => {
+          const responseClone = response.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, responseClone));
+          return response;
+        })
+        .catch(() =>
+          caches.match(event.request).then((cached) => {
+            if (cached) {
+              return cached;
+            }
+            if (isNavigationRequest || /\/$|\/index\.html$/i.test(requestUrl.pathname)) {
+              return caches.match("./index.html");
+            }
+            return Response.error();
+          })
+        )
+    );
+    return;
+  }
+
   event.respondWith(
     caches.match(event.request).then((cached) => {
       if (cached) {
@@ -136,7 +185,12 @@ self.addEventListener("fetch", (event) => {
           caches.open(CACHE_NAME).then((cache) => cache.put(event.request, responseClone));
           return response;
         })
-        .catch(() => caches.match("./index.html"));
+        .catch(() => {
+          if (isNavigationRequest) {
+            return caches.match("./index.html");
+          }
+          return Response.error();
+        });
     })
   );
 });

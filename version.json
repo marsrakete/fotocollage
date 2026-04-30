@@ -1,5 +1,5 @@
 {
-  "appVersion": "1.4.29",
-  "cacheVersion": "v216",
-  "label": "Update-Ablauf robuster: Reload wartet auf aktivierten Service Worker"
+  "appVersion": "1.4.34",
+  "cacheVersion": "v221",
+  "label": "Update-Pfad gehaertet: App-Shell-Fallbacks sauberer"
 }

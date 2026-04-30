@@ -44,10 +44,11 @@ const stencilPathCache = new Map();
 let stencilSvgLoadPromise = null;
 
 const DEFAULT_VERSION_INFO = Object.freeze({
-  appVersion: "1.4.29",
-  cacheVersion: "v216",
-  label: "Update-Ablauf robuster: Reload wartet auf aktivierten Service Worker",
+  appVersion: "1.4.34",
+  cacheVersion: "v221",
+  label: "Update-Pfad gehaertet: App-Shell-Fallbacks sauberer",
 });
+const SERVICE_WORKER_BASE_URL = "./service-worker.js";
 
 const ZOOM_MIN = 0.35;
 const ZOOM_MAX = 4;
@@ -128,6 +129,7 @@ const state = {
   readmeTextByLocale: {},
   tipAutoShowEnabled: true,
   versionInfo: { ...DEFAULT_VERSION_INFO },
+  pendingRemoteVersion: null,
   serviceWorkerRegistration: null,
   updateInProgress: false,
   assistantFiles: [],
@@ -1036,6 +1038,69 @@ function normalizeVersionInfo(raw) {
 
 function versionSignature(info) {
   return `${info.appVersion}|${info.cacheVersion}`;
+}
+
+function buildServiceWorkerUrl(cacheVersion = DEFAULT_VERSION_INFO.cacheVersion) {
+  const suffix = encodeURIComponent(String(cacheVersion || DEFAULT_VERSION_INFO.cacheVersion));
+  return `${SERVICE_WORKER_BASE_URL}?cv=${suffix}`;
+}
+
+const SERVICE_WORKER_REGISTER_OPTIONS = Object.freeze({
+  updateViaCache: "none",
+});
+
+function parseServiceWorkerScriptMeta(scriptUrl) {
+  if (!scriptUrl) return null;
+  try {
+    const parsed = new URL(scriptUrl, window.location.href);
+    const path = parsed.pathname || "";
+    const isServiceWorkerScript = /\/(service-worker|sw)\.js$/i.test(path);
+    if (!isServiceWorkerScript) return null;
+    return {
+      url: parsed,
+      path,
+      cacheVersion: parsed.searchParams.get("cv") || "",
+      isLegacySw: /\/sw\.js$/i.test(path),
+    };
+  } catch {
+    return null;
+  }
+}
+
+async function cleanupLegacyServiceWorkers(expectedCacheVersion = DEFAULT_VERSION_INFO.cacheVersion) {
+  if (!("serviceWorker" in navigator)) {
+    return false;
+  }
+  const registrations = await navigator.serviceWorker.getRegistrations().catch(() => []);
+  let removedAnyRegistration = false;
+  for (const registration of registrations) {
+    const scriptUrls = [
+      registration.active?.scriptURL,
+      registration.waiting?.scriptURL,
+      registration.installing?.scriptURL,
+    ].filter(Boolean);
+    const metas = scriptUrls.map((url) => parseServiceWorkerScriptMeta(url)).filter(Boolean);
+    if (!metas.length) {
+      continue;
+    }
+    const keepRegistration = metas.some(
+      (meta) => !meta.isLegacySw && meta.cacheVersion === expectedCacheVersion
+    );
+    if (keepRegistration) {
+      continue;
+    }
+    removedAnyRegistration = (await registration.unregister().catch(() => false)) || removedAnyRegistration;
+  }
+  if (!removedAnyRegistration || !("caches" in window)) {
+    return removedAnyRegistration;
+  }
+  const cacheKeys = await caches.keys().catch(() => []);
+  await Promise.all(
+    cacheKeys
+      .filter((key) => key.startsWith("fotocollage-cache-"))
+      .map((key) => caches.delete(key).catch(() => false))
+  );
+  return true;
 }
 
 function createEmptyCell() {
@@ -6427,14 +6492,20 @@ function waitForWorkerActivation(worker) {
 }
 
 async function performAppReload() {
-  const registration = state.serviceWorkerRegistration;
-  if (!registration || !("serviceWorker" in navigator)) {
+  if (!("serviceWorker" in navigator)) {
     window.location.reload();
     return;
   }
 
-  await registration.update().catch(() => {});
-  const candidate = registration.installing || registration.waiting;
+  const remoteVersion = state.pendingRemoteVersion || DEFAULT_VERSION_INFO;
+  await cleanupLegacyServiceWorkers(remoteVersion.cacheVersion).catch(() => {});
+  const targetUrl = buildServiceWorkerUrl(remoteVersion.cacheVersion);
+  const registration = await navigator.serviceWorker
+    .register(targetUrl, SERVICE_WORKER_REGISTER_OPTIONS)
+    .catch(() => state.serviceWorkerRegistration);
+  state.serviceWorkerRegistration = registration || state.serviceWorkerRegistration;
+  await registration?.update().catch(() => {});
+  const candidate = registration?.installing || registration?.waiting;
   if (!candidate) {
     window.location.reload();
     return;
@@ -6472,7 +6543,8 @@ async function performAppReload() {
 }
 
 async function fetchVersionInfo() {
-  const response = await fetch("./version.json", { cache: "no-cache" });
+  const versionUrl = `./version.json?ts=${Date.now()}`;
+  const response = await fetch(versionUrl, { cache: "reload" });
   if (!response.ok) {
     throw new Error("Version file unavailable");
   }
@@ -6498,7 +6570,7 @@ async function checkForUpdates(options = {}) {
     setUpdateStatus(t("updateChecking"), false);
   }
   try {
-    await state.serviceWorkerRegistration?.update();
+    await state.serviceWorkerRegistration?.update().catch(() => {});
     const remoteVersion = await fetchVersionInfo();
     if (!remoteVersion.appVersion || !remoteVersion.cacheVersion) {
       if (!silentError) {
@@ -6507,12 +6579,14 @@ async function checkForUpdates(options = {}) {
       return;
     }
     if (versionSignature(remoteVersion) === versionSignature(DEFAULT_VERSION_INFO)) {
+      state.pendingRemoteVersion = null;
       if (!silentNoChange) {
         setUpdateStatus(t("updateNoChange"), false);
       }
       return;
     }
     const remoteLabel = remoteVersion.label ? ` \u00b7 ${remoteVersion.label}` : "";
+    state.pendingRemoteVersion = remoteVersion;
     const updateMessage = `${t("updateAvailablePrefix")}: ${remoteVersion.appVersion} \u00b7 ${remoteVersion.cacheVersion}${remoteLabel}.`;
     if (!promptOnAvailable) {
       setUpdateStatus(`${updateMessage} ${t("updateAvailableAction")}`, true);
@@ -6541,8 +6615,12 @@ async function checkForUpdates(options = {}) {
 
 function registerServiceWorker() {
   if (!("serviceWorker" in navigator)) return;
-  navigator.serviceWorker
-    .register("./service-worker.js")
+  void cleanupLegacyServiceWorkers(DEFAULT_VERSION_INFO.cacheVersion)
+    .catch(() => false)
+    .then(() => navigator.serviceWorker.register(
+      buildServiceWorkerUrl(DEFAULT_VERSION_INFO.cacheVersion),
+      SERVICE_WORKER_REGISTER_OPTIONS
+    ))
     .then((registration) => {
       state.serviceWorkerRegistration = registration;
     })
