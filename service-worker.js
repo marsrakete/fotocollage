@@ -1,5 +1,5 @@
 const CACHE_PREFIX = "fotocollage-cache";
-const CACHE_VERSION = "v215";
+const CACHE_VERSION = "v216";
 const CACHE_NAME = `${CACHE_PREFIX}-${CACHE_VERSION}`;
 const ASSETS = [
   "./",
@@ -81,6 +81,12 @@ self.addEventListener("activate", (event) => {
     )
   );
   self.clients.claim();
+});
+
+self.addEventListener("message", (event) => {
+  if (event.data?.type === "SKIP_WAITING") {
+    self.skipWaiting();
+  }
 });
 
 self.addEventListener("fetch", (event) => {

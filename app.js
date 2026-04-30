@@ -44,9 +44,9 @@ const stencilPathCache = new Map();
 let stencilSvgLoadPromise = null;
 
 const DEFAULT_VERSION_INFO = Object.freeze({
-  appVersion: "1.4.28",
-  cacheVersion: "v215",
-  label: "Version hochgezogen",
+  appVersion: "1.4.29",
+  cacheVersion: "v216",
+  label: "Update-Ablauf robuster: Reload wartet auf aktivierten Service Worker",
 });
 
 const ZOOM_MIN = 0.35;
@@ -6412,8 +6412,62 @@ function setUpdateStatus(message, showReload = false) {
   els.reloadAppButton.hidden = !showReload;
 }
 
+function waitForWorkerActivation(worker) {
+  if (!worker) return Promise.resolve();
+  if (worker.state === "activated") return Promise.resolve();
+  return new Promise((resolve) => {
+    const onStateChange = () => {
+      if (worker.state === "activated" || worker.state === "redundant") {
+        worker.removeEventListener("statechange", onStateChange);
+        resolve();
+      }
+    };
+    worker.addEventListener("statechange", onStateChange);
+  });
+}
+
 async function performAppReload() {
-  await state.serviceWorkerRegistration?.update().catch(() => {});
+  const registration = state.serviceWorkerRegistration;
+  if (!registration || !("serviceWorker" in navigator)) {
+    window.location.reload();
+    return;
+  }
+
+  await registration.update().catch(() => {});
+  const candidate = registration.installing || registration.waiting;
+  if (!candidate) {
+    window.location.reload();
+    return;
+  }
+
+  const activationWait = waitForWorkerActivation(candidate);
+  try {
+    candidate.postMessage({ type: "SKIP_WAITING" });
+  } catch {}
+
+  await Promise.race([
+    activationWait,
+    new Promise((resolve) => setTimeout(resolve, 4000)),
+  ]);
+
+  await new Promise((resolve) => {
+    let resolved = false;
+    const finish = () => {
+      if (resolved) return;
+      resolved = true;
+      resolve();
+    };
+    const timer = setTimeout(finish, 1200);
+    navigator.serviceWorker.addEventListener("controllerchange", () => {
+      clearTimeout(timer);
+      finish();
+    }, { once: true });
+    if (candidate.state === "activated") {
+      clearTimeout(timer);
+      finish();
+    }
+  });
+
   window.location.reload();
 }
 

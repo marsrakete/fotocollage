@@ -1,5 +1,5 @@
 {
-  "appVersion": "1.4.28",
-  "cacheVersion": "v215",
-  "label": "Version hochgezogen"
+  "appVersion": "1.4.29",
+  "cacheVersion": "v216",
+  "label": "Update-Ablauf robuster: Reload wartet auf aktivierten Service Worker"
 }
