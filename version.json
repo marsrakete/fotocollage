@@ -1,5 +1,5 @@
 {
-  "appVersion": "0.1.50",
-  "cacheVersion": "v51",
-  "label": "Farbfokus mit zwei Zielfarben und zwei Pipetten"
+  "appVersion": "1.4.27",
+  "cacheVersion": "v214",
+  "label": "Ausschnitt-Dialog mit eckigen Ecken, Kreis-Logik unveraendert nur fuer quadratische Felder"
 }
