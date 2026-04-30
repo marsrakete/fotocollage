@@ -44,9 +44,9 @@ const stencilPathCache = new Map();
 let stencilSvgLoadPromise = null;
 
 const DEFAULT_VERSION_INFO = Object.freeze({
-  appVersion: "1.4.27",
-  cacheVersion: "v214",
-  label: "Ausschnitt-Dialog mit eckigen Ecken, Kreis-Logik unveraendert nur fuer quadratische Felder",
+  appVersion: "1.4.28",
+  cacheVersion: "v215",
+  label: "Version hochgezogen",
 });
 
 const ZOOM_MIN = 0.35;
