@@ -230,76 +230,126 @@
                 <div class="collage-preview" id="collagePreview"></div>
               </div>
 
-              <aside class="editor-panel">
-                <div class="panel-head compact">
-                  <h3 id="activeCellTitle">Aktives Feld</h3>
-                  <p id="activeCellInfo">Wähle ein Feld aus der Collage.</p>
-                </div>
-                <div class="editor-frame" id="editorFrame">
-                  <p class="editor-info" id="dragHint">Direkt in der Vorschau verschieben, zoomen und anpassen</p>
-                </div>
-                <div class="editor-controls">
-                  <button class="secondary" id="prevCell">Vorheriges Feld</button>
-                  <button class="secondary" id="nextCell">Nächstes Feld</button>
-                  <button class="secondary" id="flipHorizontalButton">Horizontal spiegeln</button>
-                  <button class="secondary" id="flipVerticalButton">Vertikal spiegeln</button>
-                  <button class="secondary" id="rotateLeftButton">90° nach links drehen</button>
-                  <button class="secondary" id="toggleReorderMode" type="button">Sortieren</button>
-                  <button class="secondary" id="replaceCell">Bild ersetzen</button>
-                  <button class="secondary" id="deleteCell">Bild löschen</button>
-                  <button class="secondary control-wide" id="openCropDialogButton">Bildausschnitt wählen</button>
-                  <button class="secondary control-wide" id="resetFocus">Ausschnitt zurücksetzen</button>
-                </div>
-                <label class="field zoom-field">
-                  <span id="zoomLabel">Zoom</span>
-                  <input id="zoomInput" type="range" min="0.35" max="4" step="0.05" value="1" />
-                  <strong><span id="zoomValue">100</span> %</strong>
-                </label>
-                <button class="secondary control-wide" id="resetZoom" type="button">Zoom zurücksetzen</button>
-                <label class="field" id="slotShapeField" hidden>
-                  <span id="slotShapeLabel">Form</span>
-                  <select id="slotShapeSelect">
-                    <option value="rect">Quadrat</option>
-                    <option value="rounded-rect">Abgerundet</option>
-                    <option value="circle">Kreis</option>
-                    <option value="diamond">Raute</option>
-                    <option value="hexagon">Sechseck</option>
-                  </select>
-                </label>
-                <div class="field text-editor-field">
-                  <strong id="textEditorTitle">Text</strong>
-                  <label>
-                    <span id="textLabel">Text</span>
-                    <textarea id="textInput" rows="3" placeholder="Text im Feld platzieren"></textarea>
+              <div class="editor-sidebar">
+                <aside class="editor-panel">
+                  <div class="panel-head compact">
+                    <h3 id="activeCellTitle">Aktives Feld</h3>
+                    <p id="activeCellInfo">Wähle ein Feld aus der Collage.</p>
+                  </div>
+                  <div class="editor-frame" id="editorFrame">
+                    <p class="editor-info" id="dragHint">Direkt in der Vorschau verschieben, zoomen und anpassen</p>
+                  </div>
+                  <div class="editor-controls">
+                    <button class="secondary" id="prevCell">Vorheriges Feld</button>
+                    <button class="secondary" id="nextCell">Nächstes Feld</button>
+                    <button class="secondary" id="flipHorizontalButton">Horizontal spiegeln</button>
+                    <button class="secondary" id="flipVerticalButton">Vertikal spiegeln</button>
+                    <button class="secondary" id="rotateLeftButton">90° nach links drehen</button>
+                    <button class="secondary" id="toggleReorderMode" type="button">Sortieren</button>
+                    <button class="secondary" id="replaceCell">Bild ersetzen</button>
+                    <button class="secondary" id="deleteCell">Bild löschen</button>
+                    <button class="secondary control-wide" id="openCropDialogButton">Bildausschnitt wählen</button>
+                    <button class="secondary control-wide" id="resetFocus">Ausschnitt zurücksetzen</button>
+                  </div>
+                  <label class="field zoom-field">
+                    <span id="zoomLabel">Zoom</span>
+                    <input id="zoomInput" type="range" min="0.35" max="4" step="0.05" value="1" />
+                    <strong><span id="zoomValue">100</span> %</strong>
                   </label>
-                  <label>
-                    <span id="textSizeLabel">Schriftgröße</span>
-                    <input id="textSizeInput" type="range" min="12" max="160" step="1" value="48" />
-                    <strong><span id="textSizeValue">48</span> px</strong>
-                  </label>
-                  <label>
-                    <span id="textFontLabel">Schriftart</span>
-                    <select id="textFontSelect">
-                      <option value="Segoe UI, system-ui, sans-serif">Segoe UI</option>
-                      <option value="Arial, Helvetica, sans-serif">Arial</option>
-                      <option value="'Times New Roman', Times, serif">Times New Roman</option>
-                      <option value="'Courier New', Courier, monospace">Courier New</option>
-                      <option value="Georgia, serif">Georgia</option>
+                  <button class="secondary control-wide" id="resetZoom" type="button">Zoom zurücksetzen</button>
+                  <label class="field" id="slotShapeField" hidden>
+                    <span id="slotShapeLabel">Form</span>
+                    <select id="slotShapeSelect">
+                      <option value="rect">Quadrat</option>
+                      <option value="rounded-rect">Abgerundet</option>
+                      <option value="circle">Kreis</option>
+                      <option value="diamond">Raute</option>
+                      <option value="hexagon">Sechseck</option>
                     </select>
                   </label>
-                  <div class="text-toggle-row">
-                    <label><input id="textBoldInput" type="checkbox" /> <span id="textBoldLabel">Fett</span></label>
-                    <label><input id="textItalicInput" type="checkbox" /> <span id="textItalicLabel">Kursiv</span></label>
+                  <div class="field text-editor-field">
+                    <strong id="textEditorTitle">Text</strong>
+                    <label>
+                      <span id="textLabel">Text</span>
+                      <textarea id="textInput" rows="3" placeholder="Text im Feld platzieren"></textarea>
+                    </label>
+                    <label>
+                      <span id="textSizeLabel">Schriftgröße</span>
+                      <input id="textSizeInput" type="range" min="12" max="160" step="1" value="48" />
+                      <strong><span id="textSizeValue">48</span> px</strong>
+                    </label>
+                    <label>
+                      <span id="textFontLabel">Schriftart</span>
+                      <select id="textFontSelect">
+                        <option value="Segoe UI, system-ui, sans-serif">Segoe UI</option>
+                        <option value="Arial, Helvetica, sans-serif">Arial</option>
+                        <option value="'Times New Roman', Times, serif">Times New Roman</option>
+                        <option value="'Courier New', Courier, monospace">Courier New</option>
+                        <option value="Georgia, serif">Georgia</option>
+                      </select>
+                    </label>
+                    <div class="text-toggle-row">
+                      <label><input id="textBoldInput" type="checkbox" /> <span id="textBoldLabel">Fett</span></label>
+                      <label><input id="textItalicInput" type="checkbox" /> <span id="textItalicLabel">Kursiv</span></label>
+                      <label><input id="textSmallCapsInput" type="checkbox" /> <span id="textSmallCapsLabel">Kapitälchen</span></label>
+                    </div>
+                    <label>
+                      <span id="textColorLabel">Textfarbe</span>
+                      <input id="textColorInput" type="color" value="#ffffff" />
+                    </label>
+                    <button class="secondary" id="resetTextPosition" type="button">Textposition zurücksetzen</button>
+                    <p class="settings-status warning-text" id="textWarning" hidden></p>
                   </div>
-                  <label>
-                    <span id="textColorLabel">Textfarbe</span>
-                    <input id="textColorInput" type="color" value="#ffffff" />
-                  </label>
-                  <button class="secondary" id="resetTextPosition" type="button">Textposition zurücksetzen</button>
-                  <p class="settings-status warning-text" id="textWarning" hidden></p>
-                </div>
-                <input id="replaceInput" type="file" accept="image/*" hidden />
-              </aside>
+                  <input id="replaceInput" type="file" accept="image/*" hidden />
+                </aside>
+
+                <aside class="editor-panel editor-panel-secondary">
+                  <div class="panel-head compact">
+                    <h3 id="globalTextEditorTitle">Gesamttext</h3>
+                    <p>Text über die gesamte Collage legen und direkt in der Vorschau verschieben.</p>
+                  </div>
+                  <div class="field text-editor-field">
+                    <label>
+                      <span id="globalTextLabel">Text über ganze Collage</span>
+                      <textarea id="globalTextInput" rows="3" placeholder="Text über die gesamte Collage legen"></textarea>
+                    </label>
+                    <label>
+                      <span id="globalTextSizeLabel">Schriftgröße</span>
+                      <input id="globalTextSizeInput" type="range" min="12" max="240" step="1" value="72" />
+                      <strong><span id="globalTextSizeValue">72</span> px</strong>
+                    </label>
+                    <label>
+                      <span id="globalTextFontLabel">Schriftart</span>
+                      <select id="globalTextFontSelect">
+                        <option value="Segoe UI, system-ui, sans-serif">Segoe UI</option>
+                        <option value="Arial, Helvetica, sans-serif">Arial</option>
+                        <option value="'Times New Roman', Times, serif">Times New Roman</option>
+                        <option value="'Courier New', Courier, monospace">Courier New</option>
+                        <option value="Georgia, serif">Georgia</option>
+                      </select>
+                    </label>
+                    <div class="text-toggle-row">
+                      <label><input id="globalTextBoldInput" type="checkbox" /> <span id="globalTextBoldLabel">Fett</span></label>
+                      <label><input id="globalTextItalicInput" type="checkbox" /> <span id="globalTextItalicLabel">Kursiv</span></label>
+                      <label><input id="globalTextSmallCapsInput" type="checkbox" /> <span id="globalTextSmallCapsLabel">Kapitälchen</span></label>
+                    </div>
+                    <label>
+                      <span id="globalTextColorLabel">Textfarbe</span>
+                      <input id="globalTextColorInput" type="color" value="#ffffff" />
+                    </label>
+                    <label>
+                      <span id="globalTextBackgroundColorLabel">Hintergrundfarbe</span>
+                      <input id="globalTextBackgroundColorInput" type="color" value="#000000" />
+                    </label>
+                    <label>
+                      <span id="globalTextBackgroundOpacityLabel">Hintergrund-Deckkraft</span>
+                      <input id="globalTextBackgroundOpacityInput" type="range" min="0" max="100" step="1" value="0" />
+                      <strong><span id="globalTextBackgroundOpacityValue">0</span> %</strong>
+                    </label>
+                    <button class="secondary" id="resetGlobalTextPosition" type="button">Gesamttext zentrieren</button>
+                  </div>
+                </aside>
+              </div>
             </div>
 
             <div class="step-actions">
@@ -652,9 +702,11 @@
           <h3 id="updatesTitle">Updates</h3>
           <p id="versionLabel" class="version-label"></p>
           <div class="settings-stack">
-            <button id="checkForUpdatesButton" class="secondary" type="button">Auf Update prüfen</button>
+            <div class="settings-actions">
+              <button id="checkForUpdatesButton" class="secondary" type="button">Auf Update prüfen</button>
+              <button id="reloadAppButton" class="primary" type="button">App neu laden</button>
+            </div>
             <p id="updateCheckStatus" class="settings-status" hidden></p>
-            <button id="reloadAppButton" class="primary" type="button" hidden>Neu laden</button>
           </div>
         </section>
         <section class="updates-block">
@@ -682,6 +734,26 @@
               alt="Support this app on Ko-Fi"
             />
           </a>
+        </section>
+        <section class="updates-block">
+          <h3 id="recommendTitle">Weiterempfehlen</h3>
+          <p id="recommendDescription" class="settings-status">Teile den Link zu Foto-Collage direkt aus der App.</p>
+          <div class="settings-stack">
+            <button id="recommendAppButton" class="primary" type="button">App teilen</button>
+            <p id="recommendStatus" class="settings-status" hidden></p>
+          </div>
+          <div class="share-card">
+            <img
+              id="recommendQrImage"
+              class="share-qr-image"
+              src="./assets/fotocollage-share-qr.svg"
+              alt="QR-Code zu Foto-Collage"
+            />
+            <div class="share-card-copy">
+              <p id="recommendScanHint" class="field-hint">Oder mit dem Smartphone scannen:</p>
+              <code id="recommendUrl" class="share-url"></code>
+            </div>
+          </div>
         </section>
         <section class="updates-block">
           <h3 id="watermarkTitle">Wasserzeichen</h3>

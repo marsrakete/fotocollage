@@ -44,9 +44,9 @@ const stencilPathCache = new Map();
 let stencilSvgLoadPromise = null;
 
 const DEFAULT_VERSION_INFO = Object.freeze({
-  appVersion: "1.4.34",
-  cacheVersion: "v221",
-  label: "Update-Pfad gehaertet: App-Shell-Fallbacks sauberer",
+  appVersion: "1.4.35",
+  cacheVersion: "v222",
+  label: "Collage-Editor erweitert: Gesamttext, Kapitaelchen und Layout-Feinschliff",
 });
 const SERVICE_WORKER_BASE_URL = "./service-worker.js";
 
@@ -113,6 +113,19 @@ const state = {
     color: "#ffffff",
     size: 32,
     enabled: false,
+  },
+  globalText: {
+    text: "",
+    textX: 0.5,
+    textY: 0.5,
+    fontSize: 72,
+    fontFamily: "Segoe UI, system-ui, sans-serif",
+    bold: false,
+    italic: false,
+    smallCaps: false,
+    color: "#ffffff",
+    backgroundColor: "#000000",
+    backgroundOpacity: 0,
   },
   exif: {
     enabled: false,
@@ -316,10 +329,34 @@ const els = {
   textBoldLabel: document.getElementById("textBoldLabel"),
   textItalicInput: document.getElementById("textItalicInput"),
   textItalicLabel: document.getElementById("textItalicLabel"),
+  textSmallCapsInput: document.getElementById("textSmallCapsInput"),
+  textSmallCapsLabel: document.getElementById("textSmallCapsLabel"),
   textColorLabel: document.getElementById("textColorLabel"),
   textColorInput: document.getElementById("textColorInput"),
   resetTextPosition: document.getElementById("resetTextPosition"),
   textWarning: document.getElementById("textWarning"),
+  globalTextEditorTitle: document.getElementById("globalTextEditorTitle"),
+  globalTextLabel: document.getElementById("globalTextLabel"),
+  globalTextInput: document.getElementById("globalTextInput"),
+  globalTextSizeLabel: document.getElementById("globalTextSizeLabel"),
+  globalTextSizeInput: document.getElementById("globalTextSizeInput"),
+  globalTextSizeValue: document.getElementById("globalTextSizeValue"),
+  globalTextFontLabel: document.getElementById("globalTextFontLabel"),
+  globalTextFontSelect: document.getElementById("globalTextFontSelect"),
+  globalTextBoldInput: document.getElementById("globalTextBoldInput"),
+  globalTextBoldLabel: document.getElementById("globalTextBoldLabel"),
+  globalTextItalicInput: document.getElementById("globalTextItalicInput"),
+  globalTextItalicLabel: document.getElementById("globalTextItalicLabel"),
+  globalTextSmallCapsInput: document.getElementById("globalTextSmallCapsInput"),
+  globalTextSmallCapsLabel: document.getElementById("globalTextSmallCapsLabel"),
+  globalTextColorLabel: document.getElementById("globalTextColorLabel"),
+  globalTextColorInput: document.getElementById("globalTextColorInput"),
+  globalTextBackgroundColorLabel: document.getElementById("globalTextBackgroundColorLabel"),
+  globalTextBackgroundColorInput: document.getElementById("globalTextBackgroundColorInput"),
+  globalTextBackgroundOpacityLabel: document.getElementById("globalTextBackgroundOpacityLabel"),
+  globalTextBackgroundOpacityInput: document.getElementById("globalTextBackgroundOpacityInput"),
+  globalTextBackgroundOpacityValue: document.getElementById("globalTextBackgroundOpacityValue"),
+  resetGlobalTextPosition: document.getElementById("resetGlobalTextPosition"),
   exportWidthInput: document.getElementById("exportWidthInput"),
   exportWidthValue: document.getElementById("exportWidthValue"),
   exportPresetLabel: document.getElementById("exportPresetLabel"),
@@ -381,6 +418,13 @@ const els = {
   tipsStatus: document.getElementById("tipsStatus"),
   supportTitle: document.getElementById("supportTitle"),
   supportIntro: document.getElementById("supportIntro"),
+  recommendTitle: document.getElementById("recommendTitle"),
+  recommendDescription: document.getElementById("recommendDescription"),
+  recommendAppButton: document.getElementById("recommendAppButton"),
+  recommendQrImage: document.getElementById("recommendQrImage"),
+  recommendScanHint: document.getElementById("recommendScanHint"),
+  recommendUrl: document.getElementById("recommendUrl"),
+  recommendStatus: document.getElementById("recommendStatus"),
   assistantDialog: document.getElementById("assistantDialog"),
   assistantForm: document.getElementById("assistantForm"),
   assistantTitle: document.getElementById("assistantTitle"),
@@ -738,6 +782,26 @@ function setTipsStatus(message) {
   if (!els.tipsStatus) return;
   els.tipsStatus.textContent = message || "";
   els.tipsStatus.hidden = !message;
+}
+
+function setRecommendStatus(message, isError = false) {
+  if (!els.recommendStatus) return;
+  els.recommendStatus.textContent = message || "";
+  els.recommendStatus.hidden = !message;
+  els.recommendStatus.classList.toggle("warning-text", Boolean(isError && message));
+}
+
+function getAppShareUrl() {
+  const canonicalMeta = document.querySelector('meta[property="og:url"]');
+  const canonicalUrl = canonicalMeta?.getAttribute("content")?.trim();
+  if (canonicalUrl) {
+    return canonicalUrl;
+  }
+  const isWebUrl = /^https?:$/i.test(window.location.protocol);
+  if (isWebUrl) {
+    return window.location.href;
+  }
+  return "https://marsrakete.github.io/fotocollage/";
 }
 
 function updateTipsControls() {
@@ -1123,6 +1187,7 @@ function createEmptyCell() {
     fontFamily: "Segoe UI, system-ui, sans-serif",
     bold: false,
     italic: false,
+    smallCaps: false,
     color: "#ffffff",
   };
 }
@@ -1381,8 +1446,18 @@ function translateStaticUi() {
   setText(els.languageLabel, "languageLabel");
   setText(els.supportTitle, "supportTitle");
   setText(els.supportIntro, "supportIntro");
+  setText(els.recommendTitle, "recommendTitle");
+  setText(els.recommendDescription, "recommendDescription");
+  setText(els.recommendAppButton, "recommendAppButton");
+  setText(els.recommendScanHint, "recommendScanHint");
+  if (els.recommendQrImage) {
+    els.recommendQrImage.alt = t("recommendQrAlt");
+  }
+  if (els.recommendUrl) {
+    els.recommendUrl.textContent = getAppShareUrl();
+  }
   setText(els.checkForUpdatesButton, "checkForUpdates");
-  setText(els.reloadAppButton, "reload");
+  setText(els.reloadAppButton, "reloadApp");
   setText(els.toStep2, "toPhotos");
   setText(els.restartButton, "restart");
   setText(els.toStep3, "toFineTune");
@@ -1422,9 +1497,24 @@ function translateStaticUi() {
   setText(els.textFontLabel, "textFontLabel");
   setText(els.textBoldLabel, "textBold");
   setText(els.textItalicLabel, "textItalic");
+  setText(els.textSmallCapsLabel, "wordMaskSubtitleSmallCapsLabel");
   setText(els.textColorLabel, "textColorLabel");
   setText(els.resetTextPosition, "resetTextPosition");
   els.textInput.placeholder = t("textPlaceholder");
+  setText(els.globalTextEditorTitle, "globalTextEditorTitle");
+  setText(els.globalTextLabel, "globalTextLabel");
+  setText(els.globalTextSizeLabel, "globalTextSizeLabel");
+  setText(els.globalTextFontLabel, "globalTextFontLabel");
+  setText(els.globalTextBoldLabel, "textBold");
+  setText(els.globalTextItalicLabel, "textItalic");
+  setText(els.globalTextSmallCapsLabel, "wordMaskSubtitleSmallCapsLabel");
+  setText(els.globalTextColorLabel, "textColorLabel");
+  setText(els.globalTextBackgroundColorLabel, "globalTextBackgroundColorLabel");
+  setText(els.globalTextBackgroundOpacityLabel, "globalTextBackgroundOpacityLabel");
+  setText(els.resetGlobalTextPosition, "resetGlobalTextPosition");
+  if (els.globalTextInput) {
+    els.globalTextInput.placeholder = t("globalTextPlaceholder");
+  }
   setText(els.watermarkTitle, "watermarkTitle");
   setText(els.watermarkTextLabel, "watermarkTextLabel");
   setText(els.watermarkPositionLabel, "watermarkPositionLabel");
@@ -2764,6 +2854,21 @@ function getPreviewGapSettings(previewWidth, previewHeight) {
   };
 }
 
+function getReferenceContentRect() {
+  const exportTarget = getExportTargetSize();
+  const preset = getExportPresetDefinition();
+  return state.autoFitToSafeArea
+    ? (getSafeAreaFittedContentRect(exportTarget.width, exportTarget.height, preset) || getCollageContentRect(exportTarget.width, exportTarget.height))
+    : getCollageContentRect(exportTarget.width, exportTarget.height);
+}
+
+function getReferenceCellRect(index) {
+  const layout = getActiveLayoutDefinition();
+  const contentRect = getReferenceContentRect();
+  const rects = buildLayoutRects(contentRect.width, contentRect.height, layout);
+  return rects[index] || null;
+}
+
 function getPresetSlotBaseShape(layout, index) {
   const slot = layout?.slots?.[index];
   const shape = typeof slot?.shape === "string" ? slot.shape : "rect";
@@ -2952,6 +3057,19 @@ async function restartWorkflow() {
   state.reorderSourceIndex = null;
   state.pinch = null;
   state.touchPoints.clear();
+  state.globalText = {
+    text: "",
+    textX: 0.5,
+    textY: 0.5,
+    fontSize: 72,
+    fontFamily: "Segoe UI, system-ui, sans-serif",
+    bold: false,
+    italic: false,
+    smallCaps: false,
+    color: "#ffffff",
+    backgroundColor: "#000000",
+    backgroundOpacity: 0,
+  };
   state.hasOpenedExportStep = false;
   state.assistantRequestToken += 1;
   state.assistantFiles = [];
@@ -3373,6 +3491,66 @@ function getCellFrameSize(index = state.selectedCell) {
   return { width: 1, height: 1 };
 }
 
+function createPreviewCellNode(index) {
+  const template = document.getElementById("previewCellTemplate");
+  const node = template.content.firstElementChild.cloneNode(true);
+  const textOverlay = document.createElement("div");
+  textOverlay.className = "preview-text-overlay";
+  textOverlay.hidden = true;
+  node.appendChild(textOverlay);
+  node.dataset.index = String(index);
+  node.querySelector(".cell-index").textContent = `#${index + 1}`;
+  node.addEventListener("pointerdown", (event) => handlePreviewPointerDown(event, index, node));
+  node.addEventListener("wheel", (event) => handlePreviewWheel(event, index), { passive: false });
+  node.addEventListener("click", () => {
+    if (state.reorderMode) {
+      handleReorderModeTap(index);
+      return;
+    }
+    state.selectedCell = index;
+    syncEditor();
+    renderPreview();
+  });
+  node.addEventListener("keydown", (event) => {
+    if (event.key !== "Enter" && event.key !== " ") return;
+    event.preventDefault();
+    if (state.reorderMode) {
+      handleReorderModeTap(index);
+      return;
+    }
+    state.selectedCell = index;
+    syncEditor();
+    renderPreview();
+  });
+  textOverlay.addEventListener("pointerdown", (event) => startTextDrag(event, index, node, textOverlay));
+  return node;
+}
+
+function ensurePreviewStructure() {
+  const existingNodes = Array.from(els.collagePreview.querySelectorAll(":scope > .preview-cell"));
+  if (existingNodes.length !== state.cells.length) {
+    els.collagePreview.innerHTML = "";
+    for (let index = 0; index < state.cells.length; index += 1) {
+      els.collagePreview.appendChild(createPreviewCellNode(index));
+    }
+  }
+  let globalTextOverlay = els.collagePreview.querySelector(":scope > .preview-global-text-overlay");
+  if (!globalTextOverlay) {
+    globalTextOverlay = document.createElement("div");
+    globalTextOverlay.className = "preview-text-overlay preview-global-text-overlay";
+    globalTextOverlay.hidden = true;
+    globalTextOverlay.addEventListener("pointerdown", (event) =>
+      startGlobalTextDrag(event, els.collagePreview, globalTextOverlay));
+    els.collagePreview.appendChild(globalTextOverlay);
+  } else if (globalTextOverlay !== els.collagePreview.lastElementChild) {
+    els.collagePreview.appendChild(globalTextOverlay);
+  }
+  return {
+    nodes: Array.from(els.collagePreview.querySelectorAll(":scope > .preview-cell")),
+    globalTextOverlay,
+  };
+}
+
 function renderPreview() {
   const layout = getActiveLayoutDefinition();
   const ratio = getLayoutAspectRatio(layout);
@@ -3384,65 +3562,7 @@ function renderPreview() {
   els.collagePreview.style.setProperty("--outer-gap", `${state.outerGap}px`);
   els.collagePreview.style.setProperty("--active-outline-color", getActiveOutlineColor(state.background));
   els.collagePreview.style.background = state.background;
-  els.collagePreview.innerHTML = "";
-  const template = document.getElementById("previewCellTemplate");
-  const nodes = [];
-  state.cells.forEach((cell, index) => {
-    const node = template.content.firstElementChild.cloneNode(true);
-    const img = node.querySelector("img");
-    const emptyNote = node.querySelector(".empty-note");
-    const textOverlay = document.createElement("div");
-    textOverlay.className = "preview-text-overlay";
-    textOverlay.hidden = true;
-    node.appendChild(textOverlay);
-    node.dataset.index = String(index);
-    node.querySelector(".cell-index").textContent = `#${index + 1}`;
-    node.classList.toggle("selected", index === state.selectedCell);
-    node.classList.toggle("reorder-source", state.reorderMode && state.reorderSourceIndex === index);
-    if (cell.bitmap) {
-      node.classList.remove("empty");
-      img.src = cell.objectUrl;
-      img.alt = cell.fileName;
-      img.setAttribute("draggable", "false");
-      img.addEventListener("contextmenu", (event) => {
-        event.preventDefault();
-      });
-      if (emptyNote) emptyNote.hidden = true;
-    } else {
-      node.classList.add("empty");
-      img.removeAttribute("src");
-      resetImagePlacement(img);
-      if (emptyNote) {
-        emptyNote.hidden = false;
-        emptyNote.textContent = t("emptySlot");
-      }
-    }
-    node.addEventListener("pointerdown", (event) => handlePreviewPointerDown(event, index, node));
-    node.addEventListener("wheel", (event) => handlePreviewWheel(event, index), { passive: false });
-    node.addEventListener("click", () => {
-      if (state.reorderMode) {
-        handleReorderModeTap(index);
-        return;
-      }
-      state.selectedCell = index;
-      syncEditor();
-      renderPreview();
-    });
-    node.addEventListener("keydown", (event) => {
-      if (event.key !== "Enter" && event.key !== " ") return;
-      event.preventDefault();
-      if (state.reorderMode) {
-        handleReorderModeTap(index);
-        return;
-      }
-      state.selectedCell = index;
-      syncEditor();
-      renderPreview();
-    });
-    textOverlay.addEventListener("pointerdown", (event) => startTextDrag(event, index, node, textOverlay));
-    els.collagePreview.appendChild(node);
-    nodes.push({ node, img, cell, textOverlay });
-  });
+  const { nodes, globalTextOverlay } = ensurePreviewStructure();
 
   const width = Math.max(1, els.collagePreview.clientWidth);
   const height = Math.max(1, els.collagePreview.clientHeight);
@@ -3450,13 +3570,44 @@ function renderPreview() {
   els.collagePreview.style.setProperty("--grid-gap", `${previewGapSettings.innerGap}px`);
   els.collagePreview.style.setProperty("--outer-gap", `${previewGapSettings.outerGap}px`);
   const rects = buildLayoutRects(width, height, layout, previewGapSettings);
-  nodes.forEach((entry, index) => {
+  nodes.forEach((node, index) => {
     const rect = rects[index];
     if (!rect) return;
-    const { node, img, cell, textOverlay } = entry;
+    const cell = state.cells[index];
+    const img = node.querySelector("img");
+    const emptyNote = node.querySelector(".empty-note");
+    const textOverlay = node.querySelector(".preview-text-overlay");
     const slotShape = getSlotShape(layout, index);
+    node.querySelector(".cell-index").textContent = `#${index + 1}`;
+    node.classList.toggle("selected", index === state.selectedCell);
+    node.classList.toggle("reorder-source", state.reorderMode && state.reorderSourceIndex === index);
     node.classList.remove("shape-rect", "shape-rounded-rect", "shape-circle", "shape-diamond", "shape-hexagon");
     node.classList.add(`shape-${slotShape}`);
+    if (cell.bitmap) {
+      node.classList.remove("empty");
+      if (img.getAttribute("src") !== cell.objectUrl) {
+        img.src = cell.objectUrl;
+      }
+      img.alt = cell.fileName;
+      img.setAttribute("draggable", "false");
+      if (!img.dataset.contextmenuBound) {
+        img.addEventListener("contextmenu", (event) => {
+          event.preventDefault();
+        });
+        img.dataset.contextmenuBound = "true";
+      }
+      if (emptyNote) emptyNote.hidden = true;
+    } else {
+      node.classList.add("empty");
+      if (img.getAttribute("src")) {
+        img.removeAttribute("src");
+      }
+      resetImagePlacement(img);
+      if (emptyNote) {
+        emptyNote.hidden = false;
+        emptyNote.textContent = t("emptySlot");
+      }
+    }
     node.style.left = `${rect.x}px`;
     node.style.top = `${rect.y}px`;
     node.style.width = `${rect.width}px`;
@@ -3465,9 +3616,11 @@ function renderPreview() {
     if (cell.bitmap) {
       applyImagePlacement(img, node, cell);
     }
-    applyTextOverlayStyle(textOverlay, cell, rect.width, rect.height);
+    applyTextOverlayStyle(textOverlay, cell, rect.width, rect.height, index);
     textOverlay.classList.toggle("interactive", !state.reorderMode && index === state.selectedCell && hasCellText(cell));
   });
+  applyGlobalTextOverlayStyle(globalTextOverlay, width, height);
+  globalTextOverlay.classList.toggle("interactive", !state.reorderMode && hasGlobalText());
 }
 
 function isCropDialogOpen() {
@@ -3649,10 +3802,61 @@ function syncEditor() {
   els.textBoldInput.disabled = controlsLocked;
   els.textItalicInput.checked = Boolean(cell.italic);
   els.textItalicInput.disabled = controlsLocked;
+  if (els.textSmallCapsInput) {
+    els.textSmallCapsInput.checked = Boolean(cell.smallCaps);
+    els.textSmallCapsInput.disabled = controlsLocked;
+  }
   els.textColorInput.value = /^#[0-9a-f]{6}$/i.test(String(cell.color || "")) ? cell.color : "#ffffff";
   els.textColorInput.disabled = controlsLocked;
   if (els.resetTextPosition) {
     els.resetTextPosition.disabled = controlsLocked || !hasCellText(cell);
+  }
+  if (els.globalTextInput) {
+    els.globalTextInput.value = state.globalText.text || "";
+    els.globalTextInput.disabled = controlsLocked;
+  }
+  if (els.globalTextSizeInput) {
+    const globalSize = clamp(Number(state.globalText.fontSize) || 72, 12, 240);
+    els.globalTextSizeInput.value = String(globalSize);
+    els.globalTextSizeInput.disabled = controlsLocked;
+    els.globalTextSizeValue.textContent = String(globalSize);
+  }
+  if (els.globalTextFontSelect) {
+    els.globalTextFontSelect.value = state.globalText.fontFamily || "Segoe UI, system-ui, sans-serif";
+    els.globalTextFontSelect.disabled = controlsLocked;
+  }
+  if (els.globalTextBoldInput) {
+    els.globalTextBoldInput.checked = Boolean(state.globalText.bold);
+    els.globalTextBoldInput.disabled = controlsLocked;
+  }
+  if (els.globalTextItalicInput) {
+    els.globalTextItalicInput.checked = Boolean(state.globalText.italic);
+    els.globalTextItalicInput.disabled = controlsLocked;
+  }
+  if (els.globalTextSmallCapsInput) {
+    els.globalTextSmallCapsInput.checked = Boolean(state.globalText.smallCaps);
+    els.globalTextSmallCapsInput.disabled = controlsLocked;
+  }
+  if (els.globalTextColorInput) {
+    els.globalTextColorInput.value = /^#[0-9a-f]{6}$/i.test(String(state.globalText.color || "")) ? state.globalText.color : "#ffffff";
+    els.globalTextColorInput.disabled = controlsLocked;
+  }
+  if (els.globalTextBackgroundColorInput) {
+    els.globalTextBackgroundColorInput.value = /^#[0-9a-f]{6}$/i.test(String(state.globalText.backgroundColor || ""))
+      ? state.globalText.backgroundColor
+      : "#000000";
+    els.globalTextBackgroundColorInput.disabled = controlsLocked;
+  }
+  if (els.globalTextBackgroundOpacityInput) {
+    const backgroundOpacity = Math.round(getGlobalTextBackgroundOpacity() * 100);
+    els.globalTextBackgroundOpacityInput.value = String(backgroundOpacity);
+    els.globalTextBackgroundOpacityInput.disabled = controlsLocked;
+    if (els.globalTextBackgroundOpacityValue) {
+      els.globalTextBackgroundOpacityValue.textContent = String(backgroundOpacity);
+    }
+  }
+  if (els.resetGlobalTextPosition) {
+    els.resetGlobalTextPosition.disabled = controlsLocked || !hasGlobalText();
   }
   updateTextWarnings();
 }
@@ -3755,6 +3959,7 @@ function drawCollage(ctx, width, height, options = {}) {
     ctx.stroke();
   }
   ctx.restore();
+  drawGlobalText(ctx, contentRect);
   ctx.restore();
   const watermarkBounds = state.autoFitToSafeArea ? getSafeAreaRect(width, height, preset) : null;
   drawWatermark(ctx, width, height, { bounds: watermarkBounds });
@@ -3907,13 +4112,37 @@ function hasCellText(cell) {
   return Boolean(cell && typeof cell.text === "string" && cell.text.trim().length > 0);
 }
 
+function hasGlobalText() {
+  return hasCellText(state.globalText);
+}
+
+function getGlobalTextBackgroundOpacity() {
+  return clamp(Number(state.globalText.backgroundOpacity) || 0, 0, 1);
+}
+
+function hasGlobalTextBackground() {
+  return hasGlobalText() && getGlobalTextBackgroundOpacity() > 0.001;
+}
+
 function getCellFontDeclaration(cell, sizePx) {
   const weight = cell.bold ? "700" : "400";
   const style = cell.italic ? "italic" : "normal";
   return `${style} ${weight} ${Math.max(10, sizePx)}px ${cell.fontFamily || "Segoe UI, system-ui, sans-serif"}`;
 }
 
-function wrapCellTextLines(ctx, text, maxWidth) {
+function getCellTextStyleOptions(cell, fontSize) {
+  return {
+    size: fontSize,
+    italic: Boolean(cell?.italic),
+    weight: cell?.bold ? "700" : "400",
+    family: cell?.fontFamily || "Segoe UI, system-ui, sans-serif",
+    spacing: 0,
+    smallCaps: Boolean(cell?.smallCaps),
+    smallCapsScale: getSmallCapsScaleForFontFamily(cell?.fontFamily),
+  };
+}
+
+function wrapCellTextLines(ctx, text, maxWidth, styleOptions = {}) {
   const sourceLines = String(text || "").replace(/\r/g, "").split("\n");
   const lines = [];
   for (const source of sourceLines) {
@@ -3930,7 +4159,7 @@ function wrapCellTextLines(ctx, text, maxWidth) {
     let current = words[0];
     for (let i = 1; i < words.length; i += 1) {
       const next = `${current} ${words[i]}`;
-      if (ctx.measureText(next).width <= maxWidth) {
+      if (measureStyledText(ctx, next, styleOptions) <= maxWidth) {
         current = next;
       } else {
         lines.push(current);
@@ -3949,10 +4178,11 @@ function getCellTextLayout(ctx, cell, width, height) {
   const lineHeight = fontSize * 1.2;
   const inset = Math.max(4, Math.min(TEXT_INSET_PX, Math.min(width, height) * 0.1));
   const maxWidth = Math.max(1, width - inset * 2);
+  const styleOptions = getCellTextStyleOptions(cell, fontSize);
   ctx.save();
   ctx.font = getCellFontDeclaration(cell, fontSize);
-  const lines = wrapCellTextLines(ctx, cell.text, maxWidth);
-  const lineWidths = lines.map((line) => ctx.measureText(line).width);
+  const lines = wrapCellTextLines(ctx, cell.text, maxWidth, styleOptions);
+  const lineWidths = lines.map((line) => measureStyledText(ctx, line, styleOptions));
   ctx.restore();
   const centerX = clamp(Number(cell.textX ?? 0.5), 0, 1) * width;
   const centerY = clamp(Number(cell.textY ?? DEFAULT_TEXT_Y), 0, 1) * height;
@@ -3969,6 +4199,7 @@ function getCellTextLayout(ctx, cell, width, height) {
     lineHeight,
     lines,
     lineWidths,
+    styleOptions,
     centerX,
     centerY: adjustedCenterY,
     startY,
@@ -3978,6 +4209,60 @@ function getCellTextLayout(ctx, cell, width, height) {
     overflowY,
     hasOverflow: overflowX || overflowY,
   };
+}
+
+function getGlobalTextBackgroundMetrics(layout) {
+  const maxLineWidth = layout.lineWidths.length ? Math.max(...layout.lineWidths) : 0;
+  const textWidth = Math.min(layout.maxWidth, maxLineWidth);
+  const textHeight = layout.lines.length * layout.lineHeight;
+  const paddingX = Math.max(8, layout.fontSize * 0.35);
+  const paddingY = Math.max(6, layout.fontSize * 0.22);
+  const radius = Math.max(6, layout.fontSize * 0.2);
+  return {
+    width: textWidth,
+    height: textHeight,
+    paddingX,
+    paddingY,
+    radius,
+  };
+}
+
+function hexToRgbaString(hex, opacity) {
+  const cleaned = String(hex || "").trim();
+  const match = /^#?([0-9a-f]{6})$/i.exec(cleaned);
+  if (!match) {
+    return `rgba(0, 0, 0, ${clamp(opacity, 0, 1)})`;
+  }
+  const value = match[1];
+  const r = parseInt(value.slice(0, 2), 16);
+  const g = parseInt(value.slice(2, 4), 16);
+  const b = parseInt(value.slice(4, 6), 16);
+  return `rgba(${r}, ${g}, ${b}, ${clamp(opacity, 0, 1)})`;
+}
+
+function renderPreviewTextOverlayContent(element, lines, styleOptions = {}) {
+  const baseSize = Math.max(1, Number(styleOptions.size) || 16);
+  const smallCaps = Boolean(styleOptions.smallCaps);
+  const smallCapsScale = Number(styleOptions.smallCapsScale) || 0.82;
+  element.textContent = "";
+  const fragment = document.createDocumentFragment();
+  lines.forEach((line, lineIndex) => {
+    const lineElement = document.createElement("span");
+    lineElement.className = "preview-text-line";
+    const glyphRuns = buildSmallCapsGlyphRuns(line, baseSize, { smallCaps, smallCapsScale });
+    glyphRuns.forEach((glyph) => {
+      const glyphElement = document.createElement("span");
+      glyphElement.className = "preview-text-glyph";
+      glyphElement.textContent = glyph.char;
+      glyphElement.style.fontSize = `${(glyph.size / baseSize) * 100}%`;
+      lineElement.appendChild(glyphElement);
+    });
+    fragment.appendChild(lineElement);
+    if (lineIndex < lines.length - 1) {
+      fragment.appendChild(document.createTextNode("\n"));
+    }
+  });
+  element.appendChild(fragment);
 }
 
 function getSafeAreaRatiosForPreset(preset = getExportPresetDefinition()) {
@@ -4034,6 +4319,21 @@ function getTextBoundsForAllCells(ctx, width, height) {
       index: i,
       x: rect.x + textLayout.centerX - textWidth / 2,
       y: rect.y + textLayout.startY,
+      width: textWidth,
+      height: textHeight,
+      overflow: textLayout.hasOverflow,
+    });
+  }
+  if (hasGlobalText()) {
+    const contentRect = getReferenceContentRect();
+    const textLayout = getCellTextLayout(ctx, state.globalText, contentRect.width, contentRect.height);
+    const maxLineWidth = textLayout.lineWidths.length ? Math.max(...textLayout.lineWidths) : 0;
+    const textWidth = Math.min(textLayout.maxWidth, maxLineWidth);
+    const textHeight = textLayout.lines.length * textLayout.lineHeight;
+    bounds.push({
+      index: -1,
+      x: contentRect.x + textLayout.centerX - textWidth / 2,
+      y: contentRect.y + textLayout.startY,
       width: textWidth,
       height: textHeight,
       overflow: textLayout.hasOverflow,
@@ -4113,7 +4413,7 @@ function updateTextWarnings() {
   els.exportWarning.hidden = messages.length === 0;
 }
 
-function applyTextOverlayStyle(element, cell, frameWidth, frameHeight) {
+function applyTextOverlayStyle(element, cell, frameWidth, frameHeight, index) {
   element.hidden = !hasCellText(cell);
   if (!hasCellText(cell)) {
     element.textContent = "";
@@ -4124,14 +4424,56 @@ function applyTextOverlayStyle(element, cell, frameWidth, frameHeight) {
     element.textContent = String(cell.text || "");
     return;
   }
-  const layout = getCellTextLayout(probeCtx, cell, frameWidth, frameHeight);
-  element.textContent = layout.lines.join("\n");
+  const referenceRect = Number.isInteger(index) ? getReferenceCellRect(index) : null;
+  const layout = referenceRect
+    ? getCellTextLayout(probeCtx, cell, referenceRect.width, referenceRect.height)
+    : getCellTextLayout(probeCtx, cell, frameWidth, frameHeight);
+  const scaleX = referenceRect ? frameWidth / Math.max(1, referenceRect.width) : 1;
+  const scaleY = referenceRect ? frameHeight / Math.max(1, referenceRect.height) : 1;
+  const fontScale = Math.min(scaleX, scaleY);
+  renderPreviewTextOverlayContent(element, layout.lines, layout.styleOptions);
   element.style.left = `${clamp(Number(cell.textX ?? 0.5), 0, 1) * 100}%`;
-  element.style.top = `${(layout.centerY / Math.max(1, frameHeight)) * 100}%`;
-  element.style.maxWidth = `${Math.max(1, frameWidth - layout.inset * 2)}px`;
-  element.style.font = getCellFontDeclaration(cell, layout.fontSize);
-  element.style.lineHeight = `${layout.lineHeight}px`;
+  element.style.top = `${((layout.centerY * scaleY) / Math.max(1, frameHeight)) * 100}%`;
+  element.style.maxWidth = `${Math.max(1, layout.maxWidth * scaleX)}px`;
+  element.style.font = getCellFontDeclaration(cell, layout.fontSize * fontScale);
+  element.style.lineHeight = `${layout.lineHeight * scaleY}px`;
   element.style.color = cell.color || "#ffffff";
+  element.style.fontVariantCaps = "normal";
+  element.style.textTransform = "none";
+}
+
+function applyGlobalTextOverlayStyle(element, frameWidth, frameHeight) {
+  element.hidden = !hasGlobalText();
+  if (!hasGlobalText()) {
+    element.textContent = "";
+    return;
+  }
+  const probeCtx = document.createElement("canvas").getContext("2d");
+  if (!probeCtx) {
+    element.textContent = String(state.globalText.text || "");
+    return;
+  }
+  const referenceRect = getReferenceContentRect();
+  const previewRect = getCollageContentRect(frameWidth, frameHeight);
+  const layout = getCellTextLayout(probeCtx, state.globalText, referenceRect.width, referenceRect.height);
+  const scaleX = previewRect.width / Math.max(1, referenceRect.width);
+  const scaleY = previewRect.height / Math.max(1, referenceRect.height);
+  const fontScale = Math.min(scaleX, scaleY);
+  const backgroundMetrics = getGlobalTextBackgroundMetrics(layout);
+  renderPreviewTextOverlayContent(element, layout.lines, layout.styleOptions);
+  element.style.left = `${((previewRect.x + layout.centerX * scaleX) / Math.max(1, frameWidth)) * 100}%`;
+  element.style.top = `${((previewRect.y + layout.centerY * scaleY) / Math.max(1, frameHeight)) * 100}%`;
+  element.style.maxWidth = `${Math.max(1, layout.maxWidth * scaleX)}px`;
+  element.style.font = getCellFontDeclaration(state.globalText, layout.fontSize * fontScale);
+  element.style.lineHeight = `${layout.lineHeight * scaleY}px`;
+  element.style.color = state.globalText.color || "#ffffff";
+  element.style.fontVariantCaps = "normal";
+  element.style.textTransform = "none";
+  element.style.padding = `${backgroundMetrics.paddingY * scaleY}px ${backgroundMetrics.paddingX * scaleX}px`;
+  element.style.borderRadius = `${backgroundMetrics.radius * fontScale}px`;
+  element.style.background = hasGlobalTextBackground()
+    ? hexToRgbaString(state.globalText.backgroundColor || "#000000", getGlobalTextBackgroundOpacity())
+    : "transparent";
 }
 
 function drawCellText(ctx, cell, x, y, width, height, slotShape = "rect") {
@@ -4153,7 +4495,45 @@ function drawCellText(ctx, cell, x, y, width, height, slotShape = "rect") {
   for (let i = 0; i < layout.lines.length; i += 1) {
     const line = layout.lines[i];
     const lineY = y + layout.startY + i * layout.lineHeight;
-    ctx.fillText(line, x + layout.centerX, lineY);
+    drawStyledText(ctx, line, x + layout.centerX, lineY + layout.lineHeight / 2, layout.styleOptions);
+  }
+  ctx.restore();
+}
+
+function drawGlobalText(ctx, contentRect) {
+  if (!hasGlobalText()) {
+    return;
+  }
+  const layout = getCellTextLayout(ctx, state.globalText, contentRect.width, contentRect.height);
+  const backgroundMetrics = getGlobalTextBackgroundMetrics(layout);
+  ctx.save();
+  ctx.beginPath();
+  ctx.rect(contentRect.x, contentRect.y, contentRect.width, contentRect.height);
+  ctx.clip();
+  if (hasGlobalTextBackground()) {
+    const rectX = contentRect.x + layout.centerX - (backgroundMetrics.width / 2) - backgroundMetrics.paddingX;
+    const rectY = contentRect.y + layout.startY - backgroundMetrics.paddingY;
+    const rectWidth = backgroundMetrics.width + backgroundMetrics.paddingX * 2;
+    const rectHeight = backgroundMetrics.height + backgroundMetrics.paddingY * 2;
+    ctx.fillStyle = hexToRgbaString(state.globalText.backgroundColor || "#000000", getGlobalTextBackgroundOpacity());
+    ctx.beginPath();
+    if (typeof ctx.roundRect === "function") {
+      ctx.roundRect(rectX, rectY, rectWidth, rectHeight, backgroundMetrics.radius);
+    } else {
+      ctx.rect(rectX, rectY, rectWidth, rectHeight);
+    }
+    ctx.fill();
+  }
+  ctx.font = getCellFontDeclaration(state.globalText, layout.fontSize);
+  ctx.fillStyle = state.globalText.color || "#ffffff";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "top";
+  ctx.shadowColor = "rgba(0,0,0,0.55)";
+  ctx.shadowBlur = Math.max(2, layout.fontSize * 0.14);
+  for (let i = 0; i < layout.lines.length; i += 1) {
+    const line = layout.lines[i];
+    const lineY = contentRect.y + layout.startY + i * layout.lineHeight;
+    drawStyledText(ctx, line, contentRect.x + layout.centerX, lineY + layout.lineHeight / 2, layout.styleOptions);
   }
   ctx.restore();
 }
@@ -4395,6 +4775,7 @@ function startTextDrag(event, index = state.selectedCell, frame = els.editorFram
   event.stopPropagation();
   const frameRect = frame.getBoundingClientRect();
   state.textDragging = {
+    target: "cell",
     pointerId: event.pointerId,
     index,
     startX: event.clientX,
@@ -4411,18 +4792,42 @@ function startTextDrag(event, index = state.selectedCell, frame = els.editorFram
   window.addEventListener("pointerup", stopTextDrag, { once: true });
 }
 
+function startGlobalTextDrag(event, frame, overlay) {
+  if (isActiveFieldLockedByReorder() || !hasGlobalText()) return;
+  event.preventDefault();
+  event.stopPropagation();
+  const frameRect = frame.getBoundingClientRect();
+  state.textDragging = {
+    target: "global",
+    pointerId: event.pointerId,
+    startX: event.clientX,
+    startY: event.clientY,
+    startTextX: clamp(state.globalText.textX ?? 0.5, 0, 1),
+    startTextY: clamp(state.globalText.textY ?? 0.5, 0, 1),
+    frameWidth: Math.max(1, frameRect.width),
+    frameHeight: Math.max(1, frameRect.height),
+    overlay,
+  };
+  overlay?.classList.add("dragging");
+  overlay?.setPointerCapture?.(event.pointerId);
+  window.addEventListener("pointermove", onTextDragMove, { passive: false });
+  window.addEventListener("pointerup", stopTextDrag, { once: true });
+}
+
 function onTextDragMove(event) {
   if (!state.textDragging || event.pointerId !== state.textDragging.pointerId) return;
-  const cell = state.cells[state.textDragging.index];
-  if (!cell) return;
   event.preventDefault();
-  if (state.selectedCell !== state.textDragging.index) {
+  const textTarget = state.textDragging.target === "global"
+    ? state.globalText
+    : state.cells[state.textDragging.index];
+  if (!textTarget) return;
+  if (state.textDragging.target !== "global" && state.selectedCell !== state.textDragging.index) {
     state.selectedCell = state.textDragging.index;
   }
   const deltaX = (event.clientX - state.textDragging.startX) / state.textDragging.frameWidth;
   const deltaY = (event.clientY - state.textDragging.startY) / state.textDragging.frameHeight;
-  cell.textX = clamp(state.textDragging.startTextX + deltaX, 0, 1);
-  cell.textY = clamp(state.textDragging.startTextY + deltaY, 0, 1);
+  textTarget.textX = clamp(state.textDragging.startTextX + deltaX, 0, 1);
+  textTarget.textY = clamp(state.textDragging.startTextY + deltaY, 0, 1);
   syncEditor();
   renderPreview();
   renderExportPreview();
@@ -4537,6 +4942,41 @@ function setExportStatus(message, loading = false) {
   els.exportStatus.textContent = message;
   els.exportStatus.hidden = !message;
   els.exportStatus.classList.toggle("loading", Boolean(loading && message));
+}
+
+async function shareAppRecommendation() {
+  const shareUrl = getAppShareUrl();
+  const payload = {
+    title: t("appTitle"),
+    text: t("recommendAppText"),
+    url: shareUrl,
+  };
+  try {
+    if (navigator.share) {
+      await navigator.share(payload);
+      return;
+    }
+    const shareText = `${payload.text}\n${payload.url}`;
+    if (navigator.clipboard?.writeText) {
+      await navigator.clipboard.writeText(shareText);
+      setRecommendStatus(t("recommendCopied"));
+      return;
+    }
+    const helper = document.createElement("textarea");
+    helper.value = shareText;
+    helper.setAttribute("readonly", "readonly");
+    helper.style.position = "fixed";
+    helper.style.opacity = "0";
+    helper.style.pointerEvents = "none";
+    document.body.append(helper);
+    helper.select();
+    document.execCommand("copy");
+    helper.remove();
+    setRecommendStatus(t("recommendCopied"));
+  } catch (error) {
+    if (error?.name === "AbortError") return;
+    setRecommendStatus(t("recommendUnavailable"), true);
+  }
 }
 
 function getWordMaskTargetSize() {
@@ -6474,7 +6914,7 @@ async function exportByShare() {
 function setUpdateStatus(message, showReload = false) {
   els.updateCheckStatus.textContent = message;
   els.updateCheckStatus.hidden = !message;
-  els.reloadAppButton.hidden = !showReload;
+  els.reloadAppButton.classList.toggle("attention", showReload);
 }
 
 function waitForWorkerActivation(worker) {
@@ -6860,11 +7300,101 @@ function wireControls() {
     renderPreview();
     renderExportPreview();
   });
+  els.textSmallCapsInput?.addEventListener("change", () => {
+    if (isActiveFieldLockedByReorder()) return;
+    const cell = state.cells[state.selectedCell];
+    if (!cell) return;
+    cell.smallCaps = els.textSmallCapsInput.checked;
+    syncEditor();
+    renderPreview();
+    renderExportPreview();
+  });
   els.textColorInput.addEventListener("input", () => {
     if (isActiveFieldLockedByReorder()) return;
     const cell = state.cells[state.selectedCell];
     if (!cell) return;
     cell.color = els.textColorInput.value;
+    syncEditor();
+    renderPreview();
+    renderExportPreview();
+  });
+  els.globalTextInput?.addEventListener("input", () => {
+    if (isActiveFieldLockedByReorder()) return;
+    state.globalText.text = els.globalTextInput.value;
+    syncEditor();
+    renderPreview();
+    renderExportPreview();
+  });
+  els.globalTextSizeInput?.addEventListener("input", () => {
+    if (isActiveFieldLockedByReorder()) return;
+    const value = clamp(Number(els.globalTextSizeInput.value) || 72, 12, 240);
+    state.globalText.fontSize = value;
+    els.globalTextSizeInput.value = String(value);
+    if (els.globalTextSizeValue) {
+      els.globalTextSizeValue.textContent = String(value);
+    }
+    syncEditor();
+    renderPreview();
+    renderExportPreview();
+  });
+  els.globalTextFontSelect?.addEventListener("change", () => {
+    if (isActiveFieldLockedByReorder()) return;
+    state.globalText.fontFamily = els.globalTextFontSelect.value;
+    syncEditor();
+    renderPreview();
+    renderExportPreview();
+  });
+  els.globalTextBoldInput?.addEventListener("change", () => {
+    if (isActiveFieldLockedByReorder()) return;
+    state.globalText.bold = els.globalTextBoldInput.checked;
+    syncEditor();
+    renderPreview();
+    renderExportPreview();
+  });
+  els.globalTextItalicInput?.addEventListener("change", () => {
+    if (isActiveFieldLockedByReorder()) return;
+    state.globalText.italic = els.globalTextItalicInput.checked;
+    syncEditor();
+    renderPreview();
+    renderExportPreview();
+  });
+  els.globalTextSmallCapsInput?.addEventListener("change", () => {
+    if (isActiveFieldLockedByReorder()) return;
+    state.globalText.smallCaps = els.globalTextSmallCapsInput.checked;
+    syncEditor();
+    renderPreview();
+    renderExportPreview();
+  });
+  els.globalTextColorInput?.addEventListener("input", () => {
+    if (isActiveFieldLockedByReorder()) return;
+    state.globalText.color = els.globalTextColorInput.value;
+    syncEditor();
+    renderPreview();
+    renderExportPreview();
+  });
+  els.globalTextBackgroundColorInput?.addEventListener("input", () => {
+    if (isActiveFieldLockedByReorder()) return;
+    state.globalText.backgroundColor = els.globalTextBackgroundColorInput.value;
+    syncEditor();
+    renderPreview();
+    renderExportPreview();
+  });
+  els.globalTextBackgroundOpacityInput?.addEventListener("input", () => {
+    if (isActiveFieldLockedByReorder()) return;
+    const value = clamp(Number(els.globalTextBackgroundOpacityInput.value) || 0, 0, 100);
+    state.globalText.backgroundOpacity = value / 100;
+    els.globalTextBackgroundOpacityInput.value = String(value);
+    if (els.globalTextBackgroundOpacityValue) {
+      els.globalTextBackgroundOpacityValue.textContent = String(value);
+    }
+    syncEditor();
+    renderPreview();
+    renderExportPreview();
+  });
+  els.resetGlobalTextPosition?.addEventListener("click", () => {
+    if (isActiveFieldLockedByReorder()) return;
+    state.globalText.textX = 0.5;
+    state.globalText.textY = 0.5;
     syncEditor();
     renderPreview();
     renderExportPreview();
@@ -6966,8 +7496,12 @@ function wireControls() {
   els.settingsButton.addEventListener("click", () => {
     setUpdateStatus("", false);
     setTipsStatus("");
+    setRecommendStatus("");
     updateTipsControls();
     els.settingsDialog.showModal();
+  });
+  els.recommendAppButton?.addEventListener("click", () => {
+    void shareAppRecommendation();
   });
   els.helpButton.addEventListener("click", () => {
     els.helpDialog.showModal();
