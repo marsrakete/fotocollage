@@ -44,9 +44,9 @@ const stencilPathCache = new Map();
 let stencilSvgLoadPromise = null;
 
 const DEFAULT_VERSION_INFO = Object.freeze({
-  appVersion: "1.4.35",
-  cacheVersion: "v222",
-  label: "Collage-Editor erweitert: Gesamttext, Kapitaelchen und Layout-Feinschliff",
+  appVersion: "1.4.36",
+  cacheVersion: "v223",
+  label: "Gesamttext-Export und Textlayout im Collage-Editor nachgebessert",
 });
 const SERVICE_WORKER_BASE_URL = "./service-worker.js";
 
@@ -4171,7 +4171,7 @@ function wrapCellTextLines(ctx, text, maxWidth, styleOptions = {}) {
   return lines.length ? lines : [""];
 }
 
-function getCellTextLayout(ctx, cell, width, height) {
+function getCellTextLayout(ctx, cell, width, height, options = {}) {
   const baseSize = clamp(cell.fontSize || 48, 10, 220);
   const scale = Math.max(0.35, Math.min(width, height) / 1000);
   const fontSize = clamp(baseSize * scale, 10, 240);
@@ -4184,7 +4184,12 @@ function getCellTextLayout(ctx, cell, width, height) {
   const lines = wrapCellTextLines(ctx, cell.text, maxWidth, styleOptions);
   const lineWidths = lines.map((line) => measureStyledText(ctx, line, styleOptions));
   ctx.restore();
-  const centerX = clamp(Number(cell.textX ?? 0.5), 0, 1) * width;
+  const textWidth = lineWidths.length ? Math.min(maxWidth, Math.max(...lineWidths)) : 0;
+  const rawCenterX = clamp(Number(cell.textX ?? 0.5), 0, 1) * width;
+  const clampHorizontal = options.clampHorizontal !== false;
+  const minCenterX = inset + textWidth / 2;
+  const maxCenterX = Math.max(minCenterX, width - inset - textWidth / 2);
+  const centerX = clampHorizontal ? clamp(rawCenterX, minCenterX, maxCenterX) : rawCenterX;
   const centerY = clamp(Number(cell.textY ?? DEFAULT_TEXT_Y), 0, 1) * height;
   const totalHeight = lines.length * lineHeight;
   const rawStartY = centerY - totalHeight / 2;
@@ -4214,16 +4219,70 @@ function getCellTextLayout(ctx, cell, width, height) {
 function getGlobalTextBackgroundMetrics(layout) {
   const maxLineWidth = layout.lineWidths.length ? Math.max(...layout.lineWidths) : 0;
   const textWidth = Math.min(layout.maxWidth, maxLineWidth);
-  const textHeight = layout.lines.length * layout.lineHeight;
   const paddingX = Math.max(8, layout.fontSize * 0.35);
   const paddingY = Math.max(6, layout.fontSize * 0.22);
   const radius = Math.max(6, layout.fontSize * 0.2);
   return {
     width: textWidth,
-    height: textHeight,
     paddingX,
     paddingY,
     radius,
+  };
+}
+
+function getTextBlockVerticalMetrics(ctx, layout) {
+  const lines = Array.isArray(layout?.lines) ? layout.lines : [];
+  if (!lines.length) {
+    return {
+      topOffset: 0,
+      bottomOffset: 0,
+      totalHeight: 0,
+      topY: 0,
+      bottomY: 0,
+    };
+  }
+  const styleOptions = {
+    ...layout.styleOptions,
+    size: layout.styleOptions?.size || layout.fontSize,
+  };
+  let topY = Number.POSITIVE_INFINITY;
+  let bottomY = Number.NEGATIVE_INFINITY;
+  for (let i = 0; i < lines.length; i += 1) {
+    const centerY = layout.startY + i * layout.lineHeight + layout.lineHeight / 2;
+    const { maxAscent, maxDescent } = getStyledTextVerticalMetrics(ctx, lines[i], styleOptions);
+    const halfHeight = (maxAscent + maxDescent) / 2;
+    topY = Math.min(topY, centerY - halfHeight);
+    bottomY = Math.max(bottomY, centerY + halfHeight);
+  }
+  const blockEndY = layout.startY + lines.length * layout.lineHeight;
+  const topOffset = Math.max(0, topY - layout.startY);
+  const bottomOffset = Math.max(0, blockEndY - bottomY);
+  const totalHeight = Math.max(0, bottomY - topY);
+  return {
+    topOffset,
+    bottomOffset,
+    totalHeight,
+    topY,
+    bottomY,
+  };
+}
+
+function getCenteredGlobalTextPosition() {
+  const contentRect = getReferenceContentRect();
+  const fallback = { textX: 0.5, textY: 0.5 };
+  if (!hasGlobalText()) {
+    return fallback;
+  }
+  const probeCtx = document.createElement("canvas").getContext("2d");
+  if (!probeCtx) {
+    return fallback;
+  }
+  const layout = getCellTextLayout(probeCtx, state.globalText, contentRect.width, contentRect.height, { clampHorizontal: false });
+  const verticalMetrics = getTextBlockVerticalMetrics(probeCtx, layout);
+  const centerYOffset = (verticalMetrics.bottomOffset - verticalMetrics.topOffset) / 2;
+  return {
+    textX: 0.5,
+    textY: clamp((contentRect.height / 2 + centerYOffset) / Math.max(1, contentRect.height), 0, 1),
   };
 }
 
@@ -4246,10 +4305,20 @@ function renderPreviewTextOverlayContent(element, lines, styleOptions = {}) {
   const smallCapsScale = Number(styleOptions.smallCapsScale) || 0.82;
   element.textContent = "";
   const fragment = document.createDocumentFragment();
-  lines.forEach((line, lineIndex) => {
+  lines.forEach((line) => {
     const lineElement = document.createElement("span");
     lineElement.className = "preview-text-line";
+    if (!smallCaps) {
+      lineElement.textContent = line || "\u00A0";
+      fragment.appendChild(lineElement);
+      return;
+    }
     const glyphRuns = buildSmallCapsGlyphRuns(line, baseSize, { smallCaps, smallCapsScale });
+    if (!glyphRuns.length) {
+      lineElement.textContent = "\u00A0";
+      fragment.appendChild(lineElement);
+      return;
+    }
     glyphRuns.forEach((glyph) => {
       const glyphElement = document.createElement("span");
       glyphElement.className = "preview-text-glyph";
@@ -4258,9 +4327,6 @@ function renderPreviewTextOverlayContent(element, lines, styleOptions = {}) {
       lineElement.appendChild(glyphElement);
     });
     fragment.appendChild(lineElement);
-    if (lineIndex < lines.length - 1) {
-      fragment.appendChild(document.createTextNode("\n"));
-    }
   });
   element.appendChild(fragment);
 }
@@ -4326,7 +4392,7 @@ function getTextBoundsForAllCells(ctx, width, height) {
   }
   if (hasGlobalText()) {
     const contentRect = getReferenceContentRect();
-    const textLayout = getCellTextLayout(ctx, state.globalText, contentRect.width, contentRect.height);
+    const textLayout = getCellTextLayout(ctx, state.globalText, contentRect.width, contentRect.height, { clampHorizontal: false });
     const maxLineWidth = textLayout.lineWidths.length ? Math.max(...textLayout.lineWidths) : 0;
     const textWidth = Math.min(textLayout.maxWidth, maxLineWidth);
     const textHeight = textLayout.lines.length * textLayout.lineHeight;
@@ -4432,7 +4498,7 @@ function applyTextOverlayStyle(element, cell, frameWidth, frameHeight, index) {
   const scaleY = referenceRect ? frameHeight / Math.max(1, referenceRect.height) : 1;
   const fontScale = Math.min(scaleX, scaleY);
   renderPreviewTextOverlayContent(element, layout.lines, layout.styleOptions);
-  element.style.left = `${clamp(Number(cell.textX ?? 0.5), 0, 1) * 100}%`;
+  element.style.left = `${((layout.centerX * scaleX) / Math.max(1, frameWidth)) * 100}%`;
   element.style.top = `${((layout.centerY * scaleY) / Math.max(1, frameHeight)) * 100}%`;
   element.style.maxWidth = `${Math.max(1, layout.maxWidth * scaleX)}px`;
   element.style.font = getCellFontDeclaration(cell, layout.fontSize * fontScale);
@@ -4455,7 +4521,7 @@ function applyGlobalTextOverlayStyle(element, frameWidth, frameHeight) {
   }
   const referenceRect = getReferenceContentRect();
   const previewRect = getCollageContentRect(frameWidth, frameHeight);
-  const layout = getCellTextLayout(probeCtx, state.globalText, referenceRect.width, referenceRect.height);
+  const layout = getCellTextLayout(probeCtx, state.globalText, referenceRect.width, referenceRect.height, { clampHorizontal: false });
   const scaleX = previewRect.width / Math.max(1, referenceRect.width);
   const scaleY = previewRect.height / Math.max(1, referenceRect.height);
   const fontScale = Math.min(scaleX, scaleY);
@@ -4504,17 +4570,26 @@ function drawGlobalText(ctx, contentRect) {
   if (!hasGlobalText()) {
     return;
   }
-  const layout = getCellTextLayout(ctx, state.globalText, contentRect.width, contentRect.height);
+  const layout = getCellTextLayout(ctx, state.globalText, contentRect.width, contentRect.height, { clampHorizontal: false });
   const backgroundMetrics = getGlobalTextBackgroundMetrics(layout);
+  const renderedBounds = getRenderedTextBlockBounds(layout.lines, layout);
+  const blockBounds = renderedBounds
+    ? {
+      left: contentRect.x + layout.centerX + renderedBounds.left,
+      right: contentRect.x + layout.centerX + renderedBounds.right,
+      top: contentRect.y + layout.startY + renderedBounds.top,
+      bottom: contentRect.y + layout.startY + renderedBounds.bottom,
+    }
+    : null;
   ctx.save();
   ctx.beginPath();
   ctx.rect(contentRect.x, contentRect.y, contentRect.width, contentRect.height);
   ctx.clip();
-  if (hasGlobalTextBackground()) {
-    const rectX = contentRect.x + layout.centerX - (backgroundMetrics.width / 2) - backgroundMetrics.paddingX;
-    const rectY = contentRect.y + layout.startY - backgroundMetrics.paddingY;
-    const rectWidth = backgroundMetrics.width + backgroundMetrics.paddingX * 2;
-    const rectHeight = backgroundMetrics.height + backgroundMetrics.paddingY * 2;
+  if (hasGlobalTextBackground() && blockBounds) {
+    const rectX = blockBounds.left - backgroundMetrics.paddingX;
+    const rectY = blockBounds.top - backgroundMetrics.paddingY;
+    const rectWidth = (blockBounds.right - blockBounds.left) + backgroundMetrics.paddingX * 2;
+    const rectHeight = (blockBounds.bottom - blockBounds.top) + backgroundMetrics.paddingY * 2;
     ctx.fillStyle = hexToRgbaString(state.globalText.backgroundColor || "#000000", getGlobalTextBackgroundOpacity());
     ctx.beginPath();
     if (typeof ctx.roundRect === "function") {
@@ -4533,7 +4608,11 @@ function drawGlobalText(ctx, contentRect) {
   for (let i = 0; i < layout.lines.length; i += 1) {
     const line = layout.lines[i];
     const lineY = contentRect.y + layout.startY + i * layout.lineHeight;
-    drawStyledText(ctx, line, contentRect.x + layout.centerX, lineY + layout.lineHeight / 2, layout.styleOptions);
+    if (!layout.styleOptions?.smallCaps && !(Number(layout.styleOptions?.spacing) > 0)) {
+      ctx.fillText(line || "", contentRect.x + layout.centerX, lineY);
+    } else {
+      drawStyledText(ctx, line, contentRect.x + layout.centerX, lineY + layout.lineHeight / 2, layout.styleOptions);
+    }
   }
   ctx.restore();
 }
@@ -5432,6 +5511,62 @@ function measureGlyphRuns(ctx, glyphRuns, options = {}) {
   return width;
 }
 
+function getNativeTextVerticalMetrics(ctx, text, options = {}) {
+  const {
+    italic = false,
+    weight = "600",
+    family = "sans-serif",
+    size = 16,
+  } = options;
+  ctx.font = buildCanvasFont({ italic, weight, size, family });
+  const metrics = ctx.measureText(text || "M");
+  return {
+    maxAscent: Number(metrics.actualBoundingBoxAscent) || size * 0.72,
+    maxDescent: Number(metrics.actualBoundingBoxDescent) || size * 0.18,
+  };
+}
+
+function getStyledTextBounds(ctx, text, centerX, centerY, options = {}) {
+  if (!options.smallCaps && !(Number(options.spacing) > 0)) {
+    const {
+      italic = false,
+      weight = "600",
+      family = "sans-serif",
+      size = 16,
+    } = options;
+    ctx.font = buildCanvasFont({ italic, weight, size, family });
+    const metrics = ctx.measureText(text || "");
+    const ascent = Number(metrics.actualBoundingBoxAscent) || size * 0.72;
+    const descent = Number(metrics.actualBoundingBoxDescent) || size * 0.18;
+    const halfWidth = metrics.width / 2;
+    const halfHeight = (ascent + descent) / 2;
+    return {
+      left: centerX - halfWidth,
+      right: centerX + halfWidth,
+      top: centerY - halfHeight,
+      bottom: centerY + halfHeight,
+    };
+  }
+  const glyphRuns = buildSmallCapsGlyphRuns(text, options.size || 16, options);
+  const totalWidth = measureGlyphRuns(ctx, glyphRuns, options);
+  const { maxAscent, maxDescent } = getGlyphRunVerticalMetrics(ctx, glyphRuns, options);
+  const halfHeight = (maxAscent + maxDescent) / 2;
+  return {
+    left: centerX - totalWidth / 2,
+    right: centerX + totalWidth / 2,
+    top: centerY - halfHeight,
+    bottom: centerY + halfHeight,
+  };
+}
+
+function getStyledTextVerticalMetrics(ctx, text, options = {}) {
+  if (!options.smallCaps && !(Number(options.spacing) > 0)) {
+    return getNativeTextVerticalMetrics(ctx, text, options);
+  }
+  const glyphRuns = buildSmallCapsGlyphRuns(text, options.size || 16, options);
+  return getGlyphRunVerticalMetrics(ctx, glyphRuns, options);
+}
+
 function getGlyphRunVerticalMetrics(ctx, glyphRuns, options = {}) {
   const {
     italic = false,
@@ -5484,13 +5619,103 @@ function drawGlyphRuns(ctx, glyphRuns, centerX, centerY, options = {}) {
 }
 
 function measureStyledText(ctx, text, options = {}) {
+  if (!options.smallCaps && !(Number(options.spacing) > 0)) {
+    const {
+      italic = false,
+      weight = "600",
+      family = "sans-serif",
+      size = 16,
+    } = options;
+    ctx.font = buildCanvasFont({ italic, weight, size, family });
+    return ctx.measureText(text || "").width;
+  }
   const glyphRuns = buildSmallCapsGlyphRuns(text, options.size || 16, options);
   return measureGlyphRuns(ctx, glyphRuns, options);
 }
 
 function drawStyledText(ctx, text, centerX, centerY, options = {}) {
+  if (!options.smallCaps && !(Number(options.spacing) > 0)) {
+    const {
+      italic = false,
+      weight = "600",
+      family = "sans-serif",
+      size = 16,
+    } = options;
+    const previousAlign = ctx.textAlign;
+    const previousBaseline = ctx.textBaseline;
+    const { maxAscent, maxDescent } = getNativeTextVerticalMetrics(ctx, text, { italic, weight, family, size });
+    const baselineY = centerY + (maxAscent - maxDescent) / 2;
+    ctx.font = buildCanvasFont({ italic, weight, size, family });
+    ctx.textAlign = "center";
+    ctx.textBaseline = "alphabetic";
+    ctx.fillText(text || "", centerX, baselineY);
+    ctx.textAlign = previousAlign;
+    ctx.textBaseline = previousBaseline;
+    return;
+  }
   const glyphRuns = buildSmallCapsGlyphRuns(text, options.size || 16, options);
   drawGlyphRuns(ctx, glyphRuns, centerX, centerY, options);
+}
+
+function getRenderedTextBlockBounds(lines, layout) {
+  if (!Array.isArray(lines) || !lines.length || typeof document === "undefined") {
+    return null;
+  }
+  const tempCanvas = document.createElement("canvas");
+  const tempCtx = tempCanvas.getContext("2d", { willReadFrequently: true });
+  if (!tempCtx) {
+    return null;
+  }
+  const maxLineWidth = layout.lineWidths?.length ? Math.max(...layout.lineWidths) : layout.maxWidth || 0;
+  const paddingX = Math.max(24, Math.ceil(layout.fontSize * 1.5));
+  const paddingY = Math.max(24, Math.ceil(layout.fontSize * 1.5));
+  const innerWidth = Math.max(1, Math.ceil(maxLineWidth));
+  const innerHeight = Math.max(1, Math.ceil(lines.length * layout.lineHeight));
+  tempCanvas.width = innerWidth + paddingX * 2;
+  tempCanvas.height = innerHeight + paddingY * 2;
+  tempCtx.clearRect(0, 0, tempCanvas.width, tempCanvas.height);
+  tempCtx.fillStyle = "#000";
+  tempCtx.textAlign = "center";
+  tempCtx.textBaseline = "top";
+  for (let i = 0; i < lines.length; i += 1) {
+    const lineY = paddingY + i * layout.lineHeight;
+    if (!layout.styleOptions?.smallCaps && !(Number(layout.styleOptions?.spacing) > 0)) {
+      tempCtx.font = buildCanvasFont(layout.styleOptions);
+      tempCtx.fillText(lines[i] || "", tempCanvas.width / 2, lineY);
+    } else {
+      drawStyledText(
+        tempCtx,
+        lines[i],
+        tempCanvas.width / 2,
+        lineY + layout.lineHeight / 2,
+        layout.styleOptions,
+      );
+    }
+  }
+  const { data, width, height } = tempCtx.getImageData(0, 0, tempCanvas.width, tempCanvas.height);
+  let minX = width;
+  let minY = height;
+  let maxX = -1;
+  let maxY = -1;
+  for (let y = 0; y < height; y += 1) {
+    for (let x = 0; x < width; x += 1) {
+      const alpha = data[(y * width + x) * 4 + 3];
+      if (alpha <= 0) continue;
+      if (x < minX) minX = x;
+      if (y < minY) minY = y;
+      if (x > maxX) maxX = x;
+      if (y > maxY) maxY = y;
+    }
+  }
+  if (maxX < minX || maxY < minY) {
+    return null;
+  }
+  return {
+    left: minX - (tempCanvas.width / 2),
+    right: maxX + 1 - (tempCanvas.width / 2),
+    top: minY - paddingY,
+    bottom: maxY + 1 - paddingY,
+  };
 }
 
 function parseSvgViewBox(viewBoxValue) {
@@ -7393,8 +7618,9 @@ function wireControls() {
   });
   els.resetGlobalTextPosition?.addEventListener("click", () => {
     if (isActiveFieldLockedByReorder()) return;
-    state.globalText.textX = 0.5;
-    state.globalText.textY = 0.5;
+    const centeredPosition = getCenteredGlobalTextPosition();
+    state.globalText.textX = centeredPosition.textX;
+    state.globalText.textY = centeredPosition.textY;
     syncEditor();
     renderPreview();
     renderExportPreview();

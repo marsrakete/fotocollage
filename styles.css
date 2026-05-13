@@ -818,7 +818,7 @@ body.touch-upload-mode #wordMaskSaveButton {
   transform: translate(-50%, -50%);
   max-width: calc(100% - 20px);
   text-align: center;
-  white-space: pre;
+  white-space: normal;
   line-height: 1.2;
   pointer-events: none;
   text-shadow: 0 2px 8px rgba(0, 0, 0, 0.55);
@@ -828,6 +828,7 @@ body.touch-upload-mode #wordMaskSaveButton {
 .preview-text-overlay.dragging { cursor: grabbing; }
 .preview-text-line {
   display: block;
+  white-space: pre;
 }
 .preview-text-glyph {
   display: inline-block;
