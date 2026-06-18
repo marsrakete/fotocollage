@@ -13,7 +13,7 @@ A progressive web app to build collages directly in the browser:
 - Fine-tune crop and zoom per slot
 - Reorder photos in fine-tune mode
 - Add and move text per slot
-- Add watermark on export
+- Add classic and protective watermarks on export
 - Export as PNG, JPEG, PDF, or GIF
 - Shape Collage mode with word/SVG mask, subtitle, and export
 
@@ -84,6 +84,7 @@ Optional:
 - Multilingual UI (`de`, `en`, `fr` with fallback behavior)
 - Offline support via service worker
 - Version/update check at startup and manually from settings
+- Dedicated watermark dialog with classic and protective variants, each enabled independently
 
 ## Step-by-step (1 to 4)
 
@@ -112,7 +113,7 @@ Optional:
 - Select export format: PNG, JPEG, PDF, GIF
 - Select export preset or free size
 - Share on mobile where supported, save on desktop
-- Watermark and EXIF options are applied if enabled
+- Enabled watermarks and EXIF options are applied during export
 
 ## Shape Collage (A to C)
 
@@ -129,6 +130,14 @@ Optional:
 - JPEG: compressed image, smaller file size
 - PDF: print/share friendly wrapper around raster output
 - GIF: animated sequence mode with frame delay
+
+## Watermarks
+
+- The dedicated `Watermark` button opens the watermark dialog.
+- The `Classic` tab controls the subtle watermark with text, position, font, size, and color.
+- The `Protective` tab controls a large horizontal or angled watermark with text, font, color, size, opacity, and fixed angles.
+- The protective watermark can optionally repeat as a pattern across the collage.
+- `Always on export` is stored per tab, so none, one, or both watermark variants can be active at the same time.
 
 ## Layout and slot formats
 

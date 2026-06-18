@@ -44,9 +44,9 @@ const stencilPathCache = new Map();
 let stencilSvgLoadPromise = null;
 
 const DEFAULT_VERSION_INFO = Object.freeze({
-  appVersion: "1.4.36",
-  cacheVersion: "v223",
-  label: "Gesamttext-Export und Textlayout im Collage-Editor nachgebessert",
+  appVersion: "1.4.37",
+  cacheVersion: "v228",
+  label: "Wasserzeichen-Dialog mit klassischem und Schutz-Wasserzeichen",
 });
 const SERVICE_WORKER_BASE_URL = "./service-worker.js";
 

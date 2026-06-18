@@ -13,7 +13,7 @@ Eine Progressive Web App zum Erstellen von Foto-Collagen direkt im Browser:
 - Bildausschnitte pro Feld anpassen
 - Reihenfolge der Bilder im Feinschliff per Sortiermodus aendern
 - Text pro Bildfeld platzieren und verschieben
-- Wasserzeichen im Export einblenden
+- Klassisches und Schutz-Wasserzeichen im Export einblenden
 - Collage als PNG, JPEG, PDF oder GIF exportieren
 - Form-Collage mit Wort- oder SVG-Stanze, Untertitel und eigenem Export
 
@@ -86,7 +86,7 @@ Optional fuer Nerds:
 - Assistent mit Vorlagenvorschlaegen auf Basis der geladenen Bilder (Ausrichtung + Seitenverhaeltnis)
 - Neustart-Button zum schnellen Leeren von Vorlage/Fotos/Texten bei beibehaltenen Layout-Basiswerten
 - Feld-Textoverlay (Schriftart, Groesse, Fett/Kursiv, Farbe, Position)
-- Wasserzeichen (Text, Position, Schriftart, Groesse, Farbe, persistent speicherbar)
+- Wasserzeichen-Dialog mit zwei Varianten: klassisch und Schutz-Wasserzeichen (einzeln oder gemeinsam aktivierbar)
 - EXIF-Metadaten (optional, fuer JPEG-Export)
 - Export in PNG/JPEG/PDF/GIF inkl. Teilen-Funktion
 - Export-Presets (freie Formate + Social-Media-Formate)
@@ -126,6 +126,7 @@ Optional fuer Nerds:
 
 - Waehle Export-Preset, Format (PNG/JPEG/PDF/GIF) und Breite.
 - GIF nutzt einen Breitenbereich von `480 bis 800 px` und bietet die Frame-Dauer in Sekunden.
+- Wasserzeichen werden beim Export angewendet, wenn sie im Wasserzeichen-Dialog aktiviert sind.
 - Wenn in den Einstellungen `EXIF Felder schreiben` aktiv ist, werden beim JPEG-Export EXIF-Daten geschrieben.
 - Teile die Collage direkt oder speichere sie als Datei.
 
@@ -152,6 +153,14 @@ Hinweise zu GIF:
 - Die Option `Sekunden zwischen Frames` ist nur bei GIF aktiv.
 - Bei GIF wird jeweils ein Bild pro Frame zentriert dargestellt.
 
+Hinweise zu Wasserzeichen:
+
+- Der eigene Button `Wasserzeichen` oeffnet den Wasserzeichen-Dialog.
+- Im Tab `Klassisch` steht das dezente Wasserzeichen mit Text, Position, Schriftart, Groesse und Farbe.
+- Im Tab `Schutz` steht ein grosses queres oder schraeges Schutz-Wasserzeichen mit Text, Schriftart, Farbe, Groesse, Deckkraft und festen Winkeln.
+- Das Schutz-Wasserzeichen kann optional als wiederholtes Muster ueber die Collage gelegt werden.
+- `Immer im Export anzeigen` gilt pro Tab separat. Dadurch kann kein, ein oder beide Wasserzeichen gleichzeitig aktiv sein.
+
 Hinweise zu EXIF (JPEG):
 
 - EXIF wird nur fuer `JPEG` geschrieben (wenn aktiviert).
@@ -160,7 +169,7 @@ Hinweise zu EXIF (JPEG):
   - `Copyright`
   - `ImageDescription` (Bildbeschreibung)
   - `Software`
-- `UserComment` wird aus dem Wasserzeichen-Text uebernommen.
+- `UserComment` wird aus den aktivierten Wasserzeichen-Texten uebernommen.
 - `DateTime`, `DateTimeOriginal` und `DateTimeDigitized` werden beim Export automatisch auf den aktuellen Zeitstempel gesetzt.
 
 Hinweis zu `og:image` / `twitter:image`:
