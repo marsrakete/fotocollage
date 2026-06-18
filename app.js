@@ -44,8 +44,8 @@ const stencilPathCache = new Map();
 let stencilSvgLoadPromise = null;
 
 const DEFAULT_VERSION_INFO = Object.freeze({
-  appVersion: "1.4.39",
-  cacheVersion: "v230",
+  appVersion: "1.4.40",
+  cacheVersion: "v231",
   label: "Aktives-Feld-Bereich im Handy-Querformat verbessert",
 });
 const SERVICE_WORKER_BASE_URL = "./service-worker.js";

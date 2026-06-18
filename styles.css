@@ -1500,7 +1500,7 @@ input[type="file"] { color: var(--muted); }
     min-height: calc(100svh - 112px);
   }
   .ui-photo .step-panel[data-step="3"] .editor-layout {
-    min-height: calc(100svh - 190px);
+    min-height: calc(100svh - 118px);
     align-items: start;
   }
   .ui-photo .step-panel[data-step="3"] .collage-preview-wrap {
@@ -1520,6 +1520,7 @@ input[type="file"] { color: var(--muted); }
   .ui-photo .step-panel[data-step="3"] .editor-sidebar {
     min-width: 0;
     align-self: stretch;
+    min-height: max(190px, calc(100svh - 118px));
   }
   .ui-photo .step-panel[data-step="3"] .editor-panel {
     min-width: 0;
@@ -1546,7 +1547,7 @@ input[type="file"] { color: var(--muted); }
     min-height: 210px;
   }
   .ui-photo .step-panel[data-step="3"] .editor-sidebar {
-    height: max(210px, calc(100svh - 190px));
+    height: max(210px, calc(100svh - 96px));
     max-height: none;
     overflow: auto;
     overscroll-behavior: contain;
@@ -1577,7 +1578,7 @@ input[type="file"] { color: var(--muted); }
     min-height: 280px;
   }
   .ui-photo .step-panel[data-step="3"] .editor-sidebar {
-    height: max(280px, calc(100svh - 198px));
+    height: max(280px, calc(100svh - 96px));
     max-height: none;
     overflow: auto;
     overscroll-behavior: contain;
@@ -1624,7 +1625,7 @@ input[type="file"] { color: var(--muted); }
     min-height: 360px;
   }
   .ui-photo .step-panel[data-step="3"] .editor-panel {
-    max-height: calc(100svh - 188px);
+    max-height: calc(100svh - 96px);
     padding: 16px;
   }
 }
