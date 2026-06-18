@@ -51,6 +51,10 @@
                 <span aria-hidden="true">⚙</span>
                 <span id="settingsButtonLabel">Einstellungen</span>
               </button>
+              <button id="watermarkButton" class="secondary settings-button" type="button" aria-label="Wasserzeichen">
+                <span aria-hidden="true">W</span>
+                <span id="watermarkButtonLabel">Wasserzeichen</span>
+              </button>
               <button id="helpButton" class="secondary settings-button" type="button" aria-label="Hilfe öffnen">
                 <span aria-hidden="true">?</span>
                 <span id="helpButtonLabel">Hilfe</span>
@@ -757,43 +761,8 @@
         </section>
         <section class="updates-block">
           <h3 id="watermarkTitle">Wasserzeichen</h3>
-          <label class="field">
-            <span id="watermarkTextLabel">Text</span>
-            <input id="watermarkTextInput" type="text" maxlength="140" />
-          </label>
-          <label class="field">
-            <span id="watermarkPositionLabel">Position</span>
-            <select id="watermarkPositionSelect">
-              <option value="top-left">Links oben</option>
-              <option value="top-right">Rechts oben</option>
-              <option value="bottom-left">Links unten</option>
-              <option value="bottom-right">Rechts unten</option>
-              <option value="center">Mittig</option>
-            </select>
-          </label>
-          <label class="field">
-            <span id="watermarkFontLabel">Schriftart</span>
-            <select id="watermarkFontSelect">
-              <option value="Segoe UI, system-ui, sans-serif">Segoe UI</option>
-              <option value="Arial, Helvetica, sans-serif">Arial</option>
-              <option value="'Times New Roman', Times, serif">Times New Roman</option>
-              <option value="'Courier New', Courier, monospace">Courier New</option>
-              <option value="Georgia, serif">Georgia</option>
-            </select>
-          </label>
-          <label class="field">
-            <span id="watermarkColorLabel">Textfarbe</span>
-            <input id="watermarkColorInput" type="color" value="#ffffff" />
-          </label>
-          <label class="field">
-            <span id="watermarkSizeLabel">Schriftgröße</span>
-            <input id="watermarkSizeInput" type="range" min="12" max="160" step="1" value="32" />
-            <strong><span id="watermarkSizeValue">32</span> px</strong>
-          </label>
-          <label class="watermark-toggle">
-            <input id="watermarkEnabledInput" type="checkbox" />
-            <span id="watermarkEnabledLabel">Immer im Export anzeigen</span>
-          </label>
+          <p id="watermarkSettingsHint" class="settings-status">Klassisches oder Schutz-Wasserzeichen fuer den Export konfigurieren.</p>
+          <button id="watermarkSettingsButton" class="secondary" type="button">Wasserzeichen konfigurieren</button>
         </section>
         <section class="updates-block">
           <h3 id="exifTitle">EXIF-Metadaten</h3>
@@ -822,6 +791,118 @@
         </section>
         <div class="settings-footer">
           <button class="secondary" value="cancel" type="submit">Schließen</button>
+        </div>
+      </form>
+    </dialog>
+
+    <dialog id="watermarkDialog" class="settings-dialog">
+      <form id="watermarkForm" method="dialog" class="settings-panel watermark-panel">
+        <div class="dialog-head">
+          <h2 id="watermarkDialogTitle">Wasserzeichen</h2>
+          <button class="secondary icon-only" value="cancel" type="submit" aria-label="Schliessen">✕</button>
+        </div>
+        <p id="watermarkDialogIntro" class="dialog-copy">Bearbeite die Wasserzeichen-Varianten fuer den Export.</p>
+        <div class="watermark-mode-tabs" role="tablist" aria-label="Wasserzeichen-Variante">
+          <label>
+            <input id="watermarkModeClassicInput" type="radio" name="watermarkMode" value="classic" />
+            <span id="watermarkModeClassicLabel">Klassisch</span>
+          </label>
+          <label>
+            <input id="watermarkModeProtectiveInput" type="radio" name="watermarkMode" value="protective" />
+            <span id="watermarkModeProtectiveLabel">Schutz</span>
+          </label>
+        </div>
+        <section id="watermarkClassicPanel" class="settings-stack">
+          <label class="field">
+            <span id="watermarkTextLabel">Text</span>
+            <input id="watermarkTextInput" type="text" maxlength="140" />
+          </label>
+          <label class="field">
+            <span id="watermarkPositionLabel">Position</span>
+            <select id="watermarkPositionSelect">
+              <option value="top-left">Links oben</option>
+              <option value="top-right">Rechts oben</option>
+              <option value="bottom-left">Links unten</option>
+              <option value="bottom-right">Rechts unten</option>
+              <option value="center">Mittig</option>
+            </select>
+          </label>
+          <label class="field">
+            <span id="watermarkFontLabel">Schriftart</span>
+            <select id="watermarkFontSelect">
+              <option value="Segoe UI, system-ui, sans-serif">Segoe UI</option>
+              <option value="Arial, Helvetica, sans-serif">Arial</option>
+              <option value="'Times New Roman', Times, serif">Times New Roman</option>
+              <option value="'Courier New', Courier, monospace">Courier New</option>
+              <option value="Georgia, serif">Georgia</option>
+              <option value="'Comic Sans MS', 'Comic Sans', cursive">Comic Sans</option>
+            </select>
+          </label>
+          <label class="field">
+            <span id="watermarkColorLabel">Textfarbe</span>
+            <input id="watermarkColorInput" type="color" value="#ffffff" />
+          </label>
+          <label class="field">
+            <span id="watermarkSizeLabel">Schriftgroesse</span>
+            <input id="watermarkSizeInput" type="range" min="12" max="160" step="1" value="32" />
+            <strong><span id="watermarkSizeValue">32</span> px</strong>
+          </label>
+          <label class="watermark-toggle">
+            <input id="watermarkEnabledInput" type="checkbox" />
+            <span id="watermarkEnabledLabel">Immer im Export anzeigen</span>
+          </label>
+        </section>
+        <section id="watermarkProtectivePanel" class="settings-stack" hidden>
+          <label class="field">
+            <span id="protectiveWatermarkTextLabel">Text</span>
+            <input id="protectiveWatermarkTextInput" type="text" maxlength="140" value="VORSCHAU" />
+          </label>
+          <label class="field">
+            <span id="protectiveWatermarkFontLabel">Schriftart</span>
+            <select id="protectiveWatermarkFontSelect">
+              <option value="Arial, Helvetica, sans-serif">Arial</option>
+              <option value="Georgia, serif">Georgia</option>
+              <option value="Verdana, Geneva, sans-serif">Verdana</option>
+              <option value="'Courier New', Courier, monospace">Courier New</option>
+              <option value="Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif">Impact</option>
+              <option value="'Comic Sans MS', 'Comic Sans', cursive">Comic Sans</option>
+            </select>
+          </label>
+          <label class="field">
+            <span id="protectiveWatermarkColorLabel">Textfarbe</span>
+            <input id="protectiveWatermarkColorInput" type="color" value="#ffffff" />
+          </label>
+          <label class="field">
+            <span id="protectiveWatermarkSizeLabel">Schriftgroesse</span>
+            <input id="protectiveWatermarkSizeInput" type="range" min="32" max="360" step="1" value="160" />
+            <strong><span id="protectiveWatermarkSizeValue">160</span> px</strong>
+          </label>
+          <label class="field">
+            <span id="protectiveWatermarkOpacityLabel">Deckkraft</span>
+            <input id="protectiveWatermarkOpacityInput" type="range" min="5" max="85" step="1" value="22" />
+            <strong><span id="protectiveWatermarkOpacityValue">22</span> %</strong>
+          </label>
+          <label class="field">
+            <span id="protectiveWatermarkAngleLabel">Ausrichtung</span>
+            <select id="protectiveWatermarkAngleSelect">
+              <option value="0">0°</option>
+              <option value="-30">-30°</option>
+              <option value="-45">-45°</option>
+              <option value="30">30°</option>
+              <option value="45">45°</option>
+            </select>
+          </label>
+          <label class="watermark-toggle">
+            <input id="protectiveWatermarkPatternInput" type="checkbox" />
+            <span id="protectiveWatermarkPatternLabel">Als Muster wiederholen</span>
+          </label>
+          <label class="watermark-toggle">
+            <input id="protectiveWatermarkEnabledInput" type="checkbox" />
+            <span id="protectiveWatermarkEnabledLabel">Immer im Export anzeigen</span>
+          </label>
+        </section>
+        <div class="settings-footer">
+          <button class="secondary" value="cancel" type="submit">Schliessen</button>
         </div>
       </form>
     </dialog>

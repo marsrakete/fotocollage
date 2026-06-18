@@ -107,12 +107,23 @@ const state = {
   exportWidthLocked: false,
   hasOpenedExportStep: false,
   watermark: {
+    mode: "classic",
     text: "",
     position: "bottom-right",
     fontFamily: "Segoe UI, system-ui, sans-serif",
     color: "#ffffff",
     size: 32,
     enabled: false,
+    protective: {
+      enabled: false,
+      text: "VORSCHAU",
+      fontFamily: "Arial, Helvetica, sans-serif",
+      color: "#ffffff",
+      size: 160,
+      opacity: 22,
+      angle: -30,
+      pattern: false,
+    },
   },
   globalText: {
     text: "",
@@ -199,6 +210,8 @@ const els = {
   homeButtonLabel: document.getElementById("homeButtonLabel"),
   settingsButton: document.getElementById("settingsButton"),
   settingsButtonLabel: document.getElementById("settingsButtonLabel"),
+  watermarkButton: document.getElementById("watermarkButton"),
+  watermarkButtonLabel: document.getElementById("watermarkButtonLabel"),
   helpButton: document.getElementById("helpButton"),
   helpButtonLabel: document.getElementById("helpButtonLabel"),
   modeSelector: document.getElementById("modeSelector"),
@@ -373,6 +386,18 @@ const els = {
   exportStatus: document.getElementById("exportStatus"),
   exportCanvas: document.getElementById("exportCanvas"),
   watermarkTitle: document.getElementById("watermarkTitle"),
+  watermarkSettingsHint: document.getElementById("watermarkSettingsHint"),
+  watermarkSettingsButton: document.getElementById("watermarkSettingsButton"),
+  watermarkDialog: document.getElementById("watermarkDialog"),
+  watermarkForm: document.getElementById("watermarkForm"),
+  watermarkDialogTitle: document.getElementById("watermarkDialogTitle"),
+  watermarkDialogIntro: document.getElementById("watermarkDialogIntro"),
+  watermarkModeClassicInput: document.getElementById("watermarkModeClassicInput"),
+  watermarkModeClassicLabel: document.getElementById("watermarkModeClassicLabel"),
+  watermarkModeProtectiveInput: document.getElementById("watermarkModeProtectiveInput"),
+  watermarkModeProtectiveLabel: document.getElementById("watermarkModeProtectiveLabel"),
+  watermarkClassicPanel: document.getElementById("watermarkClassicPanel"),
+  watermarkProtectivePanel: document.getElementById("watermarkProtectivePanel"),
   watermarkTextLabel: document.getElementById("watermarkTextLabel"),
   watermarkTextInput: document.getElementById("watermarkTextInput"),
   watermarkPositionLabel: document.getElementById("watermarkPositionLabel"),
@@ -386,6 +411,24 @@ const els = {
   watermarkSizeValue: document.getElementById("watermarkSizeValue"),
   watermarkEnabledLabel: document.getElementById("watermarkEnabledLabel"),
   watermarkEnabledInput: document.getElementById("watermarkEnabledInput"),
+  protectiveWatermarkTextLabel: document.getElementById("protectiveWatermarkTextLabel"),
+  protectiveWatermarkEnabledInput: document.getElementById("protectiveWatermarkEnabledInput"),
+  protectiveWatermarkEnabledLabel: document.getElementById("protectiveWatermarkEnabledLabel"),
+  protectiveWatermarkTextInput: document.getElementById("protectiveWatermarkTextInput"),
+  protectiveWatermarkFontLabel: document.getElementById("protectiveWatermarkFontLabel"),
+  protectiveWatermarkFontSelect: document.getElementById("protectiveWatermarkFontSelect"),
+  protectiveWatermarkColorLabel: document.getElementById("protectiveWatermarkColorLabel"),
+  protectiveWatermarkColorInput: document.getElementById("protectiveWatermarkColorInput"),
+  protectiveWatermarkSizeLabel: document.getElementById("protectiveWatermarkSizeLabel"),
+  protectiveWatermarkSizeInput: document.getElementById("protectiveWatermarkSizeInput"),
+  protectiveWatermarkSizeValue: document.getElementById("protectiveWatermarkSizeValue"),
+  protectiveWatermarkOpacityLabel: document.getElementById("protectiveWatermarkOpacityLabel"),
+  protectiveWatermarkOpacityInput: document.getElementById("protectiveWatermarkOpacityInput"),
+  protectiveWatermarkOpacityValue: document.getElementById("protectiveWatermarkOpacityValue"),
+  protectiveWatermarkAngleLabel: document.getElementById("protectiveWatermarkAngleLabel"),
+  protectiveWatermarkAngleSelect: document.getElementById("protectiveWatermarkAngleSelect"),
+  protectiveWatermarkPatternInput: document.getElementById("protectiveWatermarkPatternInput"),
+  protectiveWatermarkPatternLabel: document.getElementById("protectiveWatermarkPatternLabel"),
   exifTitle: document.getElementById("exifTitle"),
   exifEnabledInput: document.getElementById("exifEnabledInput"),
   exifEnabledLabel: document.getElementById("exifEnabledLabel"),
@@ -991,25 +1034,80 @@ function saveLayoutSettings(layout) {
 
 function getDefaultWatermarkSettings() {
   return {
+    mode: "classic",
     text: "",
     position: "bottom-right",
     fontFamily: "Segoe UI, system-ui, sans-serif",
     color: "#ffffff",
     size: 32,
     enabled: false,
+    protective: {
+      enabled: false,
+      text: "VORSCHAU",
+      fontFamily: "Arial, Helvetica, sans-serif",
+      color: "#ffffff",
+      size: 160,
+      opacity: 22,
+      angle: -30,
+      pattern: false,
+    },
+  };
+}
+
+function normalizeWatermarkMode(value) {
+  return value === "protective" ? "protective" : "classic";
+}
+
+function normalizeWatermarkColor(value, fallback = "#ffffff") {
+  return /^#[0-9a-f]{6}$/i.test(String(value || "")) ? String(value) : fallback;
+}
+
+function normalizeProtectiveWatermarkSettings(raw, defaults) {
+  const allowedAngles = new Set([0, -30, -45, 30, 45]);
+  const angle = Number(raw?.angle);
+  return {
+    enabled: Boolean(raw?.enabled),
+    text: typeof raw?.text === "string" ? raw.text : defaults.text,
+    fontFamily: typeof raw?.fontFamily === "string" && raw.fontFamily ? raw.fontFamily : defaults.fontFamily,
+    color: normalizeWatermarkColor(raw?.color, defaults.color),
+    size: clamp(Number(raw?.size) || defaults.size, 32, 360),
+    opacity: clamp(Number(raw?.opacity) || defaults.opacity, 5, 85),
+    angle: allowedAngles.has(angle) ? angle : defaults.angle,
+    pattern: Boolean(raw?.pattern),
+  };
+}
+
+function normalizeWatermarkSettings(raw) {
+  const defaults = getDefaultWatermarkSettings();
+  const protective = normalizeProtectiveWatermarkSettings(raw?.protective, defaults.protective);
+  const hasProtectiveEnabled = typeof raw?.protective?.enabled === "boolean";
+  if (!hasProtectiveEnabled && raw?.mode === "protective") {
+    protective.enabled = Boolean(raw?.enabled);
+  }
+  return {
+    ...defaults,
+    mode: normalizeWatermarkMode(raw?.mode),
+    text: typeof raw?.text === "string" ? raw.text : defaults.text,
+    position: ["top-left", "top-right", "bottom-left", "bottom-right", "center"].includes(raw?.position)
+      ? raw.position
+      : defaults.position,
+    fontFamily: typeof raw?.fontFamily === "string" && raw.fontFamily ? raw.fontFamily : defaults.fontFamily,
+    color: normalizeWatermarkColor(raw?.color, defaults.color),
+    size: clamp(Number(raw?.size) || defaults.size, 12, 160),
+    enabled: raw?.mode === "protective" && !hasProtectiveEnabled ? false : Boolean(raw?.enabled),
+    protective,
   };
 }
 
 function loadWatermarkSettings() {
-  const defaults = getDefaultWatermarkSettings();
-  let settings = defaults;
+  let settings = getDefaultWatermarkSettings();
   const persisted = safeStorageGet(STORAGE_KEYS.watermark);
   if (persisted) {
     try {
       const parsed = JSON.parse(persisted);
-      settings = { ...defaults, ...parsed };
+      settings = normalizeWatermarkSettings(parsed);
     } catch {
-      settings = defaults;
+      settings = getDefaultWatermarkSettings();
     }
   }
   state.watermark = settings;
@@ -1021,7 +1119,11 @@ function saveWatermarkSettings() {
 }
 
 function applyWatermarkToUi() {
-  const { text, position, fontFamily, color, size, enabled } = state.watermark;
+  const { mode, text, position, fontFamily, color, size, enabled, protective } = state.watermark;
+  if (els.watermarkModeClassicInput) els.watermarkModeClassicInput.checked = mode !== "protective";
+  if (els.watermarkModeProtectiveInput) els.watermarkModeProtectiveInput.checked = mode === "protective";
+  if (els.watermarkClassicPanel) els.watermarkClassicPanel.hidden = mode === "protective";
+  if (els.watermarkProtectivePanel) els.watermarkProtectivePanel.hidden = mode !== "protective";
   if (els.watermarkTextInput) els.watermarkTextInput.value = text;
   if (els.watermarkPositionSelect) els.watermarkPositionSelect.value = position;
   if (els.watermarkFontSelect) els.watermarkFontSelect.value = fontFamily;
@@ -1035,6 +1137,16 @@ function applyWatermarkToUi() {
   if (els.watermarkEnabledInput) {
     els.watermarkEnabledInput.checked = Boolean(enabled);
   }
+  if (els.protectiveWatermarkEnabledInput) els.protectiveWatermarkEnabledInput.checked = Boolean(protective?.enabled);
+  if (els.protectiveWatermarkTextInput) els.protectiveWatermarkTextInput.value = protective?.text || "VORSCHAU";
+  if (els.protectiveWatermarkFontSelect) els.protectiveWatermarkFontSelect.value = protective?.fontFamily || "Arial, Helvetica, sans-serif";
+  if (els.protectiveWatermarkColorInput) els.protectiveWatermarkColorInput.value = protective?.color || "#ffffff";
+  if (els.protectiveWatermarkSizeInput) els.protectiveWatermarkSizeInput.value = String(protective?.size || 160);
+  if (els.protectiveWatermarkSizeValue) els.protectiveWatermarkSizeValue.textContent = String(protective?.size || 160);
+  if (els.protectiveWatermarkOpacityInput) els.protectiveWatermarkOpacityInput.value = String(protective?.opacity || 22);
+  if (els.protectiveWatermarkOpacityValue) els.protectiveWatermarkOpacityValue.textContent = String(protective?.opacity || 22);
+  if (els.protectiveWatermarkAngleSelect) els.protectiveWatermarkAngleSelect.value = String(protective?.angle ?? -30);
+  if (els.protectiveWatermarkPatternInput) els.protectiveWatermarkPatternInput.checked = Boolean(protective?.pattern);
 }
 
 function getDefaultExifSettings() {
@@ -1318,6 +1430,7 @@ function translateStaticUi() {
   setText(els.heroLede, "heroLede");
   setText(els.homeButtonLabel, "homeButtonLabel");
   setText(els.settingsButtonLabel, "settingsButtonLabel");
+  setText(els.watermarkButtonLabel, "watermarkButtonLabel");
   setText(els.helpButtonLabel, "helpButtonLabel");
   setText(els.modeSelectorTitle, "modeSelectorTitle");
   setText(els.modeSelectorDesc, "modeSelectorDesc");
@@ -1373,6 +1486,7 @@ function translateStaticUi() {
   setText(els.assistantLaunchHint, "assistantLaunchHint");
   setText(els.restartLaunchHint, "restartLaunchHint");
   els.settingsButton.setAttribute("aria-label", t("settingsAria"));
+  els.watermarkButton?.setAttribute("aria-label", t("watermarkAria"));
   els.homeButton?.setAttribute("aria-label", t("homeAria"));
   els.helpButton.setAttribute("aria-label", t("helpAria"));
   setText(els.step1Title, "step1Title");
@@ -1516,12 +1630,26 @@ function translateStaticUi() {
     els.globalTextInput.placeholder = t("globalTextPlaceholder");
   }
   setText(els.watermarkTitle, "watermarkTitle");
+  setText(els.watermarkSettingsHint, "watermarkSettingsHint");
+  setText(els.watermarkSettingsButton, "watermarkSettingsButton");
+  setText(els.watermarkDialogTitle, "watermarkDialogTitle");
+  setText(els.watermarkDialogIntro, "watermarkDialogIntro");
+  setText(els.watermarkModeClassicLabel, "watermarkModeClassicLabel");
+  setText(els.watermarkModeProtectiveLabel, "watermarkModeProtectiveLabel");
   setText(els.watermarkTextLabel, "watermarkTextLabel");
   setText(els.watermarkPositionLabel, "watermarkPositionLabel");
   setText(els.watermarkFontLabel, "watermarkFontLabel");
   setText(els.watermarkColorLabel, "watermarkColorLabel");
   setText(els.watermarkSizeLabel, "watermarkSizeLabel");
   setText(els.watermarkEnabledLabel, "watermarkEnabledLabel");
+  setText(els.protectiveWatermarkEnabledLabel, "watermarkEnabledLabel");
+  setText(els.protectiveWatermarkTextLabel, "protectiveWatermarkTextLabel");
+  setText(els.protectiveWatermarkFontLabel, "protectiveWatermarkFontLabel");
+  setText(els.protectiveWatermarkColorLabel, "protectiveWatermarkColorLabel");
+  setText(els.protectiveWatermarkSizeLabel, "protectiveWatermarkSizeLabel");
+  setText(els.protectiveWatermarkOpacityLabel, "protectiveWatermarkOpacityLabel");
+  setText(els.protectiveWatermarkAngleLabel, "protectiveWatermarkAngleLabel");
+  setText(els.protectiveWatermarkPatternLabel, "protectiveWatermarkPatternLabel");
   setText(els.exifTitle, "exifTitle");
   setText(els.exifEnabledLabel, "exifEnabledLabel");
   setText(els.exifUserCommentHint, "exifUserCommentHint");
@@ -4618,6 +4746,11 @@ function drawGlobalText(ctx, contentRect) {
 }
 
 function drawWatermark(ctx, canvasWidth, canvasHeight, options = {}) {
+  drawClassicWatermark(ctx, canvasWidth, canvasHeight, options);
+  drawProtectiveWatermark(ctx, canvasWidth, canvasHeight);
+}
+
+function drawClassicWatermark(ctx, canvasWidth, canvasHeight, options = {}) {
   const { text, position, fontFamily, color, size, enabled } = state.watermark;
   if (!enabled || !text) return;
   const cleaned = String(text || "").trim();
@@ -4659,6 +4792,54 @@ function drawWatermark(ctx, canvasWidth, canvasHeight, options = {}) {
     ctx.fillText(line, baseX, lineY);
   }
   ctx.restore();
+}
+
+function drawProtectiveWatermark(ctx, canvasWidth, canvasHeight) {
+  const protective = state.watermark?.protective || getDefaultWatermarkSettings().protective;
+  if (!protective?.enabled) return;
+  const text = String(protective.text || "").trim();
+  if (!text) return;
+  const size = clamp(Number(protective.size) || 160, 32, 360);
+  const opacity = clamp(Number(protective.opacity) || 22, 5, 85) / 100;
+  const angle = (Number(protective.angle) || 0) * (Math.PI / 180);
+  const fontFamily = protective.fontFamily || "Arial, Helvetica, sans-serif";
+  const diagonal = Math.sqrt(canvasWidth * canvasWidth + canvasHeight * canvasHeight);
+  ctx.save();
+  ctx.translate(canvasWidth / 2, canvasHeight / 2);
+  ctx.rotate(angle);
+  ctx.font = `700 ${size}px ${fontFamily}`;
+  ctx.fillStyle = protective.color || "#ffffff";
+  ctx.globalAlpha = opacity;
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.shadowColor = "rgba(0,0,0,0.35)";
+  ctx.shadowBlur = Math.max(2, size * 0.08);
+
+  if (protective.pattern) {
+    const metrics = ctx.measureText(text);
+    const stepX = Math.max(size * 2.6, metrics.width + size * 0.9);
+    const stepY = Math.max(size * 1.45, size + 36);
+    for (let y = -diagonal; y <= diagonal; y += stepY) {
+      const rowOffset = Math.round(y / stepY) % 2 === 0 ? 0 : stepX / 2;
+      for (let x = -diagonal - stepX; x <= diagonal + stepX; x += stepX) {
+        ctx.fillText(text, x + rowOffset, y);
+      }
+    }
+  } else {
+    ctx.fillText(text, 0, 0);
+  }
+  ctx.restore();
+}
+
+function getActiveWatermarkText() {
+  const parts = [];
+  if (state.watermark?.enabled && state.watermark?.text) {
+    parts.push(state.watermark.text);
+  }
+  if (state.watermark?.protective?.enabled && state.watermark?.protective?.text) {
+    parts.push(state.watermark.protective.text);
+  }
+  return parts.join(" | ");
 }
 
 function getFrameMetrics(frame, cell) {
@@ -6946,7 +7127,7 @@ async function applyExifToJpegBlob(jpegBlob, exportedAt = new Date()) {
     copyright: settings.copyright,
     imageDescription: settings.description,
     software: settings.software || `Foto-Collage PWA ${state.versionInfo.appVersion}`,
-    userComment: state.watermark.text || "",
+    userComment: getActiveWatermarkText(),
     dateTime: formatExifTimestamp(exportedAt),
   };
   const jpegBytes = new Uint8Array(await jpegBlob.arrayBuffer());
@@ -7687,16 +7868,63 @@ function wireControls() {
       renderWordMaskPreview();
     }
   };
-  els.watermarkTextInput.addEventListener("input", () => watermarkHandler({ text: els.watermarkTextInput.value }));
-  els.watermarkPositionSelect.addEventListener("change", () => watermarkHandler({ position: els.watermarkPositionSelect.value }));
-  els.watermarkFontSelect.addEventListener("change", () => watermarkHandler({ fontFamily: els.watermarkFontSelect.value }));
-  els.watermarkColorInput.addEventListener("input", () => watermarkHandler({ color: els.watermarkColorInput.value }));
-  els.watermarkSizeInput.addEventListener("input", () => {
+  const protectiveWatermarkHandler = (updates) => {
+    watermarkHandler({
+      protective: {
+        ...getDefaultWatermarkSettings().protective,
+        ...(state.watermark?.protective || {}),
+        ...updates,
+      },
+    });
+  };
+  const openWatermarkDialog = () => {
+    applyWatermarkToUi();
+    els.watermarkDialog?.showModal();
+  };
+  els.watermarkSettingsButton?.addEventListener("click", openWatermarkDialog);
+  els.watermarkButton?.addEventListener("click", openWatermarkDialog);
+  els.watermarkModeClassicInput?.addEventListener("change", () => {
+    if (els.watermarkModeClassicInput.checked) {
+      watermarkHandler({ mode: "classic" });
+      applyWatermarkToUi();
+    }
+  });
+  els.watermarkModeProtectiveInput?.addEventListener("change", () => {
+    if (els.watermarkModeProtectiveInput.checked) {
+      watermarkHandler({ mode: "protective" });
+      applyWatermarkToUi();
+    }
+  });
+  els.watermarkTextInput?.addEventListener("input", () => watermarkHandler({ text: els.watermarkTextInput.value }));
+  els.watermarkPositionSelect?.addEventListener("change", () => watermarkHandler({ position: els.watermarkPositionSelect.value }));
+  els.watermarkFontSelect?.addEventListener("change", () => watermarkHandler({ fontFamily: els.watermarkFontSelect.value }));
+  els.watermarkColorInput?.addEventListener("input", () => watermarkHandler({ color: els.watermarkColorInput.value }));
+  els.watermarkSizeInput?.addEventListener("input", () => {
     const value = clamp(Number(els.watermarkSizeInput.value) || 32, 12, 160);
     els.watermarkSizeValue.textContent = String(value);
     watermarkHandler({ size: value });
   });
-  els.watermarkEnabledInput.addEventListener("change", () => watermarkHandler({ enabled: els.watermarkEnabledInput.checked }));
+  els.watermarkEnabledInput?.addEventListener("change", () => watermarkHandler({ enabled: els.watermarkEnabledInput.checked }));
+  els.protectiveWatermarkEnabledInput?.addEventListener("change", () => protectiveWatermarkHandler({ enabled: els.protectiveWatermarkEnabledInput.checked }));
+  els.protectiveWatermarkTextInput?.addEventListener("input", () => protectiveWatermarkHandler({ text: els.protectiveWatermarkTextInput.value }));
+  els.protectiveWatermarkFontSelect?.addEventListener("change", () => protectiveWatermarkHandler({ fontFamily: els.protectiveWatermarkFontSelect.value }));
+  els.protectiveWatermarkColorInput?.addEventListener("input", () => protectiveWatermarkHandler({ color: els.protectiveWatermarkColorInput.value }));
+  els.protectiveWatermarkSizeInput?.addEventListener("input", () => {
+    const value = clamp(Number(els.protectiveWatermarkSizeInput.value) || 160, 32, 360);
+    els.protectiveWatermarkSizeValue.textContent = String(value);
+    protectiveWatermarkHandler({ size: value });
+  });
+  els.protectiveWatermarkOpacityInput?.addEventListener("input", () => {
+    const value = clamp(Number(els.protectiveWatermarkOpacityInput.value) || 22, 5, 85);
+    els.protectiveWatermarkOpacityValue.textContent = String(value);
+    protectiveWatermarkHandler({ opacity: value });
+  });
+  els.protectiveWatermarkAngleSelect?.addEventListener("change", () => {
+    protectiveWatermarkHandler({ angle: Number(els.protectiveWatermarkAngleSelect.value) || 0 });
+  });
+  els.protectiveWatermarkPatternInput?.addEventListener("change", () => {
+    protectiveWatermarkHandler({ pattern: els.protectiveWatermarkPatternInput.checked });
+  });
   const exifHandler = (updates) => {
     state.exif = { ...state.exif, ...updates };
     saveExifSettings();

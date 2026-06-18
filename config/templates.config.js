@@ -306,6 +306,18 @@ const PRESETS = [
   { id: "grid-1x4-square", label: "1 x 4 (quadratisch)", rows: 1, cols: 4, slots: createGridSlots(1, 4) },
   { id: "grid-4x1-square", label: "4 x 1 (quadratisch)", rows: 4, cols: 1, slots: createGridSlots(4, 1) },
   {
+	id: "largeQuadrupel",
+	label: "2 x 2 (groß, quadratisch)",
+	rows: 4,
+	cols: 4,
+	slots: [
+		{ x: 0, y: 0, w: 2, h: 2 },
+		{ x: 2, y: 0, w: 2, h: 2 },
+		{ x: 0, y: 2, w: 2, h: 2 },
+		{ x: 2, y: 2, w: 2, h: 2 },
+	],
+  },
+  {
     id: "grid-4x1-tall2",
     label: "4 x 1 (2 Einheiten Höhe)",
     rows: 2,
@@ -595,6 +607,92 @@ const PRESETS = [
     { x: 0, y: 2, w: 2, h: 1 },
   ],
 },
+{
+  id: "phone-mix-1p-2l-left",
+  label: "Handy-Mix 1 hoch, 2 quer links",
+  rows: 2,
+  cols: 3,
+  slots: [
+    { x: 0, y: 0, w: 1, h: 2 },
+    { x: 1, y: 0, w: 2, h: 1 },
+    { x: 1, y: 1, w: 2, h: 1 },
+  ],
+},
+{
+  id: "phone-mix-1p-2l-right",
+  label: "Handy-Mix 1 hoch, 2 quer rechts",
+  rows: 2,
+  cols: 3,
+  slots: [
+    { x: 0, y: 0, w: 2, h: 1 },
+    { x: 0, y: 1, w: 2, h: 1 },
+    { x: 2, y: 0, w: 1, h: 2 },
+  ],
+},
+{
+  id: "phone-mix-2p-2l",
+  label: "Handy-Mix 2 hoch, 2 quer",
+  rows: 2,
+  cols: 4,
+  slots: [
+    { x: 0, y: 0, w: 1, h: 2 },
+    { x: 1, y: 0, w: 1, h: 2 },
+    { x: 2, y: 0, w: 2, h: 1 },
+    { x: 2, y: 1, w: 2, h: 1 },
+  ],
+},
+{
+  id: "phone-mix-2l-2p",
+  label: "Handy-Mix 2 quer, 2 hoch",
+  rows: 2,
+  cols: 4,
+  slots: [
+    { x: 0, y: 0, w: 2, h: 1 },
+    { x: 0, y: 1, w: 2, h: 1 },
+    { x: 2, y: 0, w: 1, h: 2 },
+    { x: 3, y: 0, w: 1, h: 2 },
+  ],
+},
+{
+  id: "phone-mix-3p-2l",
+  label: "Handy-Mix 3 hoch, 2 quer",
+  rows: 2,
+  cols: 5,
+  slots: [
+    { x: 0, y: 0, w: 1, h: 2 },
+    { x: 1, y: 0, w: 1, h: 2 },
+    { x: 2, y: 0, w: 1, h: 2 },
+    { x: 3, y: 0, w: 2, h: 1 },
+    { x: 3, y: 1, w: 2, h: 1 },
+  ],
+},
+{
+  id: "phone-mix-2p-3l",
+  label: "Handy-Mix 2 hoch, 3 quer",
+  rows: 3,
+  cols: 4,
+  slots: [
+    { x: 0, y: 0, w: 1, h: 3 },
+    { x: 1, y: 0, w: 1, h: 3 },
+    { x: 2, y: 0, w: 2, h: 1 },
+    { x: 2, y: 1, w: 2, h: 1 },
+    { x: 2, y: 2, w: 2, h: 1 },
+  ],
+},
+{
+  id: "phone-mix-3p-3l",
+  label: "Handy-Mix 3 hoch, 3 quer",
+  rows: 3,
+  cols: 5,
+  slots: [
+    { x: 0, y: 0, w: 1, h: 3 },
+    { x: 1, y: 0, w: 1, h: 3 },
+    { x: 2, y: 0, w: 1, h: 3 },
+    { x: 3, y: 0, w: 2, h: 1 },
+    { x: 3, y: 1, w: 2, h: 1 },
+    { x: 3, y: 2, w: 2, h: 1 },
+  ],
+},
 ];
 
 const PRESET_LABELS = Object.freeze({
@@ -871,6 +969,46 @@ const PRESET_LABELS = Object.freeze({
   de: "1 x 3 (2 Einheiten Breite)",
   en: "1 x 3 (2 units width)",
   fr: "1 x 3 (largeur 2 unites)",
+},
+"phone-mix-1p-2l-left": {
+  de: "Handy-Mix 1 hoch, 2 quer links",
+  en: "Phone mix 1 portrait, 2 landscape left",
+  fr: "Mix mobile 1 portrait, 2 paysage gauche",
+},
+"phone-mix-1p-2l-right": {
+  de: "Handy-Mix 1 hoch, 2 quer rechts",
+  en: "Phone mix 1 portrait, 2 landscape right",
+  fr: "Mix mobile 1 portrait, 2 paysage droite",
+},
+"phone-mix-2p-2l": {
+  de: "Handy-Mix 2 hoch, 2 quer",
+  en: "Phone mix 2 portrait, 2 landscape",
+  fr: "Mix mobile 2 portrait, 2 paysage",
+},
+"phone-mix-2l-2p": {
+  de: "Handy-Mix 2 quer, 2 hoch",
+  en: "Phone mix 2 landscape, 2 portrait",
+  fr: "Mix mobile 2 paysage, 2 portrait",
+},
+"phone-mix-3p-2l": {
+  de: "Handy-Mix 3 hoch, 2 quer",
+  en: "Phone mix 3 portrait, 2 landscape",
+  fr: "Mix mobile 3 portrait, 2 paysage",
+},
+"phone-mix-2p-3l": {
+  de: "Handy-Mix 2 hoch, 3 quer",
+  en: "Phone mix 2 portrait, 3 landscape",
+  fr: "Mix mobile 2 portrait, 3 paysage",
+},
+"phone-mix-3p-3l": {
+  de: "Handy-Mix 3 hoch, 3 quer",
+  en: "Phone mix 3 portrait, 3 landscape",
+  fr: "Mix mobile 3 portrait, 3 paysage",
+},
+"largeQuadrupel": {
+  de: "2 x 2 (groß, quadratisch)",
+  en: "2 x 2 (large, square)",
+  fr: "2 x 2 (grand, carré)",
 },
 });
 
