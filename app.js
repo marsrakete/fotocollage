@@ -44,9 +44,9 @@ const stencilPathCache = new Map();
 let stencilSvgLoadPromise = null;
 
 const DEFAULT_VERSION_INFO = Object.freeze({
-  appVersion: "1.4.37",
-  cacheVersion: "v228",
-  label: "Wasserzeichen-Dialog mit klassischem und Schutz-Wasserzeichen",
+  appVersion: "1.4.39",
+  cacheVersion: "v230",
+  label: "Aktives-Feld-Bereich im Handy-Querformat verbessert",
 });
 const SERVICE_WORKER_BASE_URL = "./service-worker.js";
 
@@ -623,6 +623,13 @@ function parseHexColor(hex) {
     };
   }
   return null;
+}
+
+function getCanvasColorWithAlpha(color, alpha) {
+  const opacity = clamp(Number(alpha) || 1, 0, 1);
+  const rgb = parseHexColor(color);
+  if (!rgb) return color || `rgba(255,255,255,${opacity})`;
+  return `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${opacity})`;
 }
 
 function toLinearChannel(value) {
@@ -4808,11 +4815,10 @@ function drawProtectiveWatermark(ctx, canvasWidth, canvasHeight) {
   ctx.translate(canvasWidth / 2, canvasHeight / 2);
   ctx.rotate(angle);
   ctx.font = `700 ${size}px ${fontFamily}`;
-  ctx.fillStyle = protective.color || "#ffffff";
-  ctx.globalAlpha = opacity;
+  ctx.fillStyle = getCanvasColorWithAlpha(protective.color || "#ffffff", opacity);
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
-  ctx.shadowColor = "rgba(0,0,0,0.35)";
+  ctx.shadowColor = `rgba(0,0,0,${Math.min(0.35, opacity * 0.8)})`;
   ctx.shadowBlur = Math.max(2, size * 0.08);
 
   if (protective.pattern) {

@@ -1546,7 +1546,7 @@ input[type="file"] { color: var(--muted); }
     min-height: 210px;
   }
   .ui-photo .step-panel[data-step="3"] .editor-sidebar {
-    height: calc(100svh - 190px);
+    height: max(210px, calc(100svh - 190px));
     max-height: none;
     overflow: auto;
     overscroll-behavior: contain;
@@ -1577,7 +1577,7 @@ input[type="file"] { color: var(--muted); }
     min-height: 280px;
   }
   .ui-photo .step-panel[data-step="3"] .editor-sidebar {
-    height: calc(100svh - 198px);
+    height: max(280px, calc(100svh - 198px));
     max-height: none;
     overflow: auto;
     overscroll-behavior: contain;
