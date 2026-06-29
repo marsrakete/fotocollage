@@ -44,9 +44,9 @@ const stencilPathCache = new Map();
 let stencilSvgLoadPromise = null;
 
 const DEFAULT_VERSION_INFO = Object.freeze({
-  appVersion: "1.4.40",
-  cacheVersion: "v231",
-  label: "Aktives-Feld-Bereich im Handy-Querformat verbessert",
+  appVersion: "1.4.42",
+  cacheVersion: "v233",
+  label: "Untertitel in der Form-Collage auf zwei Zeilen begrenzt",
 });
 const SERVICE_WORKER_BASE_URL = "./service-worker.js";
 
@@ -4306,6 +4306,23 @@ function wrapCellTextLines(ctx, text, maxWidth, styleOptions = {}) {
   return lines.length ? lines : [""];
 }
 
+function getManualTextLines(text) {
+  const lines = String(text || "").replace(/\r/g, "").split("\n").map((line) => line.trim());
+  while (lines.length && !lines[0]) lines.shift();
+  while (lines.length && !lines[lines.length - 1]) lines.pop();
+  return lines;
+}
+
+function normalizeTwoLineText(text, maxLength = 180) {
+  const normalizedBreaks = String(text || "").replace(/\r\n?/g, "\n");
+  const lines = normalizedBreaks.split("\n");
+  if (lines.length <= 2) {
+    return normalizedBreaks.slice(0, maxLength);
+  }
+  const secondLine = lines.slice(1).join(" ").replace(/\s+/g, " ").trim();
+  return `${lines[0]}\n${secondLine}`.slice(0, maxLength);
+}
+
 function getCellTextLayout(ctx, cell, width, height, options = {}) {
   const baseSize = clamp(cell.fontSize || 48, 10, 220);
   const scale = Math.max(0.35, Math.min(width, height) / 1000);
@@ -5336,7 +5353,11 @@ function syncWordMaskStateFromInputs() {
   state.wordMask.letterSpacing = clamp(Number(els.wordMaskSpacingInput?.value) || state.wordMask.letterSpacing, 0, 120);
   state.wordMask.bold = Boolean(els.wordMaskWordBoldInput?.checked);
   state.wordMask.italic = Boolean(els.wordMaskWordItalicInput?.checked);
-  state.wordMask.subtitle = String(els.wordMaskSubtitleInput?.value ?? "");
+  const normalizedSubtitle = normalizeTwoLineText(els.wordMaskSubtitleInput?.value ?? "");
+  if (els.wordMaskSubtitleInput && els.wordMaskSubtitleInput.value !== normalizedSubtitle) {
+    els.wordMaskSubtitleInput.value = normalizedSubtitle;
+  }
+  state.wordMask.subtitle = normalizedSubtitle;
   state.wordMask.background = String(els.wordMaskBackgroundInput?.value || state.wordMask.background);
   state.wordMask.subtitleFontFamily = String(els.wordMaskSubtitleFontSelect?.value || state.wordMask.subtitleFontFamily);
   state.wordMask.subtitleSize = clamp(Number(els.wordMaskSubtitleSizeInput?.value) || state.wordMask.subtitleSize, 18, 140);
@@ -6535,8 +6556,8 @@ function renderWordMaskPreview() {
     ctx.restore();
   }
 
-  const subtitle = String(state.wordMask.subtitle || "").trim();
-  if (subtitle) {
+  const subtitleLines = getManualTextLines(state.wordMask.subtitle);
+  if (subtitleLines.length) {
     const subtitleXNorm = clamp(Number(state.wordMask.subtitleX) || 0.5, 0.01, 0.99);
     const subtitleYNorm = clamp(Number(state.wordMask.subtitleY) || 0.93, 0.01, 0.99);
     const subtitleX = subtitleXNorm * width;
@@ -6547,7 +6568,7 @@ function renderWordMaskPreview() {
     const subtitleWeight = state.wordMask.subtitleBold ? "700" : "500";
     const subtitleSmallCapsScale = getSmallCapsScaleForFontFamily(state.wordMask.subtitleFontFamily);
     const maxWidth = Math.max(1, width - 16);
-    const measuredWidth = Math.min(maxWidth, Math.max(1, measureStyledText(ctx, subtitle, {
+    const subtitleStyleOptions = {
       size: subtitleSize,
       italic: state.wordMask.subtitleItalic,
       weight: subtitleWeight,
@@ -6555,23 +6576,21 @@ function renderWordMaskPreview() {
       spacing: 0,
       smallCaps: Boolean(state.wordMask.subtitleSmallCaps),
       smallCapsScale: subtitleSmallCapsScale,
-    })));
+    };
+    const lineWidths = subtitleLines.map((line) => measureStyledText(ctx, line, subtitleStyleOptions));
+    const measuredWidth = Math.min(maxWidth, Math.max(1, ...lineWidths));
+    const lineHeight = subtitleSize * 1.18;
+    const totalHeight = lineHeight * subtitleLines.length;
     const textLeft = clamp(subtitleX - measuredWidth / 2, 8, Math.max(8, width - 8 - measuredWidth));
-    const textTop = subtitleY - subtitleSize / 2;
+    const textTop = subtitleY - totalHeight / 2;
     state.wordMask.subtitleBounds = {
       x: textLeft - 10,
       y: textTop - 8,
       width: measuredWidth + 20,
-      height: subtitleSize + 16,
+      height: totalHeight + 16,
     };
-    drawStyledText(ctx, subtitle, textLeft + measuredWidth / 2, subtitleY, {
-      size: subtitleSize,
-      italic: state.wordMask.subtitleItalic,
-      weight: subtitleWeight,
-      family: state.wordMask.subtitleFontFamily,
-      spacing: 0,
-      smallCaps: Boolean(state.wordMask.subtitleSmallCaps),
-      smallCapsScale: subtitleSmallCapsScale,
+    subtitleLines.forEach((line, index) => {
+      drawStyledText(ctx, line, textLeft + measuredWidth / 2, textTop + lineHeight * index + lineHeight / 2, subtitleStyleOptions);
     });
     ctx.restore();
   } else {
