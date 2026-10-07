@@ -1090,7 +1090,8 @@ input[type="file"] { color: var(--muted); }
     padding: 2px;
   }
   .ui-photo .collage-preview-wrap {
-    max-width: min(100%, calc(44svh / var(--preview-height-ratio, 1)));
+    width: 100%;
+    max-width: 100%;
     margin: 0 auto;
   }
 }
@@ -1333,11 +1334,18 @@ input[type="file"] { color: var(--muted); }
     min-width: 0;
   }
   .ui-photo .collage-preview-wrap {
-    max-width: min(100%, calc(46svh / var(--preview-height-ratio, 1)), 74vw);
+    width: 100%;
+    max-width: 100%;
     margin: 0 auto;
   }
+  .ui-photo .step-panel[data-step="3"] .collage-preview-wrap {
+    width: 100%;
+    min-width: 0;
+    max-width: none;
+    justify-self: stretch;
+  }
   .ui-photo .export-preview {
-    max-width: min(100%, 68vw);
+    max-width: 100%;
     margin: 0 auto;
   }
   .ui-photo .collage-preview {
@@ -1400,10 +1408,10 @@ input[type="file"] { color: var(--muted); }
     bottom: 2px;
   }
   .ui-photo .collage-preview-wrap {
-    max-width: min(100%, calc(43svh / var(--preview-height-ratio, 1)), 70vw);
+    max-width: 100%;
   }
   .ui-photo .export-preview {
-    max-width: min(100%, 62vw);
+    max-width: 100%;
     padding: 10px;
   }
   .ui-form .wordmask-stage {

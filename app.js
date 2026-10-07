@@ -44,9 +44,9 @@ const stencilPathCache = new Map();
 let stencilSvgLoadPromise = null;
 
 const DEFAULT_VERSION_INFO = Object.freeze({
-  appVersion: "1.4.42",
-  cacheVersion: "v233",
-  label: "Untertitel in der Form-Collage auf zwei Zeilen begrenzt",
+  appVersion: "1.4.48",
+  cacheVersion: "v239",
+  label: "Mobile Vorschau in Schritt 3 weiter vergrößert",
 });
 const SERVICE_WORKER_BASE_URL = "./service-worker.js";
 
@@ -113,6 +113,7 @@ const state = {
     fontFamily: "Segoe UI, system-ui, sans-serif",
     color: "#ffffff",
     size: 32,
+    appendYear: false,
     enabled: false,
     protective: {
       enabled: false,
@@ -120,6 +121,7 @@ const state = {
       fontFamily: "Arial, Helvetica, sans-serif",
       color: "#ffffff",
       size: 160,
+      appendYear: false,
       opacity: 22,
       angle: -30,
       pattern: false,
@@ -411,6 +413,10 @@ const els = {
   watermarkSizeValue: document.getElementById("watermarkSizeValue"),
   watermarkEnabledLabel: document.getElementById("watermarkEnabledLabel"),
   watermarkEnabledInput: document.getElementById("watermarkEnabledInput"),
+  watermarkAppendYearInput: document.getElementById("watermarkAppendYearInput"),
+  watermarkAppendYearLabel: document.getElementById("watermarkAppendYearLabel"),
+  protectiveWatermarkAppendYearInput: document.getElementById("protectiveWatermarkAppendYearInput"),
+  protectiveWatermarkAppendYearLabel: document.getElementById("protectiveWatermarkAppendYearLabel"),
   protectiveWatermarkTextLabel: document.getElementById("protectiveWatermarkTextLabel"),
   protectiveWatermarkEnabledInput: document.getElementById("protectiveWatermarkEnabledInput"),
   protectiveWatermarkEnabledLabel: document.getElementById("protectiveWatermarkEnabledLabel"),
@@ -1047,6 +1053,7 @@ function getDefaultWatermarkSettings() {
     fontFamily: "Segoe UI, system-ui, sans-serif",
     color: "#ffffff",
     size: 32,
+    appendYear: false,
     enabled: false,
     protective: {
       enabled: false,
@@ -1054,6 +1061,7 @@ function getDefaultWatermarkSettings() {
       fontFamily: "Arial, Helvetica, sans-serif",
       color: "#ffffff",
       size: 160,
+      appendYear: false,
       opacity: 22,
       angle: -30,
       pattern: false,
@@ -1069,6 +1077,12 @@ function normalizeWatermarkColor(value, fallback = "#ffffff") {
   return /^#[0-9a-f]{6}$/i.test(String(value || "")) ? String(value) : fallback;
 }
 
+/**
+ * Normalisiert gespeicherte Einstellungen des Schutz-Wasserzeichens.
+ * @param {Object} raw Gespeicherte Werte.
+ * @param {Object} defaults Standardwerte für fehlende oder ungültige Angaben.
+ * @returns {Object} Gültige Schutz-Wasserzeichen-Einstellungen.
+ */
 function normalizeProtectiveWatermarkSettings(raw, defaults) {
   const allowedAngles = new Set([0, -30, -45, 30, 45]);
   const angle = Number(raw?.angle);
@@ -1078,12 +1092,18 @@ function normalizeProtectiveWatermarkSettings(raw, defaults) {
     fontFamily: typeof raw?.fontFamily === "string" && raw.fontFamily ? raw.fontFamily : defaults.fontFamily,
     color: normalizeWatermarkColor(raw?.color, defaults.color),
     size: clamp(Number(raw?.size) || defaults.size, 32, 360),
+    appendYear: Boolean(raw?.appendYear),
     opacity: clamp(Number(raw?.opacity) || defaults.opacity, 5, 85),
     angle: allowedAngles.has(angle) ? angle : defaults.angle,
     pattern: Boolean(raw?.pattern),
   };
 }
 
+/**
+ * Normalisiert gespeicherte Einstellungen beider Wasserzeichen-Varianten.
+ * @param {Object} raw Gespeicherte Wasserzeichen-Einstellungen.
+ * @returns {Object} Vollständige und gültige Wasserzeichen-Einstellungen.
+ */
 function normalizeWatermarkSettings(raw) {
   const defaults = getDefaultWatermarkSettings();
   const protective = normalizeProtectiveWatermarkSettings(raw?.protective, defaults.protective);
@@ -1101,6 +1121,7 @@ function normalizeWatermarkSettings(raw) {
     fontFamily: typeof raw?.fontFamily === "string" && raw.fontFamily ? raw.fontFamily : defaults.fontFamily,
     color: normalizeWatermarkColor(raw?.color, defaults.color),
     size: clamp(Number(raw?.size) || defaults.size, 12, 160),
+    appendYear: Boolean(raw?.appendYear),
     enabled: raw?.mode === "protective" && !hasProtectiveEnabled ? false : Boolean(raw?.enabled),
     protective,
   };
@@ -1125,6 +1146,10 @@ function saveWatermarkSettings() {
   safeStorageSet(STORAGE_KEYS.watermark, JSON.stringify(state.watermark));
 }
 
+/**
+ * Überträgt den gespeicherten Wasserzeichen-Zustand in die Dialogfelder.
+ * @returns {void}
+ */
 function applyWatermarkToUi() {
   const { mode, text, position, fontFamily, color, size, enabled, protective } = state.watermark;
   if (els.watermarkModeClassicInput) els.watermarkModeClassicInput.checked = mode !== "protective";
@@ -1144,6 +1169,7 @@ function applyWatermarkToUi() {
   if (els.watermarkEnabledInput) {
     els.watermarkEnabledInput.checked = Boolean(enabled);
   }
+  if (els.watermarkAppendYearInput) els.watermarkAppendYearInput.checked = Boolean(state.watermark.appendYear);
   if (els.protectiveWatermarkEnabledInput) els.protectiveWatermarkEnabledInput.checked = Boolean(protective?.enabled);
   if (els.protectiveWatermarkTextInput) els.protectiveWatermarkTextInput.value = protective?.text || "VORSCHAU";
   if (els.protectiveWatermarkFontSelect) els.protectiveWatermarkFontSelect.value = protective?.fontFamily || "Arial, Helvetica, sans-serif";
@@ -1154,6 +1180,7 @@ function applyWatermarkToUi() {
   if (els.protectiveWatermarkOpacityValue) els.protectiveWatermarkOpacityValue.textContent = String(protective?.opacity || 22);
   if (els.protectiveWatermarkAngleSelect) els.protectiveWatermarkAngleSelect.value = String(protective?.angle ?? -30);
   if (els.protectiveWatermarkPatternInput) els.protectiveWatermarkPatternInput.checked = Boolean(protective?.pattern);
+  if (els.protectiveWatermarkAppendYearInput) els.protectiveWatermarkAppendYearInput.checked = Boolean(protective?.appendYear);
 }
 
 function getDefaultExifSettings() {
@@ -1650,6 +1677,8 @@ function translateStaticUi() {
   setText(els.watermarkSizeLabel, "watermarkSizeLabel");
   setText(els.watermarkEnabledLabel, "watermarkEnabledLabel");
   setText(els.protectiveWatermarkEnabledLabel, "watermarkEnabledLabel");
+  setText(els.watermarkAppendYearLabel, "watermarkAppendYearLabel");
+  setText(els.protectiveWatermarkAppendYearLabel, "watermarkAppendYearLabel");
   setText(els.protectiveWatermarkTextLabel, "protectiveWatermarkTextLabel");
   setText(els.protectiveWatermarkFontLabel, "protectiveWatermarkFontLabel");
   setText(els.protectiveWatermarkColorLabel, "protectiveWatermarkColorLabel");
@@ -4769,15 +4798,31 @@ function drawGlobalText(ctx, contentRect) {
   ctx.restore();
 }
 
+/**
+ * Zeichnet alle aktivierten Wasserzeichen auf die Exportfläche.
+ * @param {CanvasRenderingContext2D} ctx Zeichenkontext des Exports.
+ * @param {number} canvasWidth Breite der Exportfläche in Pixeln.
+ * @param {number} canvasHeight Höhe der Exportfläche in Pixeln.
+ * @param {Object} options Optionale Zeichenbegrenzungen für das klassische Wasserzeichen.
+ * @returns {void}
+ */
 function drawWatermark(ctx, canvasWidth, canvasHeight, options = {}) {
   drawClassicWatermark(ctx, canvasWidth, canvasHeight, options);
   drawProtectiveWatermark(ctx, canvasWidth, canvasHeight);
 }
 
+/**
+ * Zeichnet das klassische Wasserzeichen an seiner konfigurierten Position.
+ * @param {CanvasRenderingContext2D} ctx Zeichenkontext des Exports.
+ * @param {number} canvasWidth Breite der Exportfläche in Pixeln.
+ * @param {number} canvasHeight Höhe der Exportfläche in Pixeln.
+ * @param {Object} options Optionale Zeichenbegrenzungen.
+ * @returns {void}
+ */
 function drawClassicWatermark(ctx, canvasWidth, canvasHeight, options = {}) {
-  const { text, position, fontFamily, color, size, enabled } = state.watermark;
+  const { text, position, fontFamily, color, size, enabled, appendYear } = state.watermark;
   if (!enabled || !text) return;
-  const cleaned = String(text || "").trim();
+  const cleaned = getWatermarkTextWithYear(text, appendYear);
   if (!cleaned) return;
   const lineHeight = clamp(Number(size) || 32, 12, 200) * 1.2;
   const scaleFont = Math.max(12, Math.min(240, size));
@@ -4818,10 +4863,17 @@ function drawClassicWatermark(ctx, canvasWidth, canvasHeight, options = {}) {
   ctx.restore();
 }
 
+/**
+ * Zeichnet das Schutz-Wasserzeichen als Einzeltext oder wiederholtes Muster.
+ * @param {CanvasRenderingContext2D} ctx Zeichenkontext des Exports.
+ * @param {number} canvasWidth Breite der Exportfläche in Pixeln.
+ * @param {number} canvasHeight Höhe der Exportfläche in Pixeln.
+ * @returns {void}
+ */
 function drawProtectiveWatermark(ctx, canvasWidth, canvasHeight) {
   const protective = state.watermark?.protective || getDefaultWatermarkSettings().protective;
   if (!protective?.enabled) return;
-  const text = String(protective.text || "").trim();
+  const text = getWatermarkTextWithYear(protective.text, protective.appendYear);
   if (!text) return;
   const size = clamp(Number(protective.size) || 160, 32, 360);
   const opacity = clamp(Number(protective.opacity) || 22, 5, 85) / 100;
@@ -4854,15 +4906,32 @@ function drawProtectiveWatermark(ctx, canvasWidth, canvasHeight) {
   ctx.restore();
 }
 
+/**
+ * Erzeugt den Wasserzeichen-Text für Metadaten einschließlich aktivierter Jahreszahl.
+ * @returns {string} Zusammengefügter Text der aktivierten Wasserzeichen.
+ */
 function getActiveWatermarkText() {
   const parts = [];
   if (state.watermark?.enabled && state.watermark?.text) {
-    parts.push(state.watermark.text);
+    parts.push(getWatermarkTextWithYear(state.watermark.text, state.watermark.appendYear));
   }
   if (state.watermark?.protective?.enabled && state.watermark?.protective?.text) {
-    parts.push(state.watermark.protective.text);
+    parts.push(getWatermarkTextWithYear(state.watermark.protective.text, state.watermark.protective.appendYear));
   }
   return parts.join(" | ");
+}
+
+/**
+ * Bereitet einen Wasserzeichen-Text auf und hängt bei Bedarf das aktuelle Jahr an.
+ * @param {string} text Basistext des Wasserzeichens.
+ * @param {boolean} appendYear Gibt an, ob das aktuelle Jahr angehängt wird.
+ * @returns {string} Bereinigter Text mit optionaler Jahreszahl.
+ */
+function getWatermarkTextWithYear(text, appendYear) {
+  const cleaned = String(text || "").trim();
+  if (!cleaned) return "";
+  if (!appendYear) return cleaned;
+  return `${cleaned} ${new Date().getFullYear()}`;
 }
 
 function getFrameMetrics(frame, cell) {
@@ -7930,6 +7999,7 @@ function wireControls() {
     watermarkHandler({ size: value });
   });
   els.watermarkEnabledInput?.addEventListener("change", () => watermarkHandler({ enabled: els.watermarkEnabledInput.checked }));
+  els.watermarkAppendYearInput?.addEventListener("change", () => watermarkHandler({ appendYear: els.watermarkAppendYearInput.checked }));
   els.protectiveWatermarkEnabledInput?.addEventListener("change", () => protectiveWatermarkHandler({ enabled: els.protectiveWatermarkEnabledInput.checked }));
   els.protectiveWatermarkTextInput?.addEventListener("input", () => protectiveWatermarkHandler({ text: els.protectiveWatermarkTextInput.value }));
   els.protectiveWatermarkFontSelect?.addEventListener("change", () => protectiveWatermarkHandler({ fontFamily: els.protectiveWatermarkFontSelect.value }));
@@ -7949,6 +8019,9 @@ function wireControls() {
   });
   els.protectiveWatermarkPatternInput?.addEventListener("change", () => {
     protectiveWatermarkHandler({ pattern: els.protectiveWatermarkPatternInput.checked });
+  });
+  els.protectiveWatermarkAppendYearInput?.addEventListener("change", () => {
+    protectiveWatermarkHandler({ appendYear: els.protectiveWatermarkAppendYearInput.checked });
   });
   const exifHandler = (updates) => {
     state.exif = { ...state.exif, ...updates };
