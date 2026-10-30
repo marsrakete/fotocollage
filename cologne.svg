@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 300" width="100%" height="100%">
+  <defs>
+    <style>
+      .skyline { fill: #000000; }
+      .bridge-line { stroke: #ffffff; stroke-width: 2; fill: none; }
+    </style>
+  </defs>
+
+  <!-- Kölner Skyline Silhouette (Geschlossener Pfad für Stanzen/Plotter) -->
+  <path class="skyline" d="
+    M 0,250 
+    L 50,250 
+    L 50,210 L 65,210 L 65,250 
+    L 100,250 
+    L 110,180 L 135,180 L 145,250 
+    L 180,250 
+    
+    <!-- Groß St. Martin -->
+    L 190,220 L 205,220 L 205,170 L 215,140 L 225,170 L 225,220 L 240,220 L 250,250 
+    
+    L 280,250 
+    
+    <!-- Kölner Dom -->
+    L 290,210 L 305,210 L 305,110 L 320,40 L 335,110 L 335,210 
+    L 350,150 L 365,110 L 380,150 
+    L 395,210 L 395,110 L 410,40 L 425,110 L 425,210 L 440,250 
+    
+    L 460,250
+    
+    <!-- Hohenzollernbrücke -->
+    L 465,250 
+    A 60,60 0 0,1 575,250 
+    A 55,55 0 0,1 675,250 
+    A 45,45 0 0,1 755,250 
+    
+    L 800,250 
+    L 800,300 
+    L 0,300 
+    Z
+  "/>
+
+  <!-- Brückenbögen-Details -->
+  <path class="bridge-line" d="
+    M 470,250 A 55,55 0 0,1 570,250
+    M 580,250 A 50,50 0 0,1 670,250
+    M 680,250 A 40,40 0 0,1 750,250
+  "/>
+</svg>

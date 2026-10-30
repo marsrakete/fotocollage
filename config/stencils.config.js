@@ -160,6 +160,11 @@
       label: Object.freeze({ de: "Haus", en: "House", fr: "Maison" }),
     }),
     Object.freeze({
+      id: "cologne-cathedral",
+      src: "./config/stencils/cologne-cathedral.svg",
+      label: Object.freeze({ de: "Kölner Dom", en: "Cologne Cathedral", fr: "Cathédrale de Cologne" }),
+    }),
+    Object.freeze({
       id: "fist-bump",
       src: "./config/stencils/fist-bump.svg",
       label: Object.freeze({ de: "Fist Bump", en: "Fist bump", fr: "Poings" }),

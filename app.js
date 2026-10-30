@@ -44,9 +44,9 @@ const stencilPathCache = new Map();
 let stencilSvgLoadPromise = null;
 
 const DEFAULT_VERSION_INFO = Object.freeze({
-  appVersion: "1.4.48",
-  cacheVersion: "v239",
-  label: "Mobile Vorschau in Schritt 3 weiter vergrößert",
+  appVersion: "1.4.49",
+  cacheVersion: "v240",
+  label: "Kölner Dom als Form-Collage-Motiv ergänzt",
 });
 const SERVICE_WORKER_BASE_URL = "./service-worker.js";
 

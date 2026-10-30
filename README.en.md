@@ -123,6 +123,7 @@ Optional:
 - Step C: load/reorder photos, subtitle, export
 - Word mode supports font, size, spacing, bold/italic
 - SVG mode supports visual motif selection and scaling
+- The `Cologne Cathedral` motif is based on [CologneCathedralSilhouette.svg](https://commons.wikimedia.org/wiki/File:CologneCathedralSilhouette.svg) by Jahobr and is released under CC0 1.0. The scale text was removed for use as an image mask.
 
 ## Export formats
 
@@ -206,6 +207,8 @@ Recommended public URL:
 ## License
 
 Apache 2.0. See [LICENSE](./LICENSE).
+
+The SVG motif `config/stencils/cologne-cathedral.svg` is by Jahobr ([Wikimedia Commons](https://commons.wikimedia.org/wiki/File:CologneCathedralSilhouette.svg)) and released under [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/). It is a separate asset and is not covered by the Apache license for the rest of this project.
 
 ## Author and contact
 
