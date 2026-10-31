@@ -210,6 +210,7 @@ Recommended public URL:
 Apache 2.0. See [LICENSE](./LICENSE).
 
 The SVG motif `config/stencils/cologne-cathedral.svg` is by Jahobr ([Wikimedia Commons](https://commons.wikimedia.org/wiki/File:CologneCathedralSilhouette.svg)) and released under [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/). It is a separate asset and is not covered by the Apache license for the rest of this project.
+Two Christmas star stencils have been added: a five-pointed star and a star with a tail. The tail SVG was provided by the user; the plain star was created to match it.
 
 ## Author and contact
 

@@ -135,6 +135,16 @@
       label: Object.freeze({ de: "Weihnachtsbaum", en: "Christmas tree", fr: "Sapin de Noel" }),
     }),
     Object.freeze({
+      id: "christmas-star-tail",
+      src: "./config/stencils/christmas-star-tail.svg",
+      label: Object.freeze({ de: "Weihnachtsstern mit Schweif", en: "Christmas star with tail", fr: "Etoile de Noel avec trainee" }),
+    }),
+    Object.freeze({
+      id: "christmas-star",
+      src: "./config/stencils/christmas-star.svg",
+      label: Object.freeze({ de: "Weihnachtsstern", en: "Christmas star", fr: "Etoile de Noel" }),
+    }),
+    Object.freeze({
       id: "uk-map",
       src: "./config/stencils/uk-map.svg",
       label: Object.freeze({ de: "Vereinigtes Koenigreich", en: "United Kingdom map", fr: "Carte Royaume-Uni" }),

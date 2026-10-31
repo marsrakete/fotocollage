@@ -44,9 +44,9 @@ const stencilPathCache = new Map();
 let stencilSvgLoadPromise = null;
 
 const DEFAULT_VERSION_INFO = Object.freeze({
-  appVersion: "1.4.50",
-  cacheVersion: "v241",
-  label: "Zweite Kölner-Dom-Stanze ergänzt",
+  appVersion: "1.4.51",
+  cacheVersion: "v242",
+  label: "Weihnachtssterne als Stanzmotive ergänzt",
 });
 const SERVICE_WORKER_BASE_URL = "./service-worker.js";
 

@@ -139,6 +139,7 @@ Optional fuer Nerds:
 - Die Stencil-Bibliothek enthaelt viele SVG-Motive; der neue `Blitz` ersetzt den bisherigen Blitz.
 - Das Motiv `Kölner Dom` basiert auf [CologneCathedralSilhouette.svg](https://commons.wikimedia.org/wiki/File:CologneCathedralSilhouette.svg) von Jahobr und steht unter CC0 1.0. Der Maßstabs-Text wurde für die Verwendung als Bildmaske entfernt.
 - Eine zweite, schlanke Dom-Silhouette mit spitzen Türmen ist als eigenes Motiv verfügbar.
+- Zwei Weihnachtsstern-Stanzen ergänzt: ein fünfzackiger Stern und ein Stern mit Schweif. Die Schweif-SVG wurde vom Nutzer bereitgestellt; der einfache Stern wurde passend dazu als eigene SVG erstellt.
 
 ## Export-Formate
 
@@ -415,6 +416,7 @@ Dieses Projekt steht unter der Apache License 2.0.
 Siehe [LICENSE](./LICENSE).
 
 Das SVG-Motiv `config/stencils/cologne-cathedral.svg` stammt von Jahobr ([Wikimedia Commons](https://commons.wikimedia.org/wiki/File:CologneCathedralSilhouette.svg)) und ist unter [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/deed.de) veröffentlicht. Es ist ein separates Asset und nicht Bestandteil der Apache-Lizenz des übrigen Projekts.
+Die SVG-Datei `config/stencils/christmas-star-tail.svg` wurde vom Nutzer bereitgestellt. `config/stencils/christmas-star.svg` ist ein neu erstelltes Motiv.
 
 ## Urheber und Kontakt
 

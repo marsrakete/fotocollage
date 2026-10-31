@@ -1,5 +1,5 @@
 const CACHE_PREFIX = "fotocollage-cache";
-const CACHE_VERSION = "v240";
+const CACHE_VERSION = "v242";
 const CACHE_NAME = `${CACHE_PREFIX}-${CACHE_VERSION}`;
 const APP_SHELL_PATTERNS = [
   /\/$/,
@@ -45,6 +45,8 @@ const ASSETS = [
   "./config/stencils/many-hearts.svg",
   "./config/stencils/camper-van.svg",
   "./config/stencils/christmas-tree.svg",
+  "./config/stencils/christmas-star-tail.svg",
+  "./config/stencils/christmas-star.svg",
   "./config/stencils/uk-map.svg",
   "./config/stencils/balloon.svg",
   "./config/stencils/tent.svg",
