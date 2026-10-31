@@ -1,5 +1,5 @@
 const CACHE_PREFIX = "fotocollage-cache";
-const CACHE_VERSION = "v242";
+const CACHE_VERSION = "v243";
 const CACHE_NAME = `${CACHE_PREFIX}-${CACHE_VERSION}`;
 const APP_SHELL_PATTERNS = [
   /\/$/,

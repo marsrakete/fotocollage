@@ -44,9 +44,9 @@ const stencilPathCache = new Map();
 let stencilSvgLoadPromise = null;
 
 const DEFAULT_VERSION_INFO = Object.freeze({
-  appVersion: "1.4.51",
-  cacheVersion: "v242",
-  label: "Weihnachtssterne als Stanzmotive ergänzt",
+  appVersion: "1.4.52",
+  cacheVersion: "v243",
+  label: "Weihnachtsstern-Vorlage aktualisiert",
 });
 const SERVICE_WORKER_BASE_URL = "./service-worker.js";
 
