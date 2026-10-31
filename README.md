@@ -138,6 +138,7 @@ Optional fuer Nerds:
 - Schritt C: Fotos laden, Untertitel gestalten und frei positionieren, dann exportieren.
 - Die Stencil-Bibliothek enthaelt viele SVG-Motive; der neue `Blitz` ersetzt den bisherigen Blitz.
 - Das Motiv `Koelner Dom` basiert auf [CologneCathedralSilhouette.svg](https://commons.wikimedia.org/wiki/File:CologneCathedralSilhouette.svg) von Jahobr und steht unter CC0 1.0. Der Massstabs-Text wurde fuer die Verwendung als Bildmaske entfernt.
+- Eine zweite, schlanke Dom-Silhouette mit spitzen Tuermen ist als eigenes Motiv verfuegbar.
 
 ## Export-Formate
 

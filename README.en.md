@@ -124,6 +124,7 @@ Optional:
 - Word mode supports font, size, spacing, bold/italic
 - SVG mode supports visual motif selection and scaling
 - The `Cologne Cathedral` motif is based on [CologneCathedralSilhouette.svg](https://commons.wikimedia.org/wiki/File:CologneCathedralSilhouette.svg) by Jahobr and is released under CC0 1.0. The scale text was removed for use as an image mask.
+- A second, slimmer cathedral silhouette with pointed spires is available as a separate motif.
 
 ## Export formats
 

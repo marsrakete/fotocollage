@@ -51,6 +51,7 @@ const ASSETS = [
   "./config/stencils/ship.svg",
   "./config/stencils/house.svg",
   "./config/stencils/cologne-cathedral.svg",
+  "./config/stencils/cologne-cathedral-spires.svg",
   "./config/stencils/fist-bump.svg",
   "./config/stencils/two-apples.svg",
   "./config/stencils/rain-cloud.svg",

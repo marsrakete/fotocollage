@@ -165,6 +165,11 @@
       label: Object.freeze({ de: "Kölner Dom", en: "Cologne Cathedral", fr: "Cathédrale de Cologne" }),
     }),
     Object.freeze({
+      id: "cologne-cathedral-spires",
+      src: "./config/stencils/cologne-cathedral-spires.svg",
+      label: Object.freeze({ de: "Kölner Dom (spitze Türme)", en: "Cologne Cathedral (twin spires)", fr: "Cathédrale de Cologne (tours jumelles)" }),
+    }),
+    Object.freeze({
       id: "fist-bump",
       src: "./config/stencils/fist-bump.svg",
       label: Object.freeze({ de: "Fist Bump", en: "Fist bump", fr: "Poings" }),
